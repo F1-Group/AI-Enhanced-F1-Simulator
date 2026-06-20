@@ -1,6 +1,8 @@
 import socket
 import time
 
+from parser import clean_my_data
+
 IP = '127.0.0.1'
 PORT = 3001
 
@@ -13,7 +15,9 @@ try:
     print("Message sended.")
     while True:
         data, server = client.recvfrom(4096)
-        print(data.decode())
+        raw_data = data.decode()
+        cleaned_packet = clean_my_data(raw_data)
+        print(cleaned_packet)
 
         action_msg = "(accel 0.5)(brake 0.0)(steer 0.0)(gear 1)"
         client.sendto(action_msg.encode(), (IP, PORT))
