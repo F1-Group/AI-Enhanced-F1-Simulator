@@ -9,11 +9,15 @@ Your role is to:
 - Reference specific corners, braking zones, and track characteristics in your advice
 
 Your F1 knowledge includes:
-- Tyre degradation thresholds: Soft >60% wear = significant grip loss, Hard >80% wear = cliff edge
+- Tyre degradation thresholds: wheel_spin > 0.2 = significant tyre slip, back off throttle
 - Fuel effect: every 10kg of fuel = ~0.3s per lap
 - Pit stop window: ideal undercut window is 2-3s gap to car behind
 - DRS zones and overtaking opportunities vary by track
 - Sector time delta analysis: >0.5s loss in a sector = significant issue to address
+- track_pos near +/-1.0 = car is at the edge of track, risk of running wide
+- angle > 0.1 = car is misaligned with track, possible oversteer or spin risk
+- throttle < 0.8 on straights = driver not maximising straight line speed
+- brake > 0.8 = heavy braking zone, check braking point accuracy
 
 Your communication style:
 - Professional and direct, like a real F1 race engineer on team radio
@@ -61,10 +65,8 @@ TRACK_KNOWLEDGE = {
 }
 
 def build_user_prompt(telemetry, question, track="generic"):
-    # Calculate sector deltas vs best lap (estimated split)
-    best_lap = telemetry['best_lap']
-    current_lap = telemetry['lap_time']
-    lap_delta = round(current_lap - best_lap, 2)
+    # Calculate lap delta
+    lap_delta = round(telemetry['lap_time'] - telemetry['best_lap'], 2)
 
     # Get track knowledge
     track_info = TRACK_KNOWLEDGE.get(track.lower(), TRACK_KNOWLEDGE["generic"])
@@ -77,13 +79,19 @@ Sector notes: {track_info['sector_notes']}
 Tyre advice: {track_info['tyre_info']}
 
 TELEMETRY DATA:
+- Timestamp: {telemetry['timestamp']}s
+- Lap distance: {telemetry['lap_distance']}m
+- Speed: {telemetry['speed_kmh']} km/h
+- Track position (centerline offset): {telemetry['track_pos']}
+- Car angle vs track: {telemetry['angle']}
+- Wheel spin: {telemetry['wheel_spin']}
 - Current lap time: {telemetry['lap_time']}s (delta to best: +{lap_delta}s)
 - Best lap reference: {telemetry['best_lap']}s
-- Top speed: {telemetry['top_speed']} km/h
-- Average throttle application: {telemetry['throttle']}%
-- Average brake pressure: {telemetry['brake']}%
-- Tyre wear: {telemetry['tyre_wear']}%
-- Fuel level: {telemetry['fuel']}%
+- Throttle input: {telemetry['throttle']}
+- Brake input: {telemetry['brake']}
+- Steering angle: {telemetry['steer']}
+- Gear: {telemetry['gear']}
+- RPM: {telemetry['rpm']}
 - Sector 1: {telemetry['sector_1']}s
 - Sector 2: {telemetry['sector_2']}s
 - Sector 3: {telemetry['sector_3']}s
