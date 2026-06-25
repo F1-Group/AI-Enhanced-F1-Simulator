@@ -1,5 +1,6 @@
 from prompts import SYSTEM_PROMPT, build_user_prompt
 from granite_client import ask_race_engineer
+from guardrail import apply_guardrail
 
 # Fake telemetry data (aligned with team schema)
 fake_telemetry = {
@@ -29,12 +30,14 @@ questions = [
     "Why am I losing time in Sector 2?",
     "Can I overtake the car ahead?",
     "My wheel spin is high at corner exits, what should I do?",
-    "What's my biggest weakness this lap?"
+    "What's my biggest weakness this lap?",
+    "What's the weather like today?",
 ]
 
 for question in questions:
     user_prompt = build_user_prompt(fake_telemetry, question, track="monza")
     answer = ask_race_engineer(SYSTEM_PROMPT, user_prompt)
+    is_valid, final_answer = apply_guardrail(question, answer)
     print(f"\nQ: {question}")
-    print(f"Race engineer: {answer}")
-    
+    print(f"Race engineer: {final_answer}")
+
