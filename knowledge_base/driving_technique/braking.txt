@@ -1,0 +1,15 @@
+Trail braking is a technique where the driver continues to apply brake pressure while turning into a corner. This transfers weight to the front tyres, increasing front grip and reducing understeer on corner entry. The brake pressure is gradually released as the car reaches the apex.
+
+The braking point is the location on track where the driver begins to apply the brakes. Braking too early loses time on the straight. Braking too late causes the driver to run wide on corner exit, losing time and potentially damaging the tyres.
+
+Brake pressure should be applied firmly and progressively at the start of the braking zone, then released smoothly as the car slows down. A sudden release of brake pressure can cause the rear of the car to step out.
+
+The threshold braking technique involves braking at the maximum possible force without locking the wheels. Modern F1 cars with ABS do not allow wheel lock, but in simulators without ABS, threshold braking requires precise modulation.
+
+In heavy braking zones such as Monza Turn 1 or Spa Les Combes, the driver must brake from very high speeds. The key is to hit the braking point consistently every lap to build a reference and improve over time.
+
+Sector time loss in braking zones is one of the most common causes of slow lap times. A driver losing more than 0.3 seconds in a braking zone should review their braking point, initial brake pressure, and release technique.
+
+Brake balance affects how the car behaves under braking. More front brake bias increases front grip under braking but can cause front lock-ups. More rear bias can cause rear instability. The optimal balance depends on the circuit and tyre condition.
+
+Tyre wear affects braking performance. Worn tyres have less grip and require an earlier braking point. Drivers should adjust their braking reference points as tyre wear increases throughout a stint.

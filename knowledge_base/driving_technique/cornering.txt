@@ -1,0 +1,17 @@
+The racing line is the optimal path through a corner that maximises exit speed. It typically involves a late turn-in point, hitting the apex of the corner, and using the full width of the track on exit.
+
+A late apex means turning in later than the geometric centre of the corner. This allows the driver to straighten the steering earlier on exit, applying full throttle sooner and maximising acceleration onto the following straight.
+
+An early apex means turning in too early, which forces the driver to tighten their line mid-corner. This causes the car to run wide on exit and delays full throttle application. Early apex is one of the most common mistakes in sim racing.
+
+Understeer occurs when the front tyres lose grip and the car pushes wide of the intended line. Common causes include too much entry speed, too much steering input, or worn front tyres. The fix is to reduce entry speed, apply throttle earlier to transfer weight to the rear, or adjust the brake balance.
+
+Oversteer occurs when the rear tyres lose grip and the car rotates more than intended. Common causes include too much throttle on corner exit, trail braking too deep into the corner, or worn rear tyres. The fix is to reduce throttle application on exit and smooth out steering inputs.
+
+The apex is the point on the inside of the corner where the car is closest to the inside kerb. Hitting the apex correctly allows the driver to carry maximum speed through the corner and exit with the best possible angle for acceleration.
+
+Smooth steering inputs are critical in high-speed corners. Any sudden or jerky steering movement unsettles the car and causes tyre slip. The hands should work in a smooth, continuous motion through the corner.
+
+Corner exit speed is more important than corner entry speed in most cases. A slow entry with a fast exit is faster overall than a fast entry that compromises the exit. This is especially true for corners that lead onto long straights.
+
+Weight transfer affects grip distribution. Braking transfers weight to the front, increasing front grip. Acceleration transfers weight to the rear, increasing rear grip. Understanding weight transfer helps drivers manage understeer and oversteer.

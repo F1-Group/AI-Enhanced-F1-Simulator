@@ -1,0 +1,15 @@
+A pit stop in Formula 1 costs approximately 20 to 25 seconds of track time. This includes the time lost driving through the pit lane at reduced speed and the time stationary in the pit box for the tyre change.
+
+The undercut is a strategy where a driver pits before the car ahead to gain track position. After fitting fresh tyres, the driver sets faster lap times while the competitor is still on worn tyres. When the competitor pits, the driver on fresh tyres may have built enough of a gap to emerge ahead. The undercut is most effective when the gap to the car ahead is between 2 and 4 seconds.
+
+The overcut is the opposite of the undercut. A driver stays out longer than the car behind, hoping that the car behind loses time in traffic after pitting or that the fresh tyres do not warm up quickly enough to make a difference. The overcut works best when the pit lane is slow or when tyre warm-up is difficult.
+
+The pit window refers to the range of laps during which it is optimal to make a pit stop. Pitting too early wastes the remaining life of the current tyres. Pitting too late risks tyre failure or excessive performance loss from degraded tyres.
+
+A gap of more than 4 seconds to the car behind is generally considered a safe margin to pit without losing track position. A gap of less than 2 seconds means the car behind may complete the undercut successfully.
+
+The number of laps remaining affects pit stop decisions. With fewer than 10 laps remaining, a pit stop is rarely beneficial unless the current tyres are critically worn, as the time lost in the pit lane cannot be recovered.
+
+Fuel level affects race strategy. Running low on fuel reduces car weight and improves lap times. However, running out of fuel results in retirement. Monitoring fuel consumption per lap and adjusting throttle management accordingly is essential for finishing the race.
+
+A one-stop strategy involves making a single pit stop during the race. This minimises time lost in the pit lane but requires careful tyre management to make the compounds last. A two-stop strategy involves two pit stops and allows the driver to use softer, faster compounds for more of the race at the cost of additional pit lane time.

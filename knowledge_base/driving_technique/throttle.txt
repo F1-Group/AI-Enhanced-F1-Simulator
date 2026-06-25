@@ -1,0 +1,15 @@
+Throttle control is the management of accelerator input through and out of corners. Smooth and progressive throttle application is critical for maintaining tyre grip and car stability.
+
+The throttle application point is where the driver begins to apply the accelerator after braking. Applying throttle too early while still turning causes oversteer as weight transfers to the rear before the car is pointing straight. Applying throttle too late loses acceleration time onto the following straight.
+
+Progressive throttle means gradually increasing the throttle input as the car straightens out of the corner. A sudden full throttle application on corner exit causes wheelspin, especially on worn tyres, which wastes time and damages the tyres further.
+
+Throttle on entry refers to using a small amount of throttle while still braking into a corner. This technique helps stabilise the car and maintain rear grip during the braking phase. It requires precise coordination between brake and throttle inputs.
+
+Average throttle application below 65 percent over a lap suggests the driver is being too cautious and lifting unnecessarily in sections where the car could carry more speed. This is a common issue in sim racing where drivers lack confidence in the car's grip limits.
+
+Fuel saving can be achieved by lifting off the throttle early before braking zones and coasting into corners. This technique is commonly used at circuits with long straights such as Monza. Lifting 50 to 100 metres earlier than the braking point can save significant fuel without a major lap time penalty.
+
+Tyre wear is directly affected by throttle application. Aggressive throttle on corner exit causes rear tyre wear through wheelspin. Managing throttle smoothly extends tyre life and maintains consistent lap times throughout a stint.
+
+High throttle application combined with high tyre wear suggests the driver is pushing the rear tyres hard. In this situation, reducing throttle aggressiveness on exit will preserve rear grip for the remaining laps.

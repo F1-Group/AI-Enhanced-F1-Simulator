@@ -1,0 +1,17 @@
+Tyre wear is measured as a percentage of remaining tread. At 0 percent the tyre is completely worn out. At 100 percent the tyre is brand new. Tyre performance degrades as wear increases.
+
+Soft tyres provide the highest grip level but degrade the fastest. They are best used for short stints or qualifying laps. Significant grip loss begins at approximately 60 percent wear. At 40 percent wear the tyre is considered critically degraded and a pit stop should be considered immediately.
+
+Medium tyres offer a balance between grip and durability. They are the most versatile compound and can be used for both short and long stints depending on the circuit. Grip loss becomes noticeable at approximately 50 percent wear.
+
+Hard tyres provide the lowest grip level but last the longest. They are best suited for long stints. Grip loss is gradual and becomes significant at approximately 80 percent wear. The hard tyre has a cliff edge degradation point where performance drops suddenly after extended use.
+
+Tyre temperature affects grip level. Cold tyres have less grip and are more prone to sliding. Drivers should warm up tyres gradually at the start of a stint by weaving on the straight and applying progressive inputs through corners.
+
+Graining occurs when the tyre surface tears and forms small rubber balls on the tread. It is caused by aggressive driving on cold tyres or excessive sliding. Graining temporarily reduces grip but can clear after a few laps if the tyre temperature stabilises.
+
+Blistering occurs when the tyre overheats and forms bubbles on the surface. It is caused by sustained high tyre temperatures and aggressive driving. Unlike graining, blistering permanently damages the tyre and cannot be recovered.
+
+Managing tyre wear during a stint requires smooth driving inputs. Avoiding aggressive braking, early throttle application, and excessive steering movement all help extend tyre life. The goal is to maintain consistent lap times throughout the stint rather than going fast early and degrading quickly.
+
+A tyre wear rate above expected suggests the driver is pushing too hard. Reducing aggression through high load corners and smoothing out throttle application on exit will extend the remaining tyre life.
