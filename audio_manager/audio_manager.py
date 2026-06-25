@@ -13,7 +13,7 @@ class AudioManager:
     defined in error_template.json."""
 
     def __init__(self, template_path=DEFAULT_TEMPLATE_PATH, cooldown_seconds=COOLDOWN_SECONDS):
-        self.project_root = Path(__file__).resolve().parent
+        self.project_root = Path(__file__).resolve().parent.parent
         self.template_path = self.project_root / template_path
         self.cooldown_seconds = cooldown_seconds
 
