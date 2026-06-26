@@ -20,12 +20,11 @@ def main():
             # The main thread waits for this task or performs other work.
             time.sleep(1)
     except KeyboardInterrupt:
-        print("Keyboard interrupt. Lost connection to TORCS.")
-        client.stop()
+        print("\nKeyboard interrupt. Lost connection to TORCS.")
     except Exception as e:
         print(f"Unexpected error: {e}")
-        client.stop()
     finally:
+        client.stop()
         sys.exit(0)
 
 

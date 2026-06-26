@@ -170,8 +170,6 @@ class Client:
         except Exception as e:
             self.status = GameStatus.ERROR
             print(f"Unexpected error: {e}")
-        finally:
-            self.stop()
 
     def stop(self):
         if self.status != GameStatus.FINISHED:
