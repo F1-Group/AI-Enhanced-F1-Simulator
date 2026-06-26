@@ -58,14 +58,15 @@ class Client:
         print("Failed to connect to TORCS")
 
     def _build_action(self, state: dict) -> str:
-        return (
-            f"(accel {state['accel']:.3f})"
-            f"(brake {state['brake']:.3f})"
-            f"(steer {state['steer']:.3f})"
-            f"(gear {state['gear']})"
-            f"(focus 0)"
+        commands = [
+            f"(accel {state['accel']:.3f})",
+            f"(brake {state['brake']:.3f})",
+            f"(steer {state['steer']:.3f})",
+            f"(gear {state['gear']})",
+            f"(focus 0)",
             f"(meta 0)"
-        )
+        ]
+        return ' '.join(commands)
  
     def _loop(self):
         self.socket.setblocking(False)

@@ -15,6 +15,7 @@ class InputHandler():
         }
         self._thread = None
         self._running = False
+        self._listener = None
 
         self.accel_pressed = False
         self.brake_pressed = False
@@ -32,9 +33,8 @@ class InputHandler():
 
     def _listen(self):
         with keyboard.Listener(on_press=self._on_press, on_release=self._on_release) as listener:
-            while self._running:
-                pass
-            listener.stop()
+            self._listener = listener
+            listener.join()
 
     def start(self):
         self._running = True
@@ -44,10 +44,10 @@ class InputHandler():
 
     def stop(self):
         self._running = False
+        if self._listener is not None:
+            self._listener.stop()
         if self._thread is not None:
-            # Wait until the thread terminates
-            self._thread.join()
-        pass
+            self._thread.join(timeout=1.0)
 
     def _on_press(self, key):
         try:

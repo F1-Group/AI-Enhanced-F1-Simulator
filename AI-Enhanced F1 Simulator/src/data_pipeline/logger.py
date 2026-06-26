@@ -26,23 +26,23 @@ class CSVLogger:
         print(f"CSV Logger is ready. Absolute file path: {os.path.abspath(self.filename)}")
 
         # Immediately write the absolute path to the latest indicator file upon creation.
+        indicator_path = os.path.join(self.output_dir, "latest_data.txt")
         absolute_path = os.path.abspath(self.filename)
-        with open("./data/latest_data.txt", "w", encoding="utf-8") as f:
+        with open(indicator_path, "w", encoding="utf-8") as f:
             f.write(absolute_path)
 
     def log_row(self, data_dict):
         """Receive cleaned dictionary data and write it as a row into the CSV in real-time."""
         if not data_dict:
             return
-            
-        # Automatically extract dictionary keys as the header row upon the first data entry
-        if self.writer is None:
-            fieldnames = list(data_dict.keys())
-            self.writer = csv.DictWriter(self.csv_file, fieldnames = fieldnames)
-            self.writer.writeheader()
-            
+
         # Write the data for the current frame
         with self.lock:
+            # Automatically extract dictionary keys as the header row upon the first data entry
+            if self.writer is None:
+                fieldnames = list(data_dict.keys())
+                self.writer = csv.DictWriter(self.csv_file, fieldnames = fieldnames)
+                self.writer.writeheader()
             self.writer.writerow(data_dict)
             self.csv_file.flush()
             self.row_count += 1

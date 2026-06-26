@@ -53,12 +53,18 @@ class Controller():
 
     def _get_steer_rate(self, speed):
         # Linear interpolation between low and high speed
-        t = (speed - self.STEER_RISE_LOW) / (self.HIGH_SPEED - self.LOW_SPEED)
+        t = (speed - self.LOW_SPEED) / (self.HIGH_SPEED - self.LOW_SPEED)
         t = max(0.0, min(1.0, t))
         return self.STEER_RISE_LOW + t * (self.STEER_RISE_HIGH - self.STEER_RISE_LOW)
     
     def update_steer(self, delta, speed):
         rate = self._get_steer_rate(speed)
+        is_turning = self.handler.steer_left_pressed or self.handler.steer_right_pressed
+
+        # Double the steering rate when centering to improve responsiveness.
+        if not is_turning:
+            rate *= 2.0
+
         target = 0.0
         if self.handler.steer_left_pressed:
             target = 1.0
