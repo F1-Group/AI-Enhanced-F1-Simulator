@@ -1,9 +1,10 @@
-inputs==0.5
-pygame==2.6.1
+numpy==2.5.0
+pandas==3.0.3
 pynput==1.8.2
 pyobjc-core==12.2.1
 pyobjc-framework-ApplicationServices==12.2.1
 pyobjc-framework-Cocoa==12.2.1
 pyobjc-framework-CoreText==12.2.1
 pyobjc-framework-Quartz==12.2.1
+python-dateutil==2.9.0.post0
 six==1.17.0
