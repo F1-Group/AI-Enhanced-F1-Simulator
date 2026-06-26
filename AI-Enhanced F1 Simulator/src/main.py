@@ -16,7 +16,7 @@ def main():
     client_thread.start()
 
     try:
-        while client.status not in (GameStatus.ERROR, GameStatus.FINISHED):
+        while cache.get_status() not in (GameStatus.ERROR, GameStatus.FINISHED):
             # The main thread waits for this task or performs other work.
             time.sleep(1)
     except KeyboardInterrupt:

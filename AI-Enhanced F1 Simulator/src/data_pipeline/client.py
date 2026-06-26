@@ -146,13 +146,13 @@ class Client:
             try:
                 self.logger.close()
             except Exception as e:
-                print("Unexpected error occurred while closing the logger: {e}")
+                print(f"Unexpected error occurred while closing the logger: {e}")
 
         if hasattr(self, "handler") and self.handler:
             try:
                 self.handler.stop()
             except Exception as e:
-                print("Unexpected error occurred while stopping the handler: {e}")
+                print(f"Unexpected error occurred while stopping the handler: {e}")
 
     
     def start(self):
@@ -164,10 +164,10 @@ class Client:
                 self.logger.create_file()
                 self._loop()
         except KeyboardInterrupt:
-            self.status == GameStatus.ERROR
+            self.status = GameStatus.ERROR
             print("Keyboard interrupt. Lost connection to TORCS.")
         except Exception as e:
-            self.status == GameStatus.ERROR
+            self.status = GameStatus.ERROR
             print(f"Unexpected error: {e}")
         finally:
             self.stop()
