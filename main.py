@@ -36,16 +36,7 @@ questions = [
 
 for question in questions:
     user_prompt = build_user_prompt(fake_telemetry, question, track="monza")
-<<<<<<< HEAD
-    answer = ask_race_engineer(SYSTEM_PROMPT, user_prompt, question)
-    print(f"\nQ: {question}")
-    print(f"Race engineer: {answer}")
-
-print(ask_race_engineer(SYSTEM_PROMPT, "", "What's the weather like today?"))
-=======
     answer = ask_race_engineer(SYSTEM_PROMPT, user_prompt)
     is_valid, final_answer = apply_guardrail(question, answer)
     print(f"\nQ: {question}")
     print(f"Race engineer: {final_answer}")
-
->>>>>>> origin/main

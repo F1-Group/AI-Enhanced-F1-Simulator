@@ -16,20 +16,7 @@ model = ModelInference(
     project_id=os.getenv("GRANITE_PROJECT_ID")
 )
 
-RACING_KEYWORDS = [
-    "tyre", "tire", "pit", "lap", "brake", "throttle", "sector",
-    "corner", "speed", "fuel", "gap", "overtake", "DRS", "wear",
-    "strategy", "race", "turn", "apex", "understeer", "oversteer"
-]
-
-def is_racing_related(question):
-    question_lower = question.lower()
-    return any(keyword in question_lower for keyword in RACING_KEYWORDS)
-
-def ask_race_engineer(system_prompt, user_prompt, question):
-    if not is_racing_related(question):
-        return "I only provide racing analysis. Please ask a racing-related question."
-    
+def ask_race_engineer(system_prompt, user_prompt):
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt}
