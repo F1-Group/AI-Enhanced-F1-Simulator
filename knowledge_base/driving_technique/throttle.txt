@@ -1,15 +1,51 @@
-Throttle control is the management of accelerator input through and out of corners. Smooth and progressive throttle application is critical for maintaining tyre grip and car stability.
+Throttle Control and Traction Management in Racing
 
-The throttle application point is where the driver begins to apply the accelerator after braking. Applying throttle too early while still turning causes oversteer as weight transfers to the rear before the car is pointing straight. Applying throttle too late loses acceleration time onto the following straight.
+THE TRACTION CIRCLE
 
-Progressive throttle means gradually increasing the throttle input as the car straightens out of the corner. A sudden full throttle application on corner exit causes wheelspin, especially on worn tyres, which wastes time and damages the tyres further.
+The traction circle is the fundamental concept for understanding throttle control. A tyre has a given total amount of grip at any moment in time. This grip can be used for braking, acceleration, cornering, or any combination of these. The traction circle represents this total grip as a circular boundary. Points inside the circle are achievable. Points outside cause the tyre to lose grip and slide.
 
-Throttle on entry refers to using a small amount of throttle while still braking into a corner. This technique helps stabilise the car and maintain rear grip during the braking phase. It requires precise coordination between brake and throttle inputs.
+The x-axis of the traction circle represents lateral grip for cornering. The y-axis represents longitudinal grip for braking and acceleration. The key principle is that the less of one being used, the more grip is available for the other. A tyre at maximum cornering force has no remaining grip for acceleration or braking. A tyre at maximum acceleration has no remaining grip for steering.
 
-Average throttle application below 65 percent over a lap suggests the driver is being too cautious and lifting unnecessarily in sections where the car could carry more speed. This is a common issue in sim racing where drivers lack confidence in the car's grip limits.
+THROTTLE AND THE TRACTION CIRCLE
 
-Fuel saving can be achieved by lifting off the throttle early before braking zones and coasting into corners. This technique is commonly used at circuits with long straights such as Monza. Lifting 50 to 100 metres earlier than the braking point can save significant fuel without a major lap time penalty.
+When a car is cornering at maximum lateral grip, applying any throttle will exceed the total tyre grip and cause the tyre to slip. When a car is accelerating at maximum longitudinal grip on a straight, applying any steering input will exceed the total tyre grip and cause an instant spin.
 
-Tyre wear is directly affected by throttle application. Aggressive throttle on corner exit causes rear tyre wear through wheelspin. Managing throttle smoothly extends tyre life and maintains consistent lap times throughout a stint.
+This is why cornering technique generally calls for braking first, then turning, then accelerating in sequence, rather than combining them aggressively. The phases can overlap, but only within the boundary of the traction circle.
 
-High throttle application combined with high tyre wear suggests the driver is pushing the rear tyres hard. In this situation, reducing throttle aggressiveness on exit will preserve rear grip for the remaining laps.
+THROTTLE APPLICATION ON CORNER EXIT
+
+On corner exit, throttle is applied progressively as the steering lock is progressively unwound. As the car straightens, more of the traction circle becomes available for longitudinal acceleration. Applying full throttle before the steering is sufficiently unwound exceeds the traction circle boundary and causes wheelspin or a loss of rear traction.
+
+The earlier the driver can begin applying throttle after the apex, the higher the exit speed and the higher the top speed on the following straight. This is why the late apex strategy is valuable — it allows throttle application to begin sooner.
+
+NEUTRAL THROTTLE ZONE
+
+Between the turn-in point and the apex, the tyres are under maximum lateral load. No additional longitudinal force should be applied during this phase. The car should be in a neutral state — neither accelerating nor braking — to avoid exceeding the traction circle. Understeer or oversteer is most likely to occur if throttle or brakes are applied during this phase.
+
+PROGRESSIVE THROTTLE TECHNIQUE
+
+Throttle application should always be smooth and progressive, never sudden. A sudden full throttle application on corner exit applies longitudinal force faster than the tyre can manage, causing wheelspin, especially on worn or cold tyres. Progressive throttle application keeps the tyre within the traction circle boundary and produces faster and more consistent exits.
+
+Smooth throttle inputs also minimise rear tyre wear. Aggressive throttle causes rear wheelspin which accelerates tyre degradation and reduces grip for the remainder of the stint.
+
+THROTTLE AND WEIGHT TRANSFER
+
+Applying throttle transfers weight rearward, away from the front tyres. This reduces front tyre load and front grip. Applying throttle too early while still turning causes understeer as front grip decreases. The front tyres lose the ability to follow the intended line and the car pushes wide.
+
+The correct technique is to wait until the apex before beginning throttle application, and to increase throttle smoothly as the steering is progressively unwound. This ensures the front tyres retain enough load to maintain the line through the corner exit.
+
+COASTING AND FUEL SAVING
+
+Coasting is the technique of lifting off the throttle earlier than the normal braking point and using aerodynamic drag to slow the car to the desired corner entry speed. This saves fuel because the car is not accelerating for as long before the corner. However, coasting costs lap time for the same reason. It is used strategically when the driver has a sufficient gap to the car behind and needs to manage fuel consumption over a long stint.
+
+THROTTLE AND TYRE WEAR
+
+Aggressive throttle application on corner exit causes rear tyre wear through wheelspin. High average throttle application combined with high tyre wear indicates the driver is stressing the rear tyres heavily. Reducing throttle aggressiveness on corner exit will preserve rear grip and allow more consistent lap times through the remainder of the stint.
+
+Low average throttle application over a lap suggests the driver is lifting unnecessarily in sections where the car could carry more speed. This is a common issue where drivers lack confidence in the car's grip limits.
+
+FULL THROTTLE ZONES
+
+On straights, the driver should be at full throttle at all times. Any lift on a straight — unless for fuel management — means precious time and distance are being lost. Maximum throttle should be applied from the corner exit all the way to the next braking point.
+
+The point at which full throttle can be applied from corner exit depends on the severity of the corner, the tyre condition, and the car's balance. Some corners allow full throttle immediately after the apex. Others require a more gradual build-up due to the angle of the exit or the tyre load at that point.
