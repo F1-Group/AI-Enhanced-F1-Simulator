@@ -1,17 +1,39 @@
-Tyre wear is measured as a percentage of remaining tread. At 0 percent the tyre is completely worn out. At 100 percent the tyre is brand new. Tyre performance degrades as wear increases.
+Tyre Management in Formula 1 Racing
 
-Soft tyres provide the highest grip level but degrade the fastest. They are best used for short stints or qualifying laps. Significant grip loss begins at approximately 60 percent wear. At 40 percent wear the tyre is considered critically degraded and a pit stop should be considered immediately.
+DEGRADATION VS WEAR
 
-Medium tyres offer a balance between grip and durability. They are the most versatile compound and can be used for both short and long stints depending on the circuit. Grip loss becomes noticeable at approximately 50 percent wear.
+Degradation and wear are two distinct but linked concepts. Degradation is a thermal performance loss caused by the tyres overheating or underheating. Wear is the physical consumption of the tyre tread. Both must be managed simultaneously. Changes in setup can solve one problem but create an issue elsewhere. The goal is to extract maximum performance from the tyre without stressing its limitations.
 
-Hard tyres provide the lowest grip level but last the longest. They are best suited for long stints. Grip loss is gradual and becomes significant at approximately 80 percent wear. The hard tyre has a cliff edge degradation point where performance drops suddenly after extended use.
+TYRE OPERATING WINDOW
 
-Tyre temperature affects grip level. Cold tyres have less grip and are more prone to sliding. Drivers should warm up tyres gradually at the start of a stint by weaving on the straight and applying progressive inputs through corners.
+Modern F1 tyres have a relatively narrow optimal operating window. Tyre loads, running pressures, and temperatures must be controlled and monitored carefully. If the tyre is outside its operating window, grip falls off significantly. Getting the tyre to perform within its operating window is critical to both qualifying and race performance.
 
-Graining occurs when the tyre surface tears and forms small rubber balls on the tread. It is caused by aggressive driving on cold tyres or excessive sliding. Graining temporarily reduces grip but can clear after a few laps if the tyre temperature stabilises.
+TYRE GIVE-UP
 
-Blistering occurs when the tyre overheats and forms bubbles on the surface. It is caused by sustained high tyre temperatures and aggressive driving. Unlike graining, blistering permanently damages the tyre and cannot be recovered.
+For most racing tyres, the first one or two laps are the fastest laps those tyres will ever produce. After this initial peak, performance gradually degrades over the stint. Teams monitor this degradation trend using sector-by-sector timing data, which updates every few seconds and allows engineers to identify the precise moment the tyre compound begins losing performance.
 
-Managing tyre wear during a stint requires smooth driving inputs. Avoiding aggressive braking, early throttle application, and excessive steering movement all help extend tyre life. The goal is to maintain consistent lap times throughout the stint rather than going fast early and degrading quickly.
+Once a rival has pitted and switched to a different compound, engineers can immediately read the pace delta from their sector times and make informed decisions about when to pit their own driver.
 
-A tyre wear rate above expected suggests the driver is pushing too hard. Reducing aggression through high load corners and smoothing out throttle application on exit will extend the remaining tyre life.
+HEAT CYCLES
+
+Every heat cycle changes a tyre, generally making it harder, less flexible, and less adhesive. Race tyres can lose effectiveness before the tread wears through if they go through too many heat cycles. The first heat cycle is called scrubbing. After scrubbing, the tyre's rubber chemistry has changed and it will not return to its original state.
+
+TYRE WARM-UP
+
+Cold tyres have significantly less grip than tyres at operating temperature. At the start of a stint, drivers must warm up their tyres gradually. Aggressive inputs on cold tyres cause graining and can permanently damage the tyre's rubber surface before it has reached optimal temperature.
+
+GRAINING
+
+Graining occurs when the soft, adhesive tread surface digs into the track texture, deforms into waves, and as sliding continues the waves turn over, wearing rubber off the upstream side. The result is a grainy texture on the tyre surface that reduces grip.
+
+Graining is most likely to occur when the driver is overly aggressive on cold tyres, when the car has a poorly balanced setup with excess understeer, or when track grip levels are very low. A well-balanced car generates more even tyre loading and is less prone to graining. Once a graining pattern develops on a tyre surface, it is difficult to wear away.
+
+BLISTERING
+
+Blistering occurs when the tyre overheats internally. The heat is generated at the interface between the belt plies and the tread. When tyre temperature exceeds the compound's thermal limit, the rubber melts locally, forming a blister on the surface. Unlike graining, blistering permanently damages the tyre and cannot be recovered.
+
+Soft compound tyres are more prone to blistering because their lower wear rate means more heat is generated internally rather than being dissipated through rubber removal. High inflation pressures and high track temperatures increase the risk of blistering.
+
+ABRASION
+
+Abrasion occurs when the tyre slides over the track surface in a consistent direction. The rubber develops an array of nearly

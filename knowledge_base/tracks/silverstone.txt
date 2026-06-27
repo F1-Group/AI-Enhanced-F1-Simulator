@@ -1,13 +1,21 @@
-Copse (Turn 1) is a high-speed right-hander taken flat out in modern F1 cars. Any hesitation or lift here costs significant time and confidence through the following complex.
+Silverstone Circuit - Circuit Guide
 
-Maggotts, Becketts, and Chapel (Turns 3-7) is the most iconic section of Silverstone. This high-speed left-right-left sequence requires maximum commitment and precise steering inputs. The key is to maintain rhythm through the complex without upsetting the car balance. Understeer through Becketts is a common issue caused by too much front load.
+CIRCUIT OVERVIEW
 
-Stowe (Turn 9) is a high-speed right-hander at the end of the Hangar Straight. Braking is done in a straight line before turning in. Overshoot here leads to a very slow exit onto the Vale straight.
+Silverstone is located in Northamptonshire, England, and has hosted the British Grand Prix since 1950. The current 5.891 km, 18-corner layout was reconfigured in 2010 with a new Arena infield section. The circuit is regarded as one of the finest high-speed challenges in motorsport, featuring long flowing sections and the legendary Maggotts-Becketts-Chapel complex. Silverstone has two DRS zones on the Wellington Straight and the Hangar Straight.
 
-Club Corner (Turn 13) is the final corner before the start-finish straight. A late apex is critical to maximise acceleration onto the straight. This corner is heavily influenced by wind direction.
+CAR SETUP
 
-Silverstone is a high downforce circuit with high lateral loads through the fast corners. Rear tyre wear is the primary concern, especially through the Maggotts-Becketts complex. Managing rear degradation is key to a strong race pace.
+Silverstone is a high downforce circuit due to the numerous fast corners that require aerodynamic grip. The Maggotts-Becketts complex in particular demands strong lateral stability. Wind plays a major role at Silverstone and can change the handling balance significantly between laps. Rear tyre wear is the primary concern due to the high lateral loads through the fast corners.
 
-The circuit rewards smooth steering inputs. Aggressive corrections through the high-speed sections cause unnecessary tyre wear and slow the car down.
+TURN 1 — ABBEY
 
-Wind plays a major role at Silverstone. A headwind on the Hangar Straight reduces top speed significantly. Tailwinds can make Copse feel very different lap to lap.
+A flat-out right-hander taken in sixth gear in a modern F1 car. There is no need to brake. Position the car on the left of the track and begin turning just after the 100-metre board. Take as much inside kerb as possible without cutting the corner. The orange sausage kerbs are not large enough to significantly affect stability. Run wide to the left on exit which sets up the approach to Farm.
+
+TURN 2 — FARM
+
+A flat-out left-hand curve following Abbey. Keep steering smooth to avoid scrubbing tyres. The main objective is to stay tight to the left on exit to open up the entry for Village. Any running wide here compromises the entry to the first heavy braking zone.
+
+TURN 3 — VILLAGE
+
+The first heavy braking zone of the lap. A tight 90-degree right-hander taken in second gear. Brake hard from the 100-metre board and begin trail braking as the car passes the 50-metre board. Turn in from the trail braking phase. The key is to keep tight on the apex and get on the power

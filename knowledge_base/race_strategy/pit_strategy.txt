@@ -1,15 +1,53 @@
-A pit stop in Formula 1 costs approximately 20 to 25 seconds of track time. This includes the time lost driving through the pit lane at reduced speed and the time stationary in the pit box for the tyre change.
+Pit Stop Strategy in Formula 1
 
-The undercut is a strategy where a driver pits before the car ahead to gain track position. After fitting fresh tyres, the driver sets faster lap times while the competitor is still on worn tyres. When the competitor pits, the driver on fresh tyres may have built enough of a gap to emerge ahead. The undercut is most effective when the gap to the car ahead is between 2 and 4 seconds.
+FUNDAMENTAL PRINCIPLE
 
-The overcut is the opposite of the undercut. A driver stays out longer than the car behind, hoping that the car behind loses time in traffic after pitting or that the fresh tyres do not warm up quickly enough to make a difference. The overcut works best when the pit lane is slow or when tyre warm-up is difficult.
+A pit stop costs approximately 20 to 25 seconds of track time, including time lost driving through the pit lane at reduced speed and time stationary in the pit box for the tyre change. The decision of when to stop must therefore result in a net gain that exceeds this time cost to be worthwhile.
 
-The pit window refers to the range of laps during which it is optimal to make a pit stop. Pitting too early wastes the remaining life of the current tyres. Pitting too late risks tyre failure or excessive performance loss from degraded tyres.
+By stopping and fitting fresh tyres, a car can lap significantly faster, potentially recovering the time lost in the pit lane and emerging ahead of rivals. Teams run millions of computer simulations before each race to determine the optimal pit stop window and strategy.
 
-A gap of more than 4 seconds to the car behind is generally considered a safe margin to pit without losing track position. A gap of less than 2 seconds means the car behind may complete the undercut successfully.
+THE UNDERCUT
 
-The number of laps remaining affects pit stop decisions. With fewer than 10 laps remaining, a pit stop is rarely beneficial unless the current tyres are critically worn, as the time lost in the pit lane cannot be recovered.
+The undercut is a strategy where a driver pits before the car ahead to gain track position. After fitting fresh tyres, the driver sets faster lap times while the competitor is still on worn tyres. When the competitor eventually pits, the driver on fresh tyres may have built enough of a gap to emerge from the pit lane ahead.
 
-Fuel level affects race strategy. Running low on fuel reduces car weight and improves lap times. However, running out of fuel results in retirement. Monitoring fuel consumption per lap and adjusting throttle management accordingly is essential for finishing the race.
+The undercut is most effective when the gap to the car ahead is between 2 and 4 seconds. A gap smaller than this may not be enough to complete the undercut successfully. The ideal undercut window is a gap of 2 to 3 seconds to the car behind combined with a car ahead that is slowing on worn tyres.
 
-A one-stop strategy involves making a single pit stop during the race. This minimises time lost in the pit lane but requires careful tyre management to make the compounds last. A two-stop strategy involves two pit stops and allows the driver to use softer, faster compounds for more of the race at the cost of additional pit lane time.
+THE OVERCUT
+
+The overcut is the opposite of the undercut. A driver stays out longer than the car behind, hoping that the car behind loses time in traffic after pitting, or that the fresh tyres do not warm up quickly enough to generate a pace advantage. The overcut works best when the pit lane is slow, when tyre warm-up is difficult, or when the driver can extend their stint on a circuit where track position is more valuable than tyre performance.
+
+THE PIT WINDOW
+
+The pit window is the range of laps during which it is optimal to make a pit stop. Pitting too early wastes the remaining life of the current tyres. Pitting too late risks tyre failure or excessive performance loss from degraded tyres.
+
+A gap of more than 4 seconds to the car behind is generally considered a safe margin to pit without losing track position. A gap of less than 2 seconds means the car behind may complete the undercut successfully before you can re-emerge ahead.
+
+ONE-STOP VS TWO-STOP STRATEGY
+
+A one-stop strategy involves making a single pit stop during the race. This minimises total time lost in the pit lane but requires careful tyre management to make the compounds last the full stint length. A two-stop strategy involves two pit stops and allows the driver to use softer, faster compounds for more of the race at the cost of additional pit lane time.
+
+The choice between one and two stops depends on the circuit's tyre wear characteristics, the pace delta between tyre compounds, and the track position implications of the extra stop.
+
+LAPS REMAINING AND PIT STOP DECISIONS
+
+The number of laps remaining significantly affects pit stop decisions. With fewer than 10 laps remaining, a pit stop is rarely beneficial unless the current tyres are critically worn or failing, as the time lost in the pit lane cannot be recovered over the remaining race distance.
+
+With more than 20 laps remaining and worn tyres, a pit stop almost always produces a net benefit due to the compound performance delta over the remaining distance.
+
+FUEL MANAGEMENT AND STRATEGY
+
+Fuel load affects race strategy directly. A heavier fuel load at the start of the race adds approximately 0.3 seconds per lap for every 10 kilograms of fuel. As fuel burns off through the race, lap times naturally improve. Teams account for this when analysing true pace and planning pit stop timing.
+
+Running low on fuel reduces car weight and improves lap times. Fuel saving through throttle management and coasting can extend the stint length and delay a pit stop, or allow the team to use a more aggressive tyre strategy in the final laps when the car is at its lightest.
+
+SAFETY CAR AND VIRTUAL SAFETY CAR
+
+A Safety Car or Virtual Safety Car deployed during a race dramatically changes the pit stop calculation. When a Safety Car is deployed, all cars slow significantly, reducing the gap between competitors. Pitting under a Safety Car allows the driver to change tyres with minimal time loss relative to competitors, as the field is neutralised.
+
+Teams that react quickly to a Safety Car and pit immediately gain a significant strategic advantage, often making up multiple positions through smart strategy without any on-track overtaking required.
+
+STRATEGY SIMULATION
+
+Formula 1 teams use Monte Carlo simulation methods, running millions of virtual races with different parameters to determine the optimal pit stop strategy before each race weekend. These simulations account for tyre degradation rates, competitor strategies, safety car probability, weather forecasts, and traffic considerations.
+
+Game theory is also applied to anticipate how rival teams will react to different strategic decisions, allowing teams to modify their tactics in anticipation of competitor moves such as an undercut attempt.
