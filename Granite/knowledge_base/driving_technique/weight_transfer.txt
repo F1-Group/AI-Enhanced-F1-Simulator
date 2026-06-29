@@ -1,0 +1,41 @@
+Weight Transfer in Racing
+
+BASIC PRINCIPLES
+
+Weight transfer occurs when a car's weight distribution shifts during braking, cornering, or acceleration. When stationary, weight is distributed roughly evenly across all four wheels. During acceleration, weight transfers to the rear wheels. During braking, weight transfers to the front wheels. During cornering, weight transfers to the outside wheels — in a left turn, weight shifts to the two right-side wheels.
+
+Understanding weight transfer is the key to tuning car handling and to understanding understeer and oversteer behaviour.
+
+WEIGHT TRANSFER UNDER BRAKING
+
+During braking, the front suspension compresses and the rear becomes light as weight shifts forward. This increases front tyre grip and reduces rear tyre grip. If a driver turns into a corner while the car is still in this pitch condition, rear grip is the limiting factor — the rear will break traction before the front.
+
+Smoothly releasing the brakes before turn-in balances the platform, restoring grip to all four tyres and allowing a faster corner entry speed.
+
+WEIGHT TRANSFER UNDER CORNERING
+
+The total lateral weight transfer during cornering is determined by the vehicle mass, the centre of gravity height, and the track width. At mid-corner, the total amount of lateral weight transfer cannot be changed by any driving input — only its front-to-rear distribution can be influenced.
+
+Tyre grip increases with vertical load but in decreasing increments. This is called load sensitivity. A pair of tyres more unequally loaded has less total grip than two tyres more equally loaded. This means that the stiffer end of the car in roll transfers more weight and loses grip relative to the softer end.
+
+ROLL STIFFNESS AND BALANCE
+
+The front-to-rear distribution of weight transfer is controlled by roll stiffness — the combined stiffness of springs, anti-roll bars, and roll centre height at each end of the car. The stiffer end transfers more weight and loses grip. The softer end transfers less weight and retains more grip.
+
+Increasing front roll stiffness relative to the rear increases front weight transfer, reduces front grip relative to the rear, and produces understeer. Increasing rear roll stiffness relative to the front produces oversteer.
+
+It is the difference in stiffness between the two ends that determines balance. Increasing stiffness equally at both ends reduces roll angle but does not change the car's handling balance.
+
+GEOMETRIC VS ELASTIC WEIGHT TRANSFER
+
+Total weight transfer consists of three components. Non-suspended weight transfer comes from the weight of wheels, uprights, and brakes. Geometric weight transfer acts directly through the suspension linkages without inducing body roll. Elastic weight transfer acts through the springs and anti-roll bars and is the component that causes body roll.
+
+Low roll centres produce mostly elastic weight transfer, which is delayed as the body needs time to settle. High roll centres produce mostly geometric weight transfer, which acts immediately without body roll. In modern F1 cars with minimal suspension travel and high downforce, geometric weight transfer is a significant factor in car balance.
+
+WEIGHT TRANSFER AND DRIVING TECHNIQUE
+
+Smooth driving inputs minimise abrupt weight transfer, keeping the tyres as evenly loaded as possible. Abrupt braking, steering, or throttle inputs cause sudden weight shifts that overwhelm tyre grip and cause the car to lose balance.
+
+The goal in performance driving is to transition weight smoothly between the phases of braking, cornering, and acceleration, holding tyre traction at a constant level while only changing the direction in which that traction is being used.
+
+Aggressive corner entry with too much speed causes the tyres to exceed their traction limit under the combined load of braking and cornering forces. Progressive, smooth inputs allow the driver to stay near the traction limit throughout the corner without exceeding it.

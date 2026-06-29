@@ -1,0 +1,35 @@
+Track Position and Telemetry Data in Racing
+
+WHAT TRACK POSITION TELEMETRY CAPTURES
+
+Telemetry systems in racing electronically record the performance of the engine, status of the suspension, gearbox data, fuel status, all temperature readings including tyre temperature, g-forces, and actuation of controls by the driver. This data is used as a foundation for determining car setup and diagnosing problems.
+
+Each car has between 150 and 300 sensors. The exact number varies from track to track as sensors are added and removed depending on what is relevant for that specific circuit. Data is sent from the car to the garages using 1,000 to 2,000 telemetry channels.
+
+TRACK MAP AND POSITION DATA
+
+The ATLAS telemetry software automatically generates a track map based on lateral acceleration and track distance logged data. Corners are identified against thresholds of lateral acceleration. This allows engineers to pinpoint exactly where on the track time is being gained or lost.
+
+Telemetry data is presented relative to time or distance as the domain of the plot. When distance is used as the domain, engineers can directly overlay two drivers' laps and identify exactly which section of the track one driver is faster or slower than the other, down to individual corners and braking zones.
+
+READING TRACK POSITION DATA
+
+When a driver loses time in a specific corner, the telemetry trace will show this as a delta between their line and the reference lap at that exact distance point on the track. A driver losing 0.5 seconds in a sector means their inputs through that section are less optimal than the reference.
+
+Corners are identified on the track map by lateral acceleration thresholds. High lateral acceleration indicates a corner. Low lateral acceleration indicates a straight. This allows the system to automatically label and segment the track into sectors and corners for analysis.
+
+DIFFERENTIAL TUNING AND TRACK POSITION
+
+A large part of telemetry analysis time is spent working on the differential, the most tunable part of the car. The differential allows the two rear wheels to rotate at different speeds and can be adjusted for corner entry, mid-corner, and corner exit. Small changes to differential settings directly affect how the car rotates and how cleanly it exits each corner, which impacts track position and lap time.
+
+COMPARING LAPS USING TRACK POSITION
+
+The ATLAS system allows two drivers' data to be overlaid on a single display. Each car's data is identified by a different colour. Engineers use this overlay to compare braking points, throttle application, steering inputs, and corner exit speeds at the same track positions, identifying where one driver gains time over the other.
+
+By analysing where a driver is consistently slower than the reference lap across multiple laps, engineers and race engineers can identify recurring problem areas — for example, consistently losing time through a specific chicane — and provide targeted coaching advice to address that specific section of the track.
+
+TELEMETRY LATENCY AND DATA QUALITY
+
+The typical delay between data collection and reception at the garages is 2 milliseconds. This near-instant data allows race engineers to monitor driver performance and car health in real time during a session. For each race, the total amount of collected data is in the range of 1.5 billion samples.
+
+If a car enters a blind spot or tunnel, it continues collecting and storing data on its onboard memory. As soon as communication is restored, all stored data is transmitted immediately. This ensures no data gaps in post-session analysis.

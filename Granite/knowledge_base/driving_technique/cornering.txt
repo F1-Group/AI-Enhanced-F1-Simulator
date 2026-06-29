@@ -1,0 +1,63 @@
+Cornering Technique in Racing
+
+FUNDAMENTAL PRINCIPLE
+
+When taking corners, the aim is to keep the car balanced throughout the bend — balanced between the front and rear of the car. When driving near the limit of grip, weight must be spread as evenly as possible. Overloading the front or rear tyres causes grip loss. Lifting off the throttle or braking throws weight forward. Accelerating throws weight to the rear. A trailing semi-open throttle can keep the car balanced and allow the corner to be taken at the fastest possible speed.
+
+Braking during cornering is a critical mistake. Braking mid-corner upsets the cornering balance and nearly always causes problems. All significant braking must be completed before the turn-in point.
+
+THE TRACTION CIRCLE
+
+The traction circle is the fundamental principle of efficient cornering. A car's tyres have longitudinal grip for braking and acceleration, and lateral grip for cornering. Expert drivers overlap the different phases — braking, turning, and applying power — to keep the tyre working at maximum capacity at all times. The goal is to keep total tyre load as close to the limit as possible without exceeding it.
+
+OVERSTEER AND UNDERSTEER
+
+Understeer occurs when the front end loses grip first and the car pushes wide. Road cars are designed to understeer because it is more stable and predictable. Oversteer occurs when the rear end loses grip first and tries to overtake the front. Race cars are designed to oversteer because a skilled driver can carry more speed through corners this way. With use of steering, brakes, and throttle, a skilled driver can manage oversteer and prevent a spin.
+
+THE RACING LINE
+
+The racing line is the optimal path through a corner. The basic principle is that a straighter route through a corner allows higher speed. By using all the width of the track, the effective radius of the corner can be increased, reducing the cornering force required and allowing a higher minimum speed.
+
+The key reference points on a racing line are the braking point, the turn-in point, the apex, and the exit point. The position of the next corner also influences the choice of racing line through the current one.
+
+CORNER ZONES
+
+Every corner has three phases. The entry is where turning begins, starting from the turn-in point through the neutral throttle zone to the apex. The apex is the point where the car is closest to the inside of the corner. The exit is where the car straightens and accelerates back to full throttle.
+
+On the straights before a corner, the driver should be accelerating at full throttle up to the braking point. Any coasting loses time.
+
+THE TURN-IN POINT
+
+Steering input at turn-in must be smooth and progressive. The perfect corner involves tightening the steering gradually until the apex and then progressively unwinding the steering lock. If the driver needs to increase or correct the steering lock mid-corner after the initial turn-in, the wrong line has been taken. Turning in too early causes the car to run wide on exit. Turning in too late causes the apex to be missed.
+
+THE APEX
+
+The apex is the point where the car is closest to the inside of the corner. Hitting the apex correctly allows the car to take the straightest line and carry the highest speed through the corner. After the apex, the driver begins reducing steering lock and progressively applying throttle.
+
+There are two types of apex. The geometric apex is the physical midpoint of the corner. The racing apex can be early or late depending on the strategy being used.
+
+LATE APEX STRATEGY
+
+A late apex is generally the fastest strategy for corners that lead onto long straights. With a late apex, the driver turns in later than the geometric apex, which allows earlier and more aggressive throttle application on the corner exit. The entry speed is slightly lower than a geometric apex, but the exit speed is significantly higher, which benefits the following straight.
+
+The late apex effectively turns a corner followed by a straight into a tighter corner with a longer straight, giving more distance to accelerate to top speed.
+
+EARLY APEX STRATEGY
+
+An early apex is used when trying to outbrake an opponent from the inside or when the corner is followed by another corner rather than a long straight. With an early apex, entry speed is highest but exit speed is lowest. The car reaches the inside of the corner earlier but must run wide on exit.
+
+THE NEUTRAL THROTTLE ZONE
+
+Between the turn-in point and the apex, the tyres are under maximum lateral load. No additional demands should be placed on the tyres by accelerating or braking during this phase. The car should be in a neutral state — neither accelerating nor braking — until after the apex. Understeer or oversteer is most likely to occur at this point.
+
+POST-APEX ACCELERATION
+
+After the apex, steering lock is progressively reduced as throttle is progressively increased. The speed at which full throttle can be applied depends on the severity of the corner and the car's balance. By the time the car is on the exit, the driver should already be thinking about the next corner and positioning the car for the next turn-in point.
+
+THE INFLUENCE OF THE NEXT CORNER
+
+The position and direction of the next corner affects the apex choice for the current corner. If the next corner is a left-hander, the car needs to be positioned on the right side of the track on exit, requiring a later apex in the current corner. If the next corner is the same direction, an earlier apex may be appropriate. The optimal sequence through a combination of corners requires preparation and analysis before the session.
+
+HAIRPINS
+
+A hairpin is a corner that turns approximately 180 degrees. The late apex for a hairpin is approximately three-quarters of the way around the bend. The early apex is approximately one-quarter into the bend. Hairpins are typically the slowest corners on a circuit and the most common overtaking opportunities because of the long braking zone that precedes them.

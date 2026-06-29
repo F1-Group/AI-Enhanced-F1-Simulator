@@ -1,0 +1,39 @@
+Steering Angle and Technique in F1 Racing
+
+STEERING TECHNIQUE OVERVIEW
+
+There is no single best steering technique in racing. The key principle is adaptability — switching between different methods depending on the corner type, speed, and situation. Good steering technique is crucial for smooth driving because it prevents sudden lateral weight transfers, which allows corners to be taken at higher speed.
+
+F1 drivers such as Lewis Hamilton and Felipe Massa use a fixed-hand steering method, keeping their hands in a consistent position on the wheel and making smooth rotational inputs rather than shuffling the hands around the wheel.
+
+HAND POSITION
+
+The 15-to-3 hand position (equivalent to 9-and-3 on a clock) is the recommended grip for racing. It provides a clear sense of balance and control, allows a significant amount of steering input without shuffling, and gives the driver instant awareness of where the straight-ahead position is.
+
+The 10-to-2 position is more comfortable for relaxed driving but becomes a disadvantage when large steering inputs are required. The amount of steering possible from a fixed 10-to-2 position without shuffling or crossing hands is limited, and it utilises the shoulder muscles, requiring more effort.
+
+THE FANGIO SHUFFLE
+
+The Fangio Shuffle is a technique where the driver maintains a general 15-to-3 position but shuffles the hands into a better position before cornering begins, anticipating the turn in advance. This allows the driver to be "ahead of the curve" rather than reacting to the corner mid-way through.
+
+SMOOTH STEERING INPUTS
+
+When steering around a corner, the ideal movement is progressive, smooth, and controlled. Applying and removing steering lock should be done in a fluid movement. Aggressive or jerky steering inputs are avoided because they cause rapid weight transfer, which unsettles the car and reduces grip.
+
+Loading up the steering gently and gradually will cause the car to corner far more effectively than jerking the wheel. The momentum of the car still wants to carry it straight ahead during cornering — the front wheels must fight that force through the front tyres, and this works best with smooth progressive input.
+
+GRIP SENSITIVITY
+
+The grip on the steering wheel should be relaxed — just tight enough to maintain control. A tight grip tires the hands and arms quickly, and more importantly reduces sensitivity to the vibrations needed to sense and control the limits of the car. A relaxed grip increases traction awareness and improves understanding of the car's handling balance.
+
+APEX AND EXIT TECHNIQUE
+
+When approaching an apex, aim to turn in a smooth controlled arc rather than using aggressive steering. Once the apex is clipped, unwind the steering lock progressively while increasing the throttle. Applying throttle before the steering is sufficiently unwound causes wheelspin and rear instability.
+
+STEERING AND WEIGHT TRANSFER
+
+When the steering wheel is turned, the front wheels create a counter-force through the front tyres to cause the car to deviate from its straight-ahead path. Steering input directly influences where the car's weight is shifted, which in turn affects grip distribution across all four tyres. Sudden steering changes cause rapid weight transfer and can overwhelm tyre grip, causing understeer or oversteer.
+
+STEERING AS FEEDBACK
+
+The steering wheel is the primary source of feedback from the front tyres, suspension, and brakes. A relaxed grip allows the driver to feel vibrations and traction signals from the front tyres, which is critical for sensing the limits of grip and adjusting inputs accordingly.

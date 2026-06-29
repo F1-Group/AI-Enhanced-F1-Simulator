@@ -1,0 +1,49 @@
+Advanced Braking Techniques in Racing
+
+FUNDAMENTAL PRINCIPLE
+
+Braking and accelerating on a race track should be treated with smoothness and progressiveness, even in dry conditions. Total available traction is finite at any given point on the track. Some traction must always be reserved for gear changes, steering angle adjustments, and weight transfer. The driver must be smooth with the brakes into a corner and with the throttle coming out. A sharp change at these points will upset the car's traction balance as quickly as driving on ice.
+
+THE THREE PHASES OF COMPETITIVE BRAKING
+
+Phase 1 is the initial application. Braking begins with a rapid but not instantaneous application of as much braking force as possible. How quickly maximum braking can be applied depends on suspension stiffness and track surface. Stiffer springs allow a faster ramp-up. Softer springs require a longer and smoother ramp-up to keep the car stable.
+
+Phase 2 is the sustained braking zone. Once the car settles onto the front tyres, the goal is to minimise the length of the braking zone by taking the tyres to the edge of locking up without crossing that threshold. Careful attention to pedal feedback and steering wheel vibrations is essential to feel the fine difference between maximum grip and lock-up.
+
+Phase 3 is the release phase. Towards the end of the braking zone, the car has slowed to near its final speed. The driver downshifts to the appropriate gear and gradually releases brake pressure, making the transition from full to zero braking force as smooth as possible. A sudden release would abruptly reduce front tyre load, reducing front grip at the very moment it is needed for turn-in.
+
+TURN-IN SENSITIVITY
+
+The turn-in point is where the car is most sensitive to sudden weight transfer transitions. A last-second extra tap on the brakes, or a sudden release of the brake pedal, will unsettle the car's handling. As the braking zone concludes, some throttle must be applied to reach a neutral state between braking and acceleration before the apex.
+
+THRESHOLD BRAKING
+
+Threshold braking is the technique of controlling brake pedal pressure to maximise braking force without locking the wheels. The optimal braking force is achieved at the point when the tyre just begins to slip. Braking beyond this point causes the tyre to lock and slide, reducing grip and increasing stopping distance.
+
+Peak friction occurs between static and dynamic friction endpoints. Threshold braking aims to maintain tyre slip at the optimal value that produces maximum grip. A skilled driver can sense when the tyre is approaching lock-up through pedal vibration and steering wheel feedback, and hold that threshold position consistently.
+
+TRAIL BRAKING
+
+Trail braking is the technique of keeping the brakes applied beyond the entrance to a corner, gradually releasing brake pressure up to the apex. This creates weight transfer towards the front tyres, increasing their traction and reducing understeer on corner entry.
+
+Trail braking works best in decreasing-radius corners and slower corners where the car needs to rotate more aggressively. It is less appropriate in fast corners where quick steering action is needed and the driver should not have residual brake pressure unsettling the rear.
+
+For four-wheeled vehicles, trail braking requires an excellent feel for the car's behaviour and must be kept within tight limits. Excessive braking effort during trail braking causes heavy understeer. If brake bias is set too neutral, the rear wheels can lock, causing a spin.
+
+The longer the driver trails the brakes into a corner, the later the throttle application point. Since throttle is responsible for the car's ultimate stability and traction, it is desirable to begin throttle application as early as possible once the racing line is established.
+
+CADENCE BRAKING
+
+Cadence braking is the technique of pumping the brake pedal rapidly and deliberately to make the wheels lock and unlock in sequence. It is used to maintain steering control under heavy braking without ABS. The driver locks the wheels briefly, releases to regain steering, then reapplies and repeats until the braking zone is complete. While effective for maintaining steering control, cadence braking is less efficient at straight-line deceleration than sustained threshold braking.
+
+COASTING
+
+Coasting is a fuel-saving strategy where the driver lifts off the throttle earlier than the normal braking point and uses aerodynamic drag to slow the car to the desired corner entry speed, without applying the brakes. This saves fuel because the driver is not accelerating for as long, but it costs lap time for the same reason. It is used strategically when the driver has a sufficient gap to the car behind and needs to manage fuel consumption.
+
+BRAKING AND TYRE WEAR
+
+Worn tyres have less grip and require an earlier braking point. Drivers must adjust their braking reference points as tyre wear increases throughout a stint. Consistent late braking on worn tyres causes locking, flat spots, and further accelerated tyre degradation.
+
+BRAKE BALANCE
+
+Brake balance refers to the front-to-rear distribution of braking force. More front brake bias increases braking stability but risks front lock-up. More rear bias risks rear instability and spin. The optimal balance changes depending on fuel load, tyre wear, and track conditions, and drivers adjust it throughout a race session.

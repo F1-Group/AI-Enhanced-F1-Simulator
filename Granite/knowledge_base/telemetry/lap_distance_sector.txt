@@ -1,0 +1,41 @@
+Lap Distance, Sector Times, and Performance Analysis
+
+LAP DISTANCE AS A TELEMETRY DOMAIN
+
+Telemetry data can be plotted against either time or distance as the domain. When plotted against lap distance, engineers can directly compare two laps or two drivers at the exact same point on the track, regardless of how fast or slow each lap was. This makes distance-based analysis more useful than time-based analysis for identifying where time is lost.
+
+The ATLAS telemetry software automatically segments the track into corners and straights based on lateral acceleration data, and maps each data point to its corresponding distance along the lap. This allows precise identification of which corner or section of track is causing a performance deficit.
+
+SECTOR TIMES
+
+A lap is divided into three sectors. Sector 1 covers the first portion of the circuit from the start-finish line to the first timing point. Sector 2 covers the middle section between the first and second timing points. Sector 3 covers the final section from the second timing point back to the start-finish line.
+
+Sector times allow engineers to isolate performance issues to a specific part of the circuit without needing to analyse the entire lap. A driver losing time overall may be fast in Sector 1 and Sector 3 but consistently slow in Sector 2, which immediately focuses the coaching analysis on the corners in that sector.
+
+SECTOR TIME DELTA ANALYSIS
+
+The delta between a driver's sector time and the reference sector time indicates how much time is being lost or gained in that section of the track. A delta of more than 0.5 seconds in a single sector is considered a significant issue that requires targeted coaching intervention.
+
+Sector deltas are more informative than lap time deltas alone. A driver may have a competitive overall lap time but be masking a weakness in one sector with a strength in another. Sector analysis reveals these hidden imbalances.
+
+MINI SECTORS AND CORNER-BY-CORNER ANALYSIS
+
+Within each sector, the track can be further broken down into mini sectors or individual corner performance zones. Engineers can identify time loss down to individual corners, braking zones, and corner exit points.
+
+For coaching purposes, identifying the specific corner where time is consistently lost is more actionable than knowing only which sector is slow. For example, a driver losing 0.3 seconds in Sector 2 may be losing all of it in a single chicane, which can be addressed with a specific braking point adjustment.
+
+LAP DISTANCE AND BRAKING POINT REFERENCE
+
+Braking points in F1 are referenced by distance markers on the side of the track, typically placed at 50, 100, and 150 metre intervals before a braking zone. Telemetry shows the exact distance point at which the driver begins to apply the brakes on each lap.
+
+Inconsistent braking points across multiple laps indicate a driver who has not yet committed to a reference point. Consistent braking points that are later than the reference lap indicate the driver is braking too late and carrying too much speed into the corner. Consistent braking points that are earlier than the reference lap indicate the driver is being overly cautious and losing time on the straight.
+
+LAP COMPARISON AND IMPROVEMENT TRACKING
+
+By overlaying the current lap against the best lap reference, engineers can show the driver exactly where time was gained and where it was lost at every point along the lap distance. This visual comparison is one of the most powerful coaching tools available.
+
+Improvement over multiple sessions is tracked by comparing sector times and mini sector times across different runs. A driver improving their Sector 2 time by 0.3 seconds from session to session indicates the coaching advice is being applied effectively.
+
+FUEL LOAD EFFECT ON LAP TIMES
+
+Fuel load affects lap time throughout a race stint. Every 10 kilograms of fuel adds approximately 0.3 seconds per lap. As fuel burns off over a stint, lap times naturally improve even without a change in driving technique. When comparing laps, engineers account for the fuel load difference to isolate true driving performance changes from the natural improvement caused by a lighter car.
