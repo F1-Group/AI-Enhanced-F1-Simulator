@@ -4,25 +4,19 @@ from guardrail import apply_guardrail
 from coaching_style import get_system_prompt
 
 fake_telemetry = {
-    "timestamp": 45.3,
+    "lap_time": 88.3,
     "lap_distance": 1820.5,
     "speed_kmh": 212.4,
     "track_pos": 0.15,
     "angle": 0.03,
     "wheel_spin": 0.12,
-    "lap_time": 88.3,
-    "best_lap": 86.1,
-    "throttle": 0.68,
-    "brake": 0.45,
-    "steer": -0.12,
     "gear": 5,
     "rpm": 11200,
-    "sector_1": 28.3,
-    "sector_2": 35.1,
-    "sector_3": 24.9,
-    "laps_remaining": 18,
-    "gap_ahead": 2.1,
-    "gap_behind": 4.2
+    "race_pos": 3,     
+    "fuel": 45.2,        
+    "throttle": 0.68,
+    "brake": 0.45,
+    "steer": -0.12
 }
 
 questions = [
