@@ -67,7 +67,8 @@ class CSVLogger:
         if self.csv_file:
             self.csv_file.close()
             if self.row_count < 50:
-                os.remove(os.path.abspath(self.filename))
+                if os.path.exists(self.filename):
+                    os.remove(self.filename)
                 print(f"Too few data, file deleted")
                 return
             print(f"Data saved successfully and safely!")

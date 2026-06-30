@@ -4,8 +4,7 @@ def clean_my_data(raw_string):
     # Target fields for the first and second categories
     target_categories = [
         'curLapTime', 'distFromStart', 'speedX', 'trackPos', 
-        'angle', 'wheelSpinVel', 'throttle', 'brake', 
-        'steer', 'gear', 'rpm', 'racePos', 'fuel'
+        'angle', 'wheelSpinVel', 'gear', 'rpm', 'racePos', 'fuel'
     ]
 
     # Extract all (key value) pairs from the raw TORCS UDP packet

@@ -15,6 +15,7 @@ class Client:
         self.socket = None
         self.cache = cache
         self._status = None
+        self.has_passed_line = False
         self.controller = Controller(handler)
 
     # Getter: Safely expose the current status for internal read-only access
@@ -36,7 +37,7 @@ class Client:
         self.socket.settimeout(TIME_OUT)
 
     def _handshake(self):
-        initmsg='SCR(init -45 -19 -12 -7 -4 -2.5 -1.7 -1 -.5 0 .5 1 1.7 2.5 4 7 12 19 45)'
+        initmsg='SCR(init -90.0 -75.0 -50.0 -35.0 -20.0 -15.0 -10.0 -5.0 -1.0 0.0 1.0 5.0 10.0 15.0 20.0 35.0 50.0 75.0 90.0)'
         self.status = GameStatus.CONNECTING
         
         MAX_HANDSHAKE_WAIT = 120.0
@@ -63,7 +64,7 @@ class Client:
             f"(brake {state['brake']:.3f})",
             f"(steer {state['steer']:.3f})",
             f"(gear {state['gear']})",
-            f"(focus 0)",
+            f"(focus 360)",
             f"(meta 0)"
         ]
         return ' '.join(commands)
@@ -78,7 +79,7 @@ class Client:
 
         self.socket.settimeout(TIME_OUT)
         last_time = time.time()
-        has_passed_line = False
+        self.has_passed_line = False
         while self.status == GameStatus.RACING:
             try:
                 raw_data, _ = self.socket.recvfrom(4096)
@@ -116,11 +117,11 @@ class Client:
                     last_time = time.time()
                     continue
 
-                if not has_passed_line and current_lap_dist > 5000.0:
+                if not self.has_passed_line and current_lap_dist > 5000.0:
                     cleaned_packet['lap_distance'] = 0.0
 
-                if current_lap_dist > 0.0 and current_lap_dist < 100.0:
-                    has_passed_line = True
+                if 0.0 < current_lap_dist < 100.0:
+                    self.has_passed_line = True
 
                 self.cache.update_telemetry(cleaned_packet)
 
@@ -146,6 +147,7 @@ class Client:
         if hasattr(self, "logger") and self.logger:
             try:
                 self.logger.close()
+                print("The logger has been safely closed.")
             except Exception as e:
                 print(f"Unexpected error occurred while closing the logger: {e}")
 
@@ -179,5 +181,3 @@ class Client:
         if hasattr(self, "socket") and self.socket:
                 self.socket.close()
                 print("The socket connection has been safely released.")
-
-
