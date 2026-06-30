@@ -32,7 +32,7 @@ style = "aggressive"  # Could change to "supportive" or "technical"
 system_prompt = get_system_prompt(style)
 
 for question in questions:
-    user_prompt = build_user_prompt(fake_telemetry, question, track="monza")
+    user_prompt = build_user_prompt(fake_telemetry, question)
     answer = ask_race_engineer(system_prompt, user_prompt)
     is_valid, final_answer = apply_guardrail(question, answer)
     print(f"\nQ: {question}")
