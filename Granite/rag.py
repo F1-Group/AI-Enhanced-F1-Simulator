@@ -36,4 +36,5 @@ def retrieve(query, top_k=3):
     )
     return results['documents'][0]
 
-load_knowledge_base()
+if collection.count() == 0:
+    load_knowledge_base()
