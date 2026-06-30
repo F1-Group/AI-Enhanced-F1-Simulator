@@ -1,1 +1,0 @@
-/Users/chiujaysin/Desktop/Summer Project/AI-Enhanced-F1-Simulator/data/telemetry_20260627_003654.csv
