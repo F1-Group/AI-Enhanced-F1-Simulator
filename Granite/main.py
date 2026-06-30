@@ -1,28 +1,28 @@
-from prompts import SYSTEM_PROMPT, build_user_prompt
+from prompts import build_user_prompt
 from granite_client import ask_race_engineer
 from guardrail import apply_guardrail
+from coaching_style import get_system_prompt
 
-# Fake telemetry data (aligned with team schema)
 fake_telemetry = {
-    "timestamp": 45.3,          # seconds into current lap
-    "lap_distance": 1820.5,     # meters from start
-    "speed_kmh": 212.4,         # forward speed in km/h
-    "track_pos": 0.15,          # lateral offset from centerline (-1 to 1)
-    "angle": 0.03,              # angle between car and track direction
-    "wheel_spin": 0.12,         # wheel slip indicator
-    "lap_time": 88.3,           # current lap accumulated time (s)
-    "best_lap": 86.1,           # best lap reference (s)
-    "throttle": 0.68,           # throttle input (0.0 ~ 1.0)
-    "brake": 0.45,              # brake input (0.0 ~ 1.0)
-    "steer": -0.12,             # steering angle (-1.0 ~ 1.0)
-    "gear": 5,                  # current gear (-1 ~ 6)
-    "rpm": 11200,               # engine RPM
-    "sector_1": 28.3,           # sector 1 time (s)
-    "sector_2": 35.1,           # sector 2 time (s)
-    "sector_3": 24.9,           # sector 3 time (s)
-    "laps_remaining": 18,       # laps remaining in session
-    "gap_ahead": 2.1,           # gap to car ahead (s)
-    "gap_behind": 4.2           # gap to car behind (s)
+    "timestamp": 45.3,
+    "lap_distance": 1820.5,
+    "speed_kmh": 212.4,
+    "track_pos": 0.15,
+    "angle": 0.03,
+    "wheel_spin": 0.12,
+    "lap_time": 88.3,
+    "best_lap": 86.1,
+    "throttle": 0.68,
+    "brake": 0.45,
+    "steer": -0.12,
+    "gear": 5,
+    "rpm": 11200,
+    "sector_1": 28.3,
+    "sector_2": 35.1,
+    "sector_3": 24.9,
+    "laps_remaining": 18,
+    "gap_ahead": 2.1,
+    "gap_behind": 4.2
 }
 
 questions = [
@@ -34,9 +34,12 @@ questions = [
     "What's the weather like today?",
 ]
 
+style = "aggressive"  # Could change to "supportive" or "technical" 
+system_prompt = get_system_prompt(style)
+
 for question in questions:
     user_prompt = build_user_prompt(fake_telemetry, question, track="monza")
-    answer = ask_race_engineer(SYSTEM_PROMPT, user_prompt)
+    answer = ask_race_engineer(system_prompt, user_prompt)
     is_valid, final_answer = apply_guardrail(question, answer)
     print(f"\nQ: {question}")
     print(f"Race engineer: {final_answer}")
