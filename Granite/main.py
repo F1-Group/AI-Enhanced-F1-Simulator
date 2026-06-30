@@ -40,4 +40,3 @@ for question in questions:
     is_valid, final_answer = apply_guardrail(question, answer)
     print(f"\nQ: {question}")
     print(f"Race engineer: {final_answer}")
-

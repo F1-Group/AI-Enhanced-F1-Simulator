@@ -1,0 +1,43 @@
+Gear Shifting and RPM Management in Racing
+
+REV-MATCHING
+
+Rev-matching refers to matching the engine speed to the transmission input speed before re-engaging the clutch. This is particularly important when downshifting for a corner.
+
+When cornering near the limit, the suspension needs to remain stable and the tyres need to be fully loaded for cornering force. If the engine is at a different speed than the transmission input when the clutch is re-engaged, the resulting force on the driveline will upset the suspension stability through weight transfer and may cause the tyres to exceed their traction limit.
+
+Rev-matching is essential when cornering near the limit. It is not strictly required for slower corners but makes them smoother and more controlled.
+
+Rev-matching allows the driver to downshift at the last moment before entering a corner, after braking has begun and the car has slowed, so the engine speed when the lower gear is engaged will not be too high. It also ensures that maximum power is available the instant the brake pedal is released and the throttle is fully applied.
+
+UPSHIFTING
+
+When upshifting, both the engine and intermediate shaft naturally slow down, bringing them near the speed of the higher gear. Active rev-matching is rarely required for upshifts. The synchromesh handles the engagement automatically.
+
+When pulling away and shifting up through the gears, light pressure on the lever, smooth engagement, and fast execution are the three indicators of a good upshift. Only light pressure should be required on the lever. The shift should be smooth. The shift should be fast.
+
+DOWNSHIFTING
+
+When downshifting, the engine needs to spin faster to match the new gear. If the engine is not manually sped up before re-engaging the clutch, it will be forced up to speed by the driveline. This is acceptable in normal driving but when cornering near the limit it upsets the suspension and tyre adhesion.
+
+There are three scenarios for downshifting. Downshifting without braking from an established speed, downshifting while braking then re-accelerating in a straight line, and downshifting while braking to enter a corner. The third scenario is the most demanding and requires the most precise rev-matching.
+
+The downshift cannot be done before braking because the car's initial speed would cause the engine to over-rev. The downshift must be completed before entering the corner, which means it must be done during the braking phase. The engine must be sped up to rev-match the new gear so that the tyres are not jerked past their traction limit.
+
+DOUBLE CLUTCHING
+
+Double clutching is a technique for rev-matching the transmission's intermediate shaft to the output gear to be selected. The process involves disengaging the clutch, shifting to neutral, re-engaging the clutch to take control of the intermediate shaft speed, blipping the throttle to match speed, disengaging the clutch again, shifting into the target gear, and re-engaging the clutch with power applied.
+
+Aggressive downshifts such as fifth to second from high speed benefit from double-clutching to assist the synchromesh. Shifting into first gear in a tight hairpin is nearly impossible without double-clutching and precise heel-and-toe technique, especially if the corner exit is uphill.
+
+HOW SHIFTING AFFECTS CORNERING
+
+If there is any jerking of the driveline when cornering near the limit, the additional load imposed on the tyres even momentarily will cause the traction limit to be exceeded. The key principle is to hold the level of tyre traction constant while changing only its direction from braking to cornering to acceleration.
+
+Most performance corners require a reduction in speed and a downshift of one or more gears so that the car is in the correct gear to accelerate out of the corner. The shift must be completed before the steering wheel begins to turn. As the clutch is re-engaged on corner entry, the throttle should be held at the level appropriate for maximum cornering force.
+
+GEAR SELECTION AND RPM
+
+Keeping the engine in a high RPM range maximises acceleration. Using too low a gear results in poor power delivery and slower acceleration out of corners. Gear ratios are selected by teams to optimise acceleration out of corners and top speed on straights depending on the circuit characteristics.
+
+A petrol engine has a limited power output bandwidth across the RPM range. Different gear ratios are necessary to extend the car's useful operating speed range and maximise available acceleration at different track speeds.
