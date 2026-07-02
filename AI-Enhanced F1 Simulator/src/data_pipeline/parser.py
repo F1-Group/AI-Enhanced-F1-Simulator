@@ -4,8 +4,7 @@ def clean_my_data(raw_string):
     # Target fields for the first and second categories
     target_categories = [
         'curLapTime', 'distFromStart', 'speedX', 'trackPos', 
-        'angle', 'wheelSpinVel', 'throttle', 'brake', 
-        'steer', 'gear', 'rpm', 'racePos', 'fuel'
+        'angle', 'wheelSpinVel', 'gear', 'rpm', 'racePos', 'fuel'
     ]
 
     # Extract all (key value) pairs from the raw TORCS UDP packet
@@ -24,9 +23,8 @@ def clean_my_data(raw_string):
     # Start data cleaning, unit conversion, and construct the final snake_case dictionary
     cleaned_data = {}
 
-    # Timeline and lap time (converted from curLapTime)
+    # Lap time (converted from curLapTime)
     cur_lap_time = float(raw_data.get('curLapTime', 0.0))
-    cleaned_data['timestamp'] = cur_lap_time
     cleaned_data['lap_time'] = cur_lap_time
 
     # Spatial axis
@@ -48,11 +46,6 @@ def clean_my_data(raw_string):
         cleaned_data['wheel_spin'] = wheel_avg
     else:
         cleaned_data['wheel_spin'] = 0.0
-
-    # Driver inputs
-    cleaned_data['throttle'] = float(raw_data.get('throttle', 0.0))
-    cleaned_data['brake'] = float(raw_data.get('brake', 0.0))
-    cleaned_data['steer'] = float(raw_data.get('steer', 0.0))
 
     # Engine and gear (converted to int and float according to specifications)
     cleaned_data['gear'] = int(raw_data.get('gear', 0))

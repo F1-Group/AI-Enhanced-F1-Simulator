@@ -253,3 +253,8 @@ $RECYCLE.BIN/
 .directory
 .Trash-*
 .nfs*
+
+# Data
+*.csv
+data/
+
