@@ -158,6 +158,14 @@ class AudioManager:
             return self.play(tag, priority=priority, interrupt=interrupt)
 
         if audio_file:
+            # Dynamic tags (e.g. T9_late_braking) share one clip per error
+            # type, so apply the cooldown on the shared audio key to stop the
+            # same clip spamming back-to-back from a single report.
+            cooldown_key = error.get("audio_key") or audio_file
+            now = time.time()
+            if now - self._last_played.get(cooldown_key, 0) < self.cooldown_seconds:
+                return False
+            self._last_played[cooldown_key] = now
             return self.play_sound(audio_file, priority=priority, interrupt=interrupt)
 
         print(f"Invalid error object, missing tag or audio_file: {error}")
