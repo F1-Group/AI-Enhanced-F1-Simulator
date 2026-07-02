@@ -99,7 +99,7 @@ for question in questions:
     user_prompt = build_user_prompt(
         fake_telemetry,
         question,
-        track="monza",
+        track="olethros_road_1",
         knowledge=knowledge_context,
         errors=mock_errors
     )
