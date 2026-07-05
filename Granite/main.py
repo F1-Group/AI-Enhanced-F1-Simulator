@@ -1,5 +1,8 @@
 import sys
 import os
+import json
+import glob
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from prompts import build_user_prompt
@@ -10,6 +13,69 @@ from rag import retrieve, load_knowledge_base
 
 # Load knowledge base on startup
 load_knowledge_base()
+
+
+def load_errors(error_report_path=None):
+    """
+    Load error objects from Team 2's error report JSON.
+    Falls back to mock errors if no real report is available.
+    """
+    # Try to find the latest error report from Team 2
+    if error_report_path is None:
+        reports = glob.glob("../data/error_report_lap*.json")
+        if reports:
+            error_report_path = sorted(reports)[-1]  # use latest
+
+    if error_report_path and os.path.exists(error_report_path):
+        with open(error_report_path, 'r') as f:
+            errors = json.load(f)
+        print(f"Loaded {len(errors)} errors from {error_report_path}")
+        return errors
+
+    # Fall back to mock errors if no real report found
+    print("No error report found, using mock errors for testing.")
+    return [
+        {
+            "tag": "T1_late_braking",
+            "corner": "T1",
+            "type": "late_braking",
+            "severity": "high",
+            "confidence": 0.85,
+            "coaching_hint": "Brake about 25m earlier before T1 to stabilise corner entry.",
+            "evidence": {
+                "expert_brake_point_m": 275.0,
+                "player_brake_point_m": 300.0,
+                "braked_late_by_m": 25.0,
+                "entry_overspeed_kmh": 18.3
+            }
+        },
+        {
+            "tag": "T5_poor_corner_exit",
+            "corner": "T5",
+            "type": "poor_corner_exit",
+            "severity": "medium",
+            "confidence": 0.75,
+            "coaching_hint": "Get on the throttle earlier out of T5; you are exiting 14 km/h slower than the baseline.",
+            "evidence": {
+                "exit_speed_deficit_kmh": 14.0,
+                "mean_throttle_gap": -0.18
+            }
+        },
+        {
+            "tag": "S2_time_loss",
+            "corner": "Sector 2",
+            "type": "sector_time_loss",
+            "severity": "medium",
+            "confidence": 0.70,
+            "coaching_hint": "You lost about 2.1s in Sector 2; focus on corners T4-T6.",
+            "evidence": {
+                "time_loss_s": 2.1,
+                "sector_start_m": 1500.0,
+                "sector_end_m": 3500.0
+            }
+        }
+    ]
+
 
 # Fake telemetry data (aligned with team schema)
 fake_telemetry = {
@@ -34,49 +100,6 @@ fake_telemetry = {
     "gap_behind": 4.2
 }
 
-# Mock errors from Analysis team (error_detection.py format)
-mock_errors = [
-    {
-        "tag": "T1_late_braking",
-        "corner": "T1",
-        "type": "late_braking",
-        "severity": "high",
-        "confidence": 0.85,
-        "coaching_hint": "Brake about 25m earlier before T1 to stabilise corner entry.",
-        "evidence": {
-            "expert_brake_point_m": 275.0,
-            "player_brake_point_m": 300.0,
-            "braked_late_by_m": 25.0,
-            "entry_overspeed_kmh": 18.3
-        }
-    },
-    {
-        "tag": "T5_poor_corner_exit",
-        "corner": "T5",
-        "type": "poor_corner_exit",
-        "severity": "medium",
-        "confidence": 0.75,
-        "coaching_hint": "Get on the throttle earlier out of T5; you are exiting 14 km/h slower than the baseline.",
-        "evidence": {
-            "exit_speed_deficit_kmh": 14.0,
-            "mean_throttle_gap": -0.18
-        }
-    },
-    {
-        "tag": "S2_time_loss",
-        "corner": "Sector 2",
-        "type": "sector_time_loss",
-        "severity": "medium",
-        "confidence": 0.70,
-        "coaching_hint": "You lost about 2.1s in Sector 2; focus on Lesmos and Ascari.",
-        "evidence": {
-            "time_loss_s": 2.1,
-            "sector_start_m": 1500.0,
-            "sector_end_m": 3500.0
-        }
-    }
-]
-
 questions = [
     "Should I pit now?",
     "Why am I losing time in Sector 2?",
@@ -85,6 +108,9 @@ questions = [
     "What's my biggest weakness this lap?",
     "What's the weather like today?",
 ]
+
+# Load errors (real or mock)
+errors = load_errors()
 
 # Coaching style: aggressive / supportive / technical
 style = "technical"
@@ -101,11 +127,11 @@ for question in questions:
         question,
         track="olethros_road_1",
         knowledge=knowledge_context,
-        errors=mock_errors
+        errors=errors
     )
 
     answer = ask_race_engineer(system_prompt, user_prompt)
-    result = apply_guardrail(question, answer, error=mock_errors[0] if mock_errors else None)
+    result = apply_guardrail(question, answer, error=errors[0] if errors else None)
 
     print(f"\nQ: {question}")
     print(f"Race engineer: {result['feedback']}")
