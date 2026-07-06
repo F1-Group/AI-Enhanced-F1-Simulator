@@ -25,6 +25,29 @@ DEFAULT_EXPERT = PROJECT_ROOT / "data/expert_data/expert_olethros_road_1_3laps.c
 LATEST_POINTER = PROJECT_ROOT / "data/latest_data.txt"
 
 
+def session_id_from(player_path):
+    """A stable per-session id for report filenames, taken from Team 1's
+    telemetry_<timestamp>.csv naming so reports from different sessions can
+    never overwrite each other."""
+    stem = Path(player_path).stem
+    if stem.startswith("telemetry_"):
+        return stem.removeprefix("telemetry_")
+    return datetime.now().strftime("%Y%m%d_%H%M%S")
+
+
+def write_report(report, output):
+    """Write a report atomically (temp file + rename).
+
+    Team 4's UI polls these files, so a report must never be readable in a
+    half-written state; os.replace/Path.replace is atomic on one filesystem.
+    """
+    output = Path(output)
+    tmp = output.with_name(output.name + ".tmp")
+    tmp.write_text(json.dumps(report, indent=2))
+    tmp.replace(output)
+    return output
+
+
 def latest_player_file():
     """Resolve the newest player CSV, preferring Team 1's latest_data.txt pointer."""
     if LATEST_POINTER.exists():
@@ -39,15 +62,62 @@ def latest_player_file():
     return candidates[-1]
 
 
+# The 13 fields of Team 1's CSV schema, in order - exactly what Team 3's
+# build_user_prompt(telemetry, question) expects.
+TELEMETRY_FIELDS = ["lap_time", "lap_distance", "speed_kmh", "track_pos", "angle",
+                    "wheel_spin", "gear", "rpm", "race_pos", "fuel",
+                    "throttle", "brake", "steer"]
+
+
+def _attach_telemetry_snapshots(report, player_lap):
+    """Give each error the player's telemetry frame at the error location,
+    so Team 3 can feed it straight into build_user_prompt()."""
+    # Mid-write reads can leave NaN in the last row(s); a NaN snapshot would
+    # crash int() or put an invalid NaN token into the JSON report.
+    valid_rows = player_lap.dropna(subset=TELEMETRY_FIELDS)
+    if valid_rows.empty:
+        return
+
+    apex_by_corner = {c["name"]: c["apex_m"] for c in report["corners_detected"]}
+    for error in report["errors"]:
+        evidence = error.get("evidence", {})
+        if error["corner"] in apex_by_corner:
+            anchor = apex_by_corner[error["corner"]]
+        elif "sector_start_m" in evidence:
+            anchor = (evidence["sector_start_m"] + evidence["sector_end_m"]) / 2
+        else:
+            continue
+        row = valid_rows.loc[(valid_rows["lap_distance"] - anchor).abs().idxmin()]
+        error["telemetry"] = {
+            field: (int(row[field]) if field in ("gear", "race_pos")
+                    else round(float(row[field]), 4))
+            for field in TELEMETRY_FIELDS
+        }
+
+
+STANDING_START_KMH = 30.0
+
+
+def _is_standing_start(lap):
+    """A lap that begins from (near) standstill. Measured from the data, not
+    from the lap's position in the file - a recording can start mid-session.
+
+    Uses the median of the first ~0.5 s (25 frames at 50 Hz) so that a single
+    glitched or interpolated frame can never flip the baseline choice.
+    """
+    return float(lap["speed_kmh"].head(25).median()) < STANDING_START_KMH
+
+
 def analyse_lap(player_lap, expert_laps, lap_number=1, track="olethros_road_1"):
     """Full slow-layer pass for one player lap. Returns the error report dict."""
     track_length = max(lap["lap_distance"].max() for lap in expert_laps)
     grid = distance_grid(track_length)
 
-    # A player's lap 1 is a standing start, so it is only fair to compare it
-    # against the expert's standing-start lap. Later laps are flying laps and
-    # get the averaged lap 2+ baseline recommended in the Data Handover doc.
-    if lap_number == 1 or len(expert_laps) == 1:
+    # A standing-start lap is only fairly compared against the expert's own
+    # standing-start lap (lap 1). Flying laps get the averaged lap 2+
+    # baseline recommended in the Data Handover doc.
+    standing = _is_standing_start(player_lap)
+    if standing or len(expert_laps) == 1:
         baseline = build_baseline(expert_laps[:1], grid)
     else:
         baseline = build_baseline(expert_laps[1:], grid)
@@ -57,17 +127,20 @@ def analyse_lap(player_lap, expert_laps, lap_number=1, track="olethros_road_1"):
     corners = detect_corners(baseline)
     errors = detect_errors(deltas, corners, track_length)
 
-    return {
+    report = {
         "source": "team2_slow_layer",
         "template_id": "team2_error_template_v3",
         "track": track,
         "lap_number": lap_number,
+        "baseline_type": "standing_start" if standing or len(expert_laps) == 1 else "flying",
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "player_lap_time_s": round(float(player_lap["lap_time"].max()), 2),
         "expert_lap_time_s": round(float(baseline["lap_time"].iloc[-1]), 2),
         "corners_detected": corners,
         "errors": errors,
-    }, deltas
+    }
+    _attach_telemetry_snapshots(report, player_lap)
+    return report, deltas
 
 
 def main():
@@ -120,9 +193,12 @@ def main():
             # laps' reports are not overwritten.
             base = Path(args.output)
             output = base.with_stem(f"{base.stem}_lap{lap_number}")
+        elif args.output:
+            output = args.output
         else:
-            output = args.output or (PROJECT_ROOT / "data" / f"error_report_lap{lap_number}.json")
-        Path(output).write_text(json.dumps(report, indent=2))
+            session = session_id_from(player_path)
+            output = PROJECT_ROOT / "data" / f"error_report_{session}_lap{lap_number}.json"
+        write_report(report, output)
         print(f"Report written to {output}")
 
 

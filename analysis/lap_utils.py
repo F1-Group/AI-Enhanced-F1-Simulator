@@ -10,24 +10,32 @@ Data characteristics (see Data Handover doc):
 import numpy as np
 import pandas as pd
 
-# Values above this are physically impossible for our car and are treated
-# as sensor glitches (collisions can spike speed_kmh past 1000).
-SPEED_MAX_VALID = 300.0
+# Sanity bound for speed_kmh: comfortably above the highest reading seen in
+# normal driving (~510 in the expert recordings), so it only catches clear
+# collision sensor spikes (which exceed 1000).
+SPEED_MAX_VALID = 600.0
 
 # A lap reset shows up as lap_distance suddenly dropping by (almost) a full
 # track length. Any backwards jump bigger than this is treated as a new lap.
 LAP_RESET_DROP_M = 500.0
 
 
-def load_telemetry(path):
-    """Read a telemetry CSV and clean out physically impossible values."""
-    df = pd.read_csv(path)
+def clean_telemetry(df):
+    """Clean collision sensor spikes out of the speed column.
 
+    The speed_kmh values are taken as recorded (Team 1 has confirmed the
+    telemetry and parser are correct); only readings outside the plausible
+    range are treated as glitches and interpolated over.
+    """
     spikes = (df["speed_kmh"] < 0.0) | (df["speed_kmh"] > SPEED_MAX_VALID)
     df.loc[spikes, "speed_kmh"] = np.nan
     df["speed_kmh"] = df["speed_kmh"].interpolate(limit_direction="both")
-
     return df
+
+
+def load_telemetry(path):
+    """Read a telemetry CSV and clean out physically impossible values."""
+    return clean_telemetry(pd.read_csv(path))
 
 
 def _lap_ids(df, reset_drop_m):

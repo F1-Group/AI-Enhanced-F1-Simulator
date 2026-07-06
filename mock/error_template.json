@@ -4,8 +4,8 @@
   "lap_number": 1,
   "source": "team_2_error_schema",
   "description": "Driving error schema for Team 2 detection (analysis/), Team 3 Granite prompt generation, and AudioManager playback.",
-  "schema_note": "Each error defines a driving issue, its priority, whether it can interrupt active audio, the related telemetry fields for Granite, and the audio file used by AudioManager. Real reports produced by analysis/run_analysis.py follow this exact schema and add an extra 'evidence' object with measured telemetry values.",
-  "tag_convention": "Slow-layer tags are generated dynamically as {corner}_{type} (e.g. T9_poor_corner_exit, S2_time_loss). The track has 9 auto-detected corners (T1-T9) and 3 sectors (S1-S3). Audio files are shared per type (audio/{type}.wav), so any corner's error maps to one of the files below.",
+  "schema_note": "Each error defines a driving issue, its priority, whether it can interrupt active audio, the related telemetry fields for Granite, and the audio file used by AudioManager. Real reports (data/error_report_<session>_lap<N>.json, written atomically) follow this exact schema and add two extra objects per error: 'evidence' (measured values, e.g. braked_late_by_m) and 'telemetry' (the player's 13-field frame at the error location, ready for Team 3's build_user_prompt).",
+  "tag_convention": "Corner tags are generated dynamically as {corner}_{type} (e.g. T9_poor_corner_exit) across the 9 auto-detected corners T1-T9. Sector tags use the short form S{n}_time_loss (S1-S3). Audio files are shared per type (audio/{type}.wav), so any corner's error maps to one of the files below.",
   "errors": [
     {
       "tag": "T1_late_braking",

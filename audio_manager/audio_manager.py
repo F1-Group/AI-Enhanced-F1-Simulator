@@ -171,6 +171,26 @@ class AudioManager:
         print(f"Invalid error object, missing tag or audio_file: {error}")
         return False
 
+    def wait_until_idle(self, timeout=None):
+        """Block until every queued clip has finished playing.
+
+        Meant for graceful shutdown after a session ends (so the final
+        coaching clips are not cut off) - never call it from a real-time
+        path. Returns False if the timeout expired first.
+
+        unfinished_tasks only reaches 0 after the worker's task_done(),
+        which runs once a clip's playback has fully completed, so this also
+        covers a clip that was already dequeued and is still playing.
+        """
+        deadline = None if timeout is None else time.time() + timeout
+        while self._running:
+            if self._audio_queue.unfinished_tasks == 0 and not pygame.mixer.get_busy():
+                return True
+            if deadline is not None and time.time() >= deadline:
+                return False
+            time.sleep(0.1)
+        return False
+
     def stop_all(self):
         pygame.mixer.stop()
 
