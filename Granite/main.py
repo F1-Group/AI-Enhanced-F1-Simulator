@@ -10,6 +10,7 @@ from granite_client import ask_race_engineer
 from guardrail import apply_guardrail
 from coaching_style import get_system_prompt
 from rag import retrieve, load_knowledge_base
+from tts import generate_wav
 
 # Load knowledge base on startup
 load_knowledge_base()
@@ -136,3 +137,15 @@ for question in questions:
     print(f"\nQ: {question}")
     print(f"Race engineer: {result['feedback']}")
     print(f"Output JSON: {result}")
+
+# TTS — convert Granite's response to audio and send to Team 2
+    if result.get('is_valid', False):
+        wav_path = generate_wav(result['feedback'])
+        print(f"TTS saved: {wav_path}")
+
+        # Save output JSON for Team 4 (Frontend)
+        import json
+        os.makedirs("data", exist_ok=True)
+        with open("data/latest_coaching.json", "w") as f:
+            json.dump(result, f, indent=2)
+        print(f"Coaching output saved to data/latest_coaching.json")
