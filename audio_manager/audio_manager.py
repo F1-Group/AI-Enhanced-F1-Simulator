@@ -158,9 +158,37 @@ class AudioManager:
             return self.play(tag, priority=priority, interrupt=interrupt)
 
         if audio_file:
+            # Dynamic tags (e.g. T9_late_braking) share one clip per error
+            # type, so apply the cooldown on the shared audio key to stop the
+            # same clip spamming back-to-back from a single report.
+            cooldown_key = error.get("audio_key") or audio_file
+            now = time.time()
+            if now - self._last_played.get(cooldown_key, 0) < self.cooldown_seconds:
+                return False
+            self._last_played[cooldown_key] = now
             return self.play_sound(audio_file, priority=priority, interrupt=interrupt)
 
         print(f"Invalid error object, missing tag or audio_file: {error}")
+        return False
+
+    def wait_until_idle(self, timeout=None):
+        """Block until every queued clip has finished playing.
+
+        Meant for graceful shutdown after a session ends (so the final
+        coaching clips are not cut off) - never call it from a real-time
+        path. Returns False if the timeout expired first.
+
+        unfinished_tasks only reaches 0 after the worker's task_done(),
+        which runs once a clip's playback has fully completed, so this also
+        covers a clip that was already dequeued and is still playing.
+        """
+        deadline = None if timeout is None else time.time() + timeout
+        while self._running:
+            if self._audio_queue.unfinished_tasks == 0 and not pygame.mixer.get_busy():
+                return True
+            if deadline is not None and time.time() >= deadline:
+                return False
+            time.sleep(0.1)
         return False
 
     def stop_all(self):
