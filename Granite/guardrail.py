@@ -1,9 +1,7 @@
-# guardrail.py
-# Filters input questions and output responses for the F1 coaching system
+import json
 
 # ─── INPUT GUARDRAIL ───────────────────────────────────────────────────────────
 
-# Keywords that are NOT related to F1 / racing
 BLOCKED_TOPICS = [
     "weather", "politics", "food", "music", "movie", "sport",
     "football", "basketball", "cricket", "tennis",
@@ -11,7 +9,6 @@ BLOCKED_TOPICS = [
     "joke", "poem", "story", "recipe"
 ]
 
-# Keywords that confirm the question IS related to F1 / racing
 RACING_KEYWORDS = [
     "lap", "sector", "tyre", "tire", "brake", "throttle", "gear",
     "speed", "corner", "pit", "overtake", "drs", "fuel", "stint",
@@ -20,22 +17,13 @@ RACING_KEYWORDS = [
 ]
 
 def validate_input(question: str):
-    """
-    Check if the question is related to F1 / racing.
-    Returns (is_valid: bool, error_message: str or None)
-    """
     question_lower = question.lower()
-
-    # Block if contains non-racing topics
     for topic in BLOCKED_TOPICS:
         if topic in question_lower:
             return False, f"I can only answer questions related to racing. Please ask about your lap, tyres, strategy, or driving technique."
-
-    # Warn if no racing keywords found
     has_racing_keyword = any(kw in question_lower for kw in RACING_KEYWORDS)
     if not has_racing_keyword and len(question.split()) > 3:
         return False, "Please ask a question related to your current race or driving performance."
-
     return True, None
 
 
@@ -43,7 +31,6 @@ def validate_input(question: str):
 
 MAX_WORDS = 40
 
-# Phrases that indicate Granite gave a bad response
 INVALID_PHRASES = [
     "i don't know",
     "i cannot",
@@ -57,55 +44,75 @@ INVALID_PHRASES = [
     "it's important to note"
 ]
 
-# Fallback responses if Granite gives a bad response
 FALLBACK_RESPONSES = {
     "default": "Focus on your braking points and maintain consistent throttle application through the corners.",
-    "wheel_spin": "Reduce throttle past the apex to minimise wheelspin and preserve rear tyre grip.",
-    "heavy_braking": "Move your braking point 10 meters earlier and trail brake into the apex.",
-    "track_limit": "Use a later apex to open the corner exit and avoid running wide.",
-    "misaligned": "Reduce steering input and wait for the car to settle before applying throttle.",
+    "late_braking": "Move your braking point earlier and trail brake into the apex.",
+    "poor_corner_exit": "Apply throttle earlier and more progressively on corner exit.",
+    "poor_track_position": "Follow the racing line more closely and avoid large steering corrections.",
+    "unstable_throttle": "Use one smooth throttle application instead of pumping the pedal.",
+    "sector_time_loss": "Focus on the key corners in the slow sector to recover time.",
 }
 
-def validate_output(response: str, event_type: str = "default"):
-    """
-    Check if Granite's response is valid.
-    Returns (is_valid: bool, cleaned_response: str)
-    """
-    # Check for invalid phrases
+def validate_output(response: str, error_type: str = "default"):
     response_lower = response.lower()
     for phrase in INVALID_PHRASES:
         if phrase in response_lower:
-            return False, FALLBACK_RESPONSES.get(event_type, FALLBACK_RESPONSES["default"])
-
-    # Check if response is too long
+            return False, FALLBACK_RESPONSES.get(error_type, FALLBACK_RESPONSES["default"])
     word_count = len(response.split())
     if word_count > MAX_WORDS:
-        # Truncate to first two sentences
         sentences = response.split('.')
         truncated = '. '.join(sentences[:2]).strip()
         if truncated and not truncated.endswith('.'):
             truncated += '.'
         return True, truncated
-
-    # Check if response is too short (probably useless)
     if word_count < 3:
-        return False, FALLBACK_RESPONSES.get(event_type, FALLBACK_RESPONSES["default"])
-
+        return False, FALLBACK_RESPONSES.get(error_type, FALLBACK_RESPONSES["default"])
     return True, response
 
 
-# ─── COMBINED GUARDRAIL ────────────────────────────────────────────────────────
+# ─── JSON OUTPUT FOR UI TEAM ──────────────────────────────────────────────────
 
-def apply_guardrail(question: str, response: str, event_type: str = "default"):
+def apply_guardrail(question: str, response: str, error: dict = None):
     """
-    Apply both input and output guardrails.
-    Returns (is_valid: bool, final_response: str)
+    Apply guardrails and return a JSON object for the UI team.
+
+    Args:
+        question: driver's question
+        response: Granite's raw response
+        error: optional error dict from error_detection.py
+
+    Returns:
+        dict: structured JSON output for UI team
     """
+    error_type = error.get("type", "default") if error else "default"
+    corner = error.get("corner", None) if error else None
+    severity = error.get("severity", None) if error else None
+
     # Check input
     input_valid, input_error = validate_input(question)
     if not input_valid:
-        return False, input_error
+        return {
+            "is_valid": False,
+            "feedback": input_error,
+            "error_type": None,
+            "severity": None,
+            "corner": None,
+            "question": question
+        }
 
     # Check output
-    output_valid, cleaned_response = validate_output(response, event_type)
-    return output_valid, cleaned_response
+    output_valid, cleaned_response = validate_output(response, error_type)
+
+    return {
+        "is_valid": output_valid,
+        "feedback": cleaned_response,
+        "error_type": error_type,
+        "severity": severity,
+        "corner": corner,
+        "question": question
+    }
+
+
+def apply_guardrail_json(question: str, response: str, error: dict = None) -> str:
+    """Same as apply_guardrail but returns a JSON string."""
+    return json.dumps(apply_guardrail(question, response, error), indent=2)
