@@ -13,16 +13,17 @@ import argparse
 import json
 from datetime import datetime
 from pathlib import Path
-
+import os
 import pandas as pd
 
 from .alignment import align_nearest, build_baseline, compute_deltas, distance_grid
 from .error_detection import detect_corners, detect_errors
 from .lap_utils import load_telemetry, split_laps
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_EXPERT = PROJECT_ROOT / "data/expert_data/expert_olethros_road_1_3laps.csv"
-LATEST_POINTER = PROJECT_ROOT / "data/latest_data.txt"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+DEFAULT_EXPERT = PROJECT_ROOT / "data" / "expert_data" / "expert_olethros_road_1_3laps.csv"
+LATEST_POINTER = PROJECT_ROOT / "data" / "latest_data.txt"
+ERROR_REPORT_DIR_PATH = PROJECT_ROOT / "data" / "error_report"
 
 
 def session_id_from(player_path):
@@ -153,6 +154,7 @@ def main():
     player_path = Path(args.player_csv) if args.player_csv else latest_player_file()
     expert_laps = split_laps(load_telemetry(args.expert))
 
+
     # Team 1's logger creates the CSV (and the latest_data.txt pointer) the
     # moment a recording starts, so the file may still be empty or mid-lap.
     try:
@@ -197,7 +199,7 @@ def main():
             output = args.output
         else:
             session = session_id_from(player_path)
-            output = PROJECT_ROOT / "data" / f"error_report_{session}_lap{lap_number}.json"
+            output = ERROR_REPORT_DIR_PATH / f"error_report_{session}_lap{lap_number}.json"
         write_report(report, output)
         print(f"Report written to {output}")
 

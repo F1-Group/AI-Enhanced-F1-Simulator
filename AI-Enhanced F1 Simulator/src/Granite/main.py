@@ -1,7 +1,6 @@
 import sys
 import os
 import json
-import glob
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -11,10 +10,13 @@ from guardrail import apply_guardrail
 from coaching_style import get_system_prompt
 from rag import retrieve, load_knowledge_base
 from tts import generate_wav
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+ERROR_REPORT_DIR_PATH = PROJECT_ROOT / "data" / "error_report"
 
 # Load knowledge base on startup
 load_knowledge_base()
-
 
 def load_errors(error_report_path=None):
     """
@@ -23,7 +25,7 @@ def load_errors(error_report_path=None):
     """
     # Try to find the latest error report from Team 2
     if error_report_path is None:
-        reports = glob.glob("../data/error_report_lap*.json")
+        reports = list(ERROR_REPORT_DIR_PATH.glob("error_report_*.json"))
         if reports:
             error_report_path = sorted(reports)[-1]  # use latest
 
@@ -145,7 +147,7 @@ for question in questions:
 
         # Save output JSON for Team 4 (Frontend)
         import json
-        os.makedirs("data", exist_ok=True)
-        with open("data/latest_coaching.json", "w") as f:
+        os.makedirs(PROJECT_ROOT / "data", exist_ok=True)
+        with open(PROJECT_ROOT / "data" / "latest_coaching.json", "w") as f:
             json.dump(result, f, indent=2)
         print(f"Coaching output saved to data/latest_coaching.json")

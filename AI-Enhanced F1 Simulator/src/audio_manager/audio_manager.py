@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pygame
 
-DEFAULT_TEMPLATE_PATH = "mock/error_template.json"
+DEFAULT_TEMPLATE_PATH = Path(__file__).resolve().parent.parent.parent / "mock" / "error_template.json"
 COOLDOWN_SECONDS = 4.0
 
 PRIORITY_ORDER = {
@@ -22,7 +22,7 @@ class AudioManager:
     """Priority-based audio manager for fast and slow coaching layers."""
 
     def __init__(self, template_path=DEFAULT_TEMPLATE_PATH, cooldown_seconds=COOLDOWN_SECONDS):
-        self.project_root = Path(__file__).resolve().parent.parent
+        self.project_root = Path(__file__).resolve().parent.parent.parent
         self.template_path = self.project_root / template_path
         self.cooldown_seconds = cooldown_seconds
 

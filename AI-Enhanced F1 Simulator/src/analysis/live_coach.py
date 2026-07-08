@@ -21,7 +21,7 @@ import queue
 import threading
 import time
 from pathlib import Path
-
+import os
 import pandas as pd
 
 from .fast_layer import FastLayer
@@ -29,8 +29,8 @@ from .alignment import build_baseline, distance_grid
 from .error_detection import detect_corners
 from .granite_adapter import coach_report
 from .lap_utils import LAP_RESET_DROP_M, clean_telemetry, load_telemetry, split_laps
-from .run_analysis import (DEFAULT_EXPERT, LATEST_POINTER, PROJECT_ROOT,
-                           TELEMETRY_FIELDS, analyse_lap, session_id_from,
+from .run_analysis import (DEFAULT_EXPERT, LATEST_POINTER,
+                           TELEMETRY_FIELDS, ERROR_REPORT_DIR_PATH, analyse_lap, session_id_from,
                            write_report)
 
 POLL_S = 0.05
@@ -138,7 +138,8 @@ class LiveCoach:
         self.lap_number += 1
         report, _ = analyse_lap(lap, self.expert_laps, lap_number=self.lap_number)
 
-        output = write_report(report, PROJECT_ROOT / "data" /
+        os.makedirs(ERROR_REPORT_DIR_PATH, exist_ok = True)
+        output = write_report(report, ERROR_REPORT_DIR_PATH /
                               f"error_report_{self.session_id}_lap{self.lap_number}.json")
         print(f"\n[coach] Lap {self.lap_number} finished: "
               f"{report['player_lap_time_s']}s vs expert {report['expert_lap_time_s']}s, "

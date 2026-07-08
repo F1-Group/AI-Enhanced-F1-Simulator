@@ -3,7 +3,9 @@ import time
 from dotenv import load_dotenv
 from ibm_watsonx_ai import Credentials
 from ibm_watsonx_ai.foundation_models import ModelInference
-
+# Clear all proxy server settings that might interfere with httpx
+os.environ.pop("HTTP_PROXY", None)
+os.environ.pop("HTTPS_PROXY", None)
 load_dotenv()
 
 credentials = Credentials(

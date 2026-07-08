@@ -6,9 +6,12 @@ and passes it to Team 2's Audio Manager for playback.
 
 import pyttsx3
 import os
+from pathlib import Path
+
 
 # Output directory for generated audio files
-AUDIO_OUTPUT_DIR = "audio"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+AUDIO_OUTPUT_DIR = PROJECT_ROOT / "audio"
 OUTPUT_FILENAME = "granite_coaching_output.wav"
 
 
@@ -19,7 +22,6 @@ def generate_wav(text: str, filename: str = OUTPUT_FILENAME) -> str:
     """
     # Make sure audio/ folder exists
     os.makedirs(AUDIO_OUTPUT_DIR, exist_ok=True)
-    
     output_path = os.path.join(AUDIO_OUTPUT_DIR, filename)
     
     engine = pyttsx3.init()

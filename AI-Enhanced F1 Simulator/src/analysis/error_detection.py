@@ -15,7 +15,7 @@ import pandas as pd
 # mock/error_template.json is the cross-team contract: it owns each error
 # type's layer/priority/interrupt/audio so Team 3 and the AudioManager can
 # tune them in one place. Detection thresholds stay in this module.
-TEMPLATE_PATH = Path(__file__).resolve().parent.parent / "mock" / "error_template.json"
+TEMPLATE_PATH = Path(__file__).resolve().parent.parent.parent / "mock" / "error_template.json"
 
 
 def _load_type_defaults():
