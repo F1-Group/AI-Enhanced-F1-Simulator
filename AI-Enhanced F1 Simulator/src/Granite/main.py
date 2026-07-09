@@ -1,8 +1,6 @@
 import sys
 import os
 import json
-import glob
-import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -32,7 +30,7 @@ def load_errors(error_report_path=None):
     """
 
     if error_report_path is None:
-        reports = glob.glob("../data/error_report_lap*.json")
+        reports = list(ERROR_REPORT_DIR_PATH.glob("error_report_*.json"))
         if reports:
             error_report_path = sorted(reports)[-1]
 
@@ -142,12 +140,16 @@ for error in errors:
     if result.get('is_valid', False):
         # TTS — convert Granite's response to .wav
         wav_path = generate_wav(result['feedback'])
+
+        # Convert relative path to absolute path
+        wav_path = Path(__file__).resolve().parent / wav_path
+
         print(f"TTS saved: {wav_path}")
 
         # Send .wav to Team 2's Audio Manager and wait for playback
         audio_manager.stop_all()
         audio_manager._clear_queue()
-        audio_manager.play_sound(wav_path, priority="slow")
+        audio_manager.play_sound(str(wav_path), priority="slow")
         print(f"Audio queued for playback")
         audio_manager._audio_queue.join()
 
