@@ -3,9 +3,14 @@ import os
 from datetime import datetime
 import threading
 import pandas as pd
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+LATEST_POINTER = PROJECT_ROOT / "data" / "latest_data.txt"
+
 
 class CSVLogger:
-    def __init__(self, output_dir = "data"):
+    def __init__(self, output_dir = PROJECT_ROOT / "data" / "player_data"):
         self.output_dir = output_dir
         self.filename = None
         self.writer = None
@@ -28,7 +33,7 @@ class CSVLogger:
         # Immediately write the absolute path to the latest indicator file upon creation.
         indicator_path = os.path.join(self.output_dir, "latest_data.txt")
         absolute_path = os.path.abspath(self.filename)
-        with open(indicator_path, "w", encoding="utf-8") as f:
+        with open(LATEST_POINTER, "w", encoding="utf-8") as f:
             f.write(absolute_path)
 
     def log_row(self, data_dict):
@@ -47,7 +52,7 @@ class CSVLogger:
             self.csv_file.flush()
             self.row_count += 1
         # Update log on the same terminal line for real-time feedback without cluttering the screen
-        #print(f"\n[LOG] Recording... Rows written: {self.row_count} (Timeline: {data_dict.get('lap_time', 0)}s)", end = "\r")
+        # print(f"\n[LOG] Recording... Rows written: {self.row_count} (Timeline: {data_dict.get('lap_time', 0)}s)", end = "\r")
 
     def safe_read_csv(self):
         """Real-time read interface exposed for invocation by other groups within the same process."""
