@@ -1,26 +1,144 @@
 {
+  "source": "team2_slow_layer",
   "template_id": "team2_error_template_v3",
   "track": "olethros_road_1",
   "lap_number": 1,
-  "source": "team_2_error_schema",
-  "description": "Driving error schema for Team 2 detection (analysis/), Team 3 Granite prompt generation, and AudioManager playback.",
-  "schema_note": "Each error defines a driving issue, its priority, whether it can interrupt active audio, the related telemetry fields for Granite, and the audio file used by AudioManager. Real reports (data/error_report_<session>_lap<N>.json, written atomically) follow this exact schema and add two extra objects per error: 'evidence' (measured values, e.g. braked_late_by_m) and 'telemetry' (the player's 13-field frame at the error location, ready for Team 3's build_user_prompt).",
-  "tag_convention": "Corner tags are generated dynamically as {corner}_{type} (e.g. T9_poor_corner_exit) across the 9 auto-detected corners T1-T9. Sector tags use the short form S{n}_time_loss (S1-S3). Audio files are shared per type (audio/{type}.wav), so any corner's error maps to one of the files below.",
+  "baseline_type": "standing_start",
+  "generated_at": "2026-07-06T00:16:15",
+  "player_lap_time_s": 276.91,
+  "expert_lap_time_s": 175.49,
+  "corners_detected": [
+    {
+      "name": "T1",
+      "start_m": 535.0,
+      "end_m": 620.0,
+      "apex_m": 610.0
+    },
+    {
+      "name": "T2",
+      "start_m": 700.0,
+      "end_m": 820.0,
+      "apex_m": 795.0
+    },
+    {
+      "name": "T3",
+      "start_m": 2805.0,
+      "end_m": 2870.0,
+      "apex_m": 2815.0
+    },
+    {
+      "name": "T4",
+      "start_m": 3155.0,
+      "end_m": 3185.0,
+      "apex_m": 3185.0
+    },
+    {
+      "name": "T5",
+      "start_m": 3395.0,
+      "end_m": 3435.0,
+      "apex_m": 3435.0
+    },
+    {
+      "name": "T6",
+      "start_m": 3510.0,
+      "end_m": 3565.0,
+      "apex_m": 3550.0
+    },
+    {
+      "name": "T7",
+      "start_m": 3650.0,
+      "end_m": 3700.0,
+      "apex_m": 3660.0
+    },
+    {
+      "name": "T8",
+      "start_m": 4110.0,
+      "end_m": 4165.0,
+      "apex_m": 4165.0
+    },
+    {
+      "name": "T9",
+      "start_m": 4770.0,
+      "end_m": 4975.0,
+      "apex_m": 4965.0
+    }
+  ],
   "errors": [
     {
-      "tag": "T1_late_braking",
+      "tag": "T1_poor_corner_exit",
       "layer": "slow",
       "priority": "high",
       "interrupt": false,
       "corner": "T1",
-      "type": "late_braking",
+      "type": "poor_corner_exit",
       "severity": "high",
-      "confidence": 0.9,
-      "related_metrics_granite": ["brake", "speed_kmh", "lap_distance"],
-      "message": "Late braking detected at Turn 1.",
-      "coaching_hint": "Brake earlier before Turn 1 and release the brake more smoothly to improve corner entry stability.",
-      "audio_key": "late_braking",
-      "audio_file": "audio/late_braking.wav"
+      "confidence": 0.95,
+      "related_metrics_granite": [
+        "throttle",
+        "speed_kmh",
+        "wheel_spin"
+      ],
+      "message": "Poor corner exit detected at T1.",
+      "coaching_hint": "Get on the throttle earlier and more progressively out of T1; you are exiting about 58 km/h slower than the baseline.",
+      "audio_key": "poor_corner_exit",
+      "audio_file": "audio/poor_corner_exit.wav",
+      "evidence": {
+        "exit_speed_deficit_kmh": 57.8,
+        "mean_throttle_gap": 0.25
+      },
+      "telemetry": {
+        "lap_time": 14.69,
+        "lap_distance": 610.228,
+        "speed_kmh": 499.5828,
+        "track_pos": -0.4062,
+        "angle": 0.184,
+        "wheel_spin": 120.287,
+        "gear": 4,
+        "rpm": 9508.29,
+        "race_pos": 1,
+        "fuel": 99.5235,
+        "throttle": 0.0,
+        "brake": 0.0,
+        "steer": 0.3761
+      }
+    },
+    {
+      "tag": "T2_poor_corner_exit",
+      "layer": "slow",
+      "priority": "high",
+      "interrupt": false,
+      "corner": "T2",
+      "type": "poor_corner_exit",
+      "severity": "high",
+      "confidence": 0.95,
+      "related_metrics_granite": [
+        "throttle",
+        "speed_kmh",
+        "wheel_spin"
+      ],
+      "message": "Poor corner exit detected at T2.",
+      "coaching_hint": "Get on the throttle earlier and more progressively out of T2; you are exiting about 156 km/h slower than the baseline.",
+      "audio_key": "poor_corner_exit",
+      "audio_file": "audio/poor_corner_exit.wav",
+      "evidence": {
+        "exit_speed_deficit_kmh": 156.2,
+        "mean_throttle_gap": -0.03
+      },
+      "telemetry": {
+        "lap_time": 20.566,
+        "lap_distance": 794.848,
+        "speed_kmh": 308.7572,
+        "track_pos": -1.6652,
+        "angle": -0.0862,
+        "wheel_spin": 77.273,
+        "gear": 4,
+        "rpm": 6373.84,
+        "race_pos": 1,
+        "fuel": 99.5136,
+        "throttle": 0.0664,
+        "brake": 0.0,
+        "steer": 0.0
+      }
     },
     {
       "tag": "T3_poor_corner_exit",
@@ -29,43 +147,301 @@
       "interrupt": false,
       "corner": "T3",
       "type": "poor_corner_exit",
-      "severity": "medium",
-      "confidence": 0.85,
-      "related_metrics_granite": ["throttle", "speed_kmh", "wheel_spin"],
-      "message": "Poor corner exit detected at Turn 3.",
-      "coaching_hint": "Apply throttle more progressively on corner exit to reduce wheel spin and improve acceleration.",
+      "severity": "high",
+      "confidence": 0.95,
+      "related_metrics_granite": [
+        "throttle",
+        "speed_kmh",
+        "wheel_spin"
+      ],
+      "message": "Poor corner exit detected at T3.",
+      "coaching_hint": "Get on the throttle earlier and more progressively out of T3; you are exiting about 352 km/h slower than the baseline.",
       "audio_key": "poor_corner_exit",
-      "audio_file": "audio/poor_corner_exit.wav"
+      "audio_file": "audio/poor_corner_exit.wav",
+      "evidence": {
+        "exit_speed_deficit_kmh": 352.1,
+        "mean_throttle_gap": -0.02
+      },
+      "telemetry": {
+        "lap_time": 78.99,
+        "lap_distance": 2815.09,
+        "speed_kmh": 363.4308,
+        "track_pos": 0.1451,
+        "angle": -0.0353,
+        "wheel_spin": 91.4112,
+        "gear": 4,
+        "rpm": 7585.55,
+        "race_pos": 1,
+        "fuel": 98.6857,
+        "throttle": 0.4154,
+        "brake": 0.0,
+        "steer": -0.1244
+      }
     },
     {
-      "tag": "T7_poor_track_position",
+      "tag": "T3_poor_track_position",
       "layer": "slow",
       "priority": "normal",
       "interrupt": false,
-      "corner": "T7",
+      "corner": "T3",
       "type": "poor_track_position",
-      "severity": "medium",
-      "confidence": 0.82,
-      "related_metrics_granite": ["track_pos", "angle", "steer"],
-      "message": "The car appears to be off the ideal racing line at Turn 7.",
-      "coaching_hint": "Keep the car closer to the ideal racing line and avoid excessive steering correction.",
+      "severity": "high",
+      "confidence": 0.95,
+      "related_metrics_granite": [
+        "track_pos",
+        "angle",
+        "steer"
+      ],
+      "message": "The car is off the ideal racing line at T3.",
+      "coaching_hint": "Follow the baseline line through T3 more closely and avoid large steering corrections.",
       "audio_key": "poor_track_position",
-      "audio_file": "audio/poor_track_position.wav"
+      "audio_file": "audio/poor_track_position.wav",
+      "evidence": {
+        "mean_track_pos_gap": 1.15
+      },
+      "telemetry": {
+        "lap_time": 78.99,
+        "lap_distance": 2815.09,
+        "speed_kmh": 363.4308,
+        "track_pos": 0.1451,
+        "angle": -0.0353,
+        "wheel_spin": 91.4112,
+        "gear": 4,
+        "rpm": 7585.55,
+        "race_pos": 1,
+        "fuel": 98.6857,
+        "throttle": 0.4154,
+        "brake": 0.0,
+        "steer": -0.1244
+      }
     },
     {
-      "tag": "T5_unstable_throttle",
+      "tag": "T4_poor_corner_exit",
       "layer": "slow",
-      "priority": "normal",
+      "priority": "high",
+      "interrupt": false,
+      "corner": "T4",
+      "type": "poor_corner_exit",
+      "severity": "high",
+      "confidence": 0.95,
+      "related_metrics_granite": [
+        "throttle",
+        "speed_kmh",
+        "wheel_spin"
+      ],
+      "message": "Poor corner exit detected at T4.",
+      "coaching_hint": "Get on the throttle earlier and more progressively out of T4; you are exiting about 193 km/h slower than the baseline.",
+      "audio_key": "poor_corner_exit",
+      "audio_file": "audio/poor_corner_exit.wav",
+      "evidence": {
+        "exit_speed_deficit_kmh": 192.6,
+        "mean_throttle_gap": -0.17
+      },
+      "telemetry": {
+        "lap_time": 104.224,
+        "lap_distance": 3184.76,
+        "speed_kmh": 361.3572,
+        "track_pos": 1.6913,
+        "angle": 0.1067,
+        "wheel_spin": 90.2967,
+        "gear": 4,
+        "rpm": 7432.02,
+        "race_pos": 1,
+        "fuel": 98.5204,
+        "throttle": 0.0,
+        "brake": 0.0,
+        "steer": 0.0
+      }
+    },
+    {
+      "tag": "T5_poor_corner_exit",
+      "layer": "slow",
+      "priority": "high",
       "interrupt": false,
       "corner": "T5",
-      "type": "unstable_throttle",
-      "severity": "low",
-      "confidence": 0.75,
-      "related_metrics_granite": ["throttle", "wheel_spin", "speed_kmh"],
-      "message": "Unstable throttle control detected at Turn 5.",
-      "coaching_hint": "Use a smoother throttle input at Turn 5 to keep the car stable and avoid unnecessary wheel spin.",
-      "audio_key": "unstable_throttle",
-      "audio_file": "audio/unstable_throttle.wav"
+      "type": "poor_corner_exit",
+      "severity": "high",
+      "confidence": 0.95,
+      "related_metrics_granite": [
+        "throttle",
+        "speed_kmh",
+        "wheel_spin"
+      ],
+      "message": "Poor corner exit detected at T5.",
+      "coaching_hint": "Get on the throttle earlier and more progressively out of T5; you are exiting about 237 km/h slower than the baseline.",
+      "audio_key": "poor_corner_exit",
+      "audio_file": "audio/poor_corner_exit.wav",
+      "evidence": {
+        "exit_speed_deficit_kmh": 236.7,
+        "mean_throttle_gap": 0.05
+      },
+      "telemetry": {
+        "lap_time": 119.25,
+        "lap_distance": 3435.31,
+        "speed_kmh": 375.6096,
+        "track_pos": -0.4394,
+        "angle": 0.2318,
+        "wheel_spin": 94.6184,
+        "gear": 4,
+        "rpm": 7770.38,
+        "race_pos": 1,
+        "fuel": 98.3953,
+        "throttle": 0.0,
+        "brake": 0.0,
+        "steer": 0.0
+      }
+    },
+    {
+      "tag": "T6_poor_corner_exit",
+      "layer": "slow",
+      "priority": "high",
+      "interrupt": false,
+      "corner": "T6",
+      "type": "poor_corner_exit",
+      "severity": "high",
+      "confidence": 0.95,
+      "related_metrics_granite": [
+        "throttle",
+        "speed_kmh",
+        "wheel_spin"
+      ],
+      "message": "Poor corner exit detected at T6.",
+      "coaching_hint": "Get on the throttle earlier and more progressively out of T6; you are exiting about 76 km/h slower than the baseline.",
+      "audio_key": "poor_corner_exit",
+      "audio_file": "audio/poor_corner_exit.wav",
+      "evidence": {
+        "exit_speed_deficit_kmh": 75.7,
+        "mean_throttle_gap": 0.05
+      },
+      "telemetry": {
+        "lap_time": 151.686,
+        "lap_distance": 3549.9,
+        "speed_kmh": 154.2769,
+        "track_pos": 0.3416,
+        "angle": -0.0137,
+        "wheel_spin": 38.5754,
+        "gear": 2,
+        "rpm": 5235.99,
+        "race_pos": 1,
+        "fuel": 98.309,
+        "throttle": 0.0,
+        "brake": 0.0,
+        "steer": 0.0
+      }
+    },
+    {
+      "tag": "T7_poor_corner_exit",
+      "layer": "slow",
+      "priority": "high",
+      "interrupt": false,
+      "corner": "T7",
+      "type": "poor_corner_exit",
+      "severity": "high",
+      "confidence": 0.95,
+      "related_metrics_granite": [
+        "throttle",
+        "speed_kmh",
+        "wheel_spin"
+      ],
+      "message": "Poor corner exit detected at T7.",
+      "coaching_hint": "Get on the throttle earlier and more progressively out of T7; you are exiting about 94 km/h slower than the baseline.",
+      "audio_key": "poor_corner_exit",
+      "audio_file": "audio/poor_corner_exit.wav",
+      "evidence": {
+        "exit_speed_deficit_kmh": 93.6,
+        "mean_throttle_gap": 0.03
+      },
+      "telemetry": {
+        "lap_time": 156.806,
+        "lap_distance": 3660.0,
+        "speed_kmh": 325.287,
+        "track_pos": 0.9587,
+        "angle": -0.2884,
+        "wheel_spin": 79.1152,
+        "gear": 3,
+        "rpm": 7979.17,
+        "race_pos": 1,
+        "fuel": 98.2509,
+        "throttle": 0.0,
+        "brake": 0.0,
+        "steer": 1.0
+      }
+    },
+    {
+      "tag": "T8_poor_corner_exit",
+      "layer": "slow",
+      "priority": "high",
+      "interrupt": false,
+      "corner": "T8",
+      "type": "poor_corner_exit",
+      "severity": "high",
+      "confidence": 0.95,
+      "related_metrics_granite": [
+        "throttle",
+        "speed_kmh",
+        "wheel_spin"
+      ],
+      "message": "Poor corner exit detected at T8.",
+      "coaching_hint": "Get on the throttle earlier and more progressively out of T8; you are exiting about 88 km/h slower than the baseline.",
+      "audio_key": "poor_corner_exit",
+      "audio_file": "audio/poor_corner_exit.wav",
+      "evidence": {
+        "exit_speed_deficit_kmh": 88.3,
+        "mean_throttle_gap": -0.18
+      },
+      "telemetry": {
+        "lap_time": 193.846,
+        "lap_distance": 4165.1,
+        "speed_kmh": 244.5642,
+        "track_pos": -0.8941,
+        "angle": -0.073,
+        "wheel_spin": 61.24,
+        "gear": 3,
+        "rpm": 6218.61,
+        "race_pos": 1,
+        "fuel": 97.9839,
+        "throttle": 0.1065,
+        "brake": 0.0,
+        "steer": 0.0
+      }
+    },
+    {
+      "tag": "T9_poor_corner_exit",
+      "layer": "slow",
+      "priority": "high",
+      "interrupt": false,
+      "corner": "T9",
+      "type": "poor_corner_exit",
+      "severity": "high",
+      "confidence": 0.95,
+      "related_metrics_granite": [
+        "throttle",
+        "speed_kmh",
+        "wheel_spin"
+      ],
+      "message": "Poor corner exit detected at T9.",
+      "coaching_hint": "Get on the throttle earlier and more progressively out of T9; you are exiting about 294 km/h slower than the baseline.",
+      "audio_key": "poor_corner_exit",
+      "audio_file": "audio/poor_corner_exit.wav",
+      "evidence": {
+        "exit_speed_deficit_kmh": 294.0,
+        "mean_throttle_gap": -0.29
+      },
+      "telemetry": {
+        "lap_time": 229.926,
+        "lap_distance": 4964.9,
+        "speed_kmh": 306.7409,
+        "track_pos": -0.6295,
+        "angle": 0.2486,
+        "wheel_spin": 77.3414,
+        "gear": 4,
+        "rpm": 6437.69,
+        "race_pos": 1,
+        "fuel": 97.7306,
+        "throttle": 0.5418,
+        "brake": 0.0,
+        "steer": 0.0
+      }
     },
     {
       "tag": "S2_time_loss",
@@ -75,44 +451,445 @@
       "corner": "Sector 2",
       "type": "sector_time_loss",
       "severity": "high",
-      "confidence": 0.8,
-      "related_metrics_granite": ["sector_2", "lap_time", "speed_kmh"],
-      "message": "Significant time loss detected in Sector 2.",
-      "coaching_hint": "Focus on smoother braking and earlier throttle application through Sector 2 to reduce lap time loss.",
-      "audio_key": "sector_time_loss",
-      "audio_file": "audio/sector_time_loss.wav"
-    },
-    {
-      "tag": "brake_now",
-      "layer": "fast",
-      "priority": "urgent",
-      "interrupt": true,
-      "corner": "general",
-      "type": "urgent_braking_command",
-      "severity": "critical",
       "confidence": 0.95,
-      "related_metrics_granite": ["speed_kmh", "brake", "lap_distance"],
-      "message": "Immediate braking required.",
-      "coaching_hint": "Brake now.",
-      "audio_key": "brake_now",
-      "audio_file": "audio/brake_now.wav",
-      "status_note": "Fast layer (real-time if-else rules) is a Week 3 task; this entry is reserved for it."
+      "related_metrics_granite": [
+        "sector_2",
+        "lap_time",
+        "speed_kmh"
+      ],
+      "message": "Significant time loss detected in Sector 2.",
+      "coaching_hint": "You lost about 78.0 s to the baseline in Sector 2; focus on the corners between 2094 m and 4188 m.",
+      "audio_key": "sector_time_loss",
+      "audio_file": "audio/sector_time_loss.wav",
+      "evidence": {
+        "time_loss_s": 78.01,
+        "sector_start_m": 2094.0,
+        "sector_end_m": 4188.0
+      },
+      "telemetry": {
+        "lap_time": 102.816,
+        "lap_distance": 3141.1,
+        "speed_kmh": 391.0716,
+        "track_pos": 0.0091,
+        "angle": -0.0583,
+        "wheel_spin": 101.0397,
+        "gear": 4,
+        "rpm": 8844.64,
+        "race_pos": 1,
+        "fuel": 98.5365,
+        "throttle": 1.0,
+        "brake": 0.0,
+        "steer": 0.9473
+      }
     },
     {
-      "tag": "overtake_not_recommended",
+      "tag": "S3_time_loss",
       "layer": "slow",
-      "priority": "low",
+      "priority": "normal",
       "interrupt": false,
-      "corner": "general",
-      "type": "race_strategy",
+      "corner": "Sector 3",
+      "type": "sector_time_loss",
+      "severity": "high",
+      "confidence": 0.95,
+      "related_metrics_granite": [
+        "sector_3",
+        "lap_time",
+        "speed_kmh"
+      ],
+      "message": "Significant time loss detected in Sector 3.",
+      "coaching_hint": "You lost about 26.8 s to the baseline in Sector 3; focus on the corners between 4188 m and 6283 m.",
+      "audio_key": "sector_time_loss",
+      "audio_file": "audio/sector_time_loss.wav",
+      "evidence": {
+        "time_loss_s": 26.79,
+        "sector_start_m": 4188.0,
+        "sector_end_m": 6283.0
+      },
+      "telemetry": {
+        "lap_time": 257.906,
+        "lap_distance": 5235.45,
+        "speed_kmh": 516.2904,
+        "track_pos": 0.4992,
+        "angle": -0.0716,
+        "wheel_spin": 131.2435,
+        "gear": 5,
+        "rpm": 9907.27,
+        "race_pos": 1,
+        "fuel": 97.461,
+        "throttle": 1.0,
+        "brake": 0.0,
+        "steer": 0.0
+      }
+    },
+    {
+      "tag": "T8_poor_track_position",
+      "layer": "slow",
+      "priority": "normal",
+      "interrupt": false,
+      "corner": "T8",
+      "type": "poor_track_position",
+      "severity": "high",
+      "confidence": 0.94,
+      "related_metrics_granite": [
+        "track_pos",
+        "angle",
+        "steer"
+      ],
+      "message": "The car is off the ideal racing line at T8.",
+      "coaching_hint": "Follow the baseline line through T8 more closely and avoid large steering corrections.",
+      "audio_key": "poor_track_position",
+      "audio_file": "audio/poor_track_position.wav",
+      "evidence": {
+        "mean_track_pos_gap": 0.75
+      },
+      "telemetry": {
+        "lap_time": 193.846,
+        "lap_distance": 4165.1,
+        "speed_kmh": 244.5642,
+        "track_pos": -0.8941,
+        "angle": -0.073,
+        "wheel_spin": 61.24,
+        "gear": 3,
+        "rpm": 6218.61,
+        "race_pos": 1,
+        "fuel": 97.9839,
+        "throttle": 0.1065,
+        "brake": 0.0,
+        "steer": 0.0
+      }
+    },
+    {
+      "tag": "T9_poor_track_position",
+      "layer": "slow",
+      "priority": "normal",
+      "interrupt": false,
+      "corner": "T9",
+      "type": "poor_track_position",
+      "severity": "high",
+      "confidence": 0.91,
+      "related_metrics_granite": [
+        "track_pos",
+        "angle",
+        "steer"
+      ],
+      "message": "The car is off the ideal racing line at T9.",
+      "coaching_hint": "Follow the baseline line through T9 more closely and avoid large steering corrections.",
+      "audio_key": "poor_track_position",
+      "audio_file": "audio/poor_track_position.wav",
+      "evidence": {
+        "mean_track_pos_gap": 0.71
+      },
+      "telemetry": {
+        "lap_time": 229.926,
+        "lap_distance": 4964.9,
+        "speed_kmh": 306.7409,
+        "track_pos": -0.6295,
+        "angle": 0.2486,
+        "wheel_spin": 77.3414,
+        "gear": 4,
+        "rpm": 6437.69,
+        "race_pos": 1,
+        "fuel": 97.7306,
+        "throttle": 0.5418,
+        "brake": 0.0,
+        "steer": 0.0
+      }
+    },
+    {
+      "tag": "T4_poor_track_position",
+      "layer": "slow",
+      "priority": "normal",
+      "interrupt": false,
+      "corner": "T4",
+      "type": "poor_track_position",
+      "severity": "medium",
+      "confidence": 0.86,
+      "related_metrics_granite": [
+        "track_pos",
+        "angle",
+        "steer"
+      ],
+      "message": "The car is off the ideal racing line at T4.",
+      "coaching_hint": "Follow the baseline line through T4 more closely and avoid large steering corrections.",
+      "audio_key": "poor_track_position",
+      "audio_file": "audio/poor_track_position.wav",
+      "evidence": {
+        "mean_track_pos_gap": 0.65
+      },
+      "telemetry": {
+        "lap_time": 104.224,
+        "lap_distance": 3184.76,
+        "speed_kmh": 361.3572,
+        "track_pos": 1.6913,
+        "angle": 0.1067,
+        "wheel_spin": 90.2967,
+        "gear": 4,
+        "rpm": 7432.02,
+        "race_pos": 1,
+        "fuel": 98.5204,
+        "throttle": 0.0,
+        "brake": 0.0,
+        "steer": 0.0
+      }
+    },
+    {
+      "tag": "T9_unstable_throttle",
+      "layer": "slow",
+      "priority": "normal",
+      "interrupt": false,
+      "corner": "T9",
+      "type": "unstable_throttle",
+      "severity": "medium",
+      "confidence": 0.85,
+      "related_metrics_granite": [
+        "throttle",
+        "wheel_spin",
+        "speed_kmh"
+      ],
+      "message": "Unstable throttle control detected at T9.",
+      "coaching_hint": "Use one smooth throttle application through T9 instead of pumping the pedal.",
+      "audio_key": "unstable_throttle",
+      "audio_file": "audio/unstable_throttle.wav",
+      "evidence": {
+        "throttle_std_excess": 0.28
+      },
+      "telemetry": {
+        "lap_time": 229.926,
+        "lap_distance": 4964.9,
+        "speed_kmh": 306.7409,
+        "track_pos": -0.6295,
+        "angle": 0.2486,
+        "wheel_spin": 77.3414,
+        "gear": 4,
+        "rpm": 6437.69,
+        "race_pos": 1,
+        "fuel": 97.7306,
+        "throttle": 0.5418,
+        "brake": 0.0,
+        "steer": 0.0
+      }
+    },
+    {
+      "tag": "T7_poor_track_position",
+      "layer": "slow",
+      "priority": "normal",
+      "interrupt": false,
+      "corner": "T7",
+      "type": "poor_track_position",
+      "severity": "medium",
+      "confidence": 0.84,
+      "related_metrics_granite": [
+        "track_pos",
+        "angle",
+        "steer"
+      ],
+      "message": "The car is off the ideal racing line at T7.",
+      "coaching_hint": "Follow the baseline line through T7 more closely and avoid large steering corrections.",
+      "audio_key": "poor_track_position",
+      "audio_file": "audio/poor_track_position.wav",
+      "evidence": {
+        "mean_track_pos_gap": 0.63
+      },
+      "telemetry": {
+        "lap_time": 156.806,
+        "lap_distance": 3660.0,
+        "speed_kmh": 325.287,
+        "track_pos": 0.9587,
+        "angle": -0.2884,
+        "wheel_spin": 79.1152,
+        "gear": 3,
+        "rpm": 7979.17,
+        "race_pos": 1,
+        "fuel": 98.2509,
+        "throttle": 0.0,
+        "brake": 0.0,
+        "steer": 1.0
+      }
+    },
+    {
+      "tag": "T2_poor_track_position",
+      "layer": "slow",
+      "priority": "normal",
+      "interrupt": false,
+      "corner": "T2",
+      "type": "poor_track_position",
+      "severity": "medium",
+      "confidence": 0.77,
+      "related_metrics_granite": [
+        "track_pos",
+        "angle",
+        "steer"
+      ],
+      "message": "The car is off the ideal racing line at T2.",
+      "coaching_hint": "Follow the baseline line through T2 more closely and avoid large steering corrections.",
+      "audio_key": "poor_track_position",
+      "audio_file": "audio/poor_track_position.wav",
+      "evidence": {
+        "mean_track_pos_gap": 0.55
+      },
+      "telemetry": {
+        "lap_time": 20.566,
+        "lap_distance": 794.848,
+        "speed_kmh": 308.7572,
+        "track_pos": -1.6652,
+        "angle": -0.0862,
+        "wheel_spin": 77.273,
+        "gear": 4,
+        "rpm": 6373.84,
+        "race_pos": 1,
+        "fuel": 99.5136,
+        "throttle": 0.0664,
+        "brake": 0.0,
+        "steer": 0.0
+      }
+    },
+    {
+      "tag": "T3_unstable_throttle",
+      "layer": "slow",
+      "priority": "normal",
+      "interrupt": false,
+      "corner": "T3",
+      "type": "unstable_throttle",
       "severity": "low",
-      "confidence": 0.78,
-      "related_metrics_granite": ["gap_ahead", "speed_kmh", "lap_distance"],
-      "message": "Overtake is not recommended at this moment.",
-      "coaching_hint": "The gap to the car ahead is still too large. Focus on improving corner exits before attempting an overtake.",
-      "audio_key": "race_strategy",
-      "audio_file": "audio/race_strategy.wav",
-      "status_note": "Requires a gap_ahead metric that does not exist in the current telemetry schema; blocked until Team 1 adds opponent data."
+      "confidence": 0.71,
+      "related_metrics_granite": [
+        "throttle",
+        "wheel_spin",
+        "speed_kmh"
+      ],
+      "message": "Unstable throttle control detected at T3.",
+      "coaching_hint": "Use one smooth throttle application through T3 instead of pumping the pedal.",
+      "audio_key": "unstable_throttle",
+      "audio_file": "audio/unstable_throttle.wav",
+      "evidence": {
+        "throttle_std_excess": 0.2
+      },
+      "telemetry": {
+        "lap_time": 78.99,
+        "lap_distance": 2815.09,
+        "speed_kmh": 363.4308,
+        "track_pos": 0.1451,
+        "angle": -0.0353,
+        "wheel_spin": 91.4112,
+        "gear": 4,
+        "rpm": 7585.55,
+        "race_pos": 1,
+        "fuel": 98.6857,
+        "throttle": 0.4154,
+        "brake": 0.0,
+        "steer": -0.1244
+      }
+    },
+    {
+      "tag": "T1_poor_track_position",
+      "layer": "slow",
+      "priority": "normal",
+      "interrupt": false,
+      "corner": "T1",
+      "type": "poor_track_position",
+      "severity": "low",
+      "confidence": 0.68,
+      "related_metrics_granite": [
+        "track_pos",
+        "angle",
+        "steer"
+      ],
+      "message": "The car is off the ideal racing line at T1.",
+      "coaching_hint": "Follow the baseline line through T1 more closely and avoid large steering corrections.",
+      "audio_key": "poor_track_position",
+      "audio_file": "audio/poor_track_position.wav",
+      "evidence": {
+        "mean_track_pos_gap": 0.45
+      },
+      "telemetry": {
+        "lap_time": 14.69,
+        "lap_distance": 610.228,
+        "speed_kmh": 499.5828,
+        "track_pos": -0.4062,
+        "angle": 0.184,
+        "wheel_spin": 120.287,
+        "gear": 4,
+        "rpm": 9508.29,
+        "race_pos": 1,
+        "fuel": 99.5235,
+        "throttle": 0.0,
+        "brake": 0.0,
+        "steer": 0.3761
+      }
+    },
+    {
+      "tag": "T6_poor_track_position",
+      "layer": "slow",
+      "priority": "normal",
+      "interrupt": false,
+      "corner": "T6",
+      "type": "poor_track_position",
+      "severity": "low",
+      "confidence": 0.65,
+      "related_metrics_granite": [
+        "track_pos",
+        "angle",
+        "steer"
+      ],
+      "message": "The car is off the ideal racing line at T6.",
+      "coaching_hint": "Follow the baseline line through T6 more closely and avoid large steering corrections.",
+      "audio_key": "poor_track_position",
+      "audio_file": "audio/poor_track_position.wav",
+      "evidence": {
+        "mean_track_pos_gap": 0.41
+      },
+      "telemetry": {
+        "lap_time": 151.686,
+        "lap_distance": 3549.9,
+        "speed_kmh": 154.2769,
+        "track_pos": 0.3416,
+        "angle": -0.0137,
+        "wheel_spin": 38.5754,
+        "gear": 2,
+        "rpm": 5235.99,
+        "race_pos": 1,
+        "fuel": 98.309,
+        "throttle": 0.0,
+        "brake": 0.0,
+        "steer": 0.0
+      }
+    },
+    {
+      "tag": "T8_unstable_throttle",
+      "layer": "slow",
+      "priority": "normal",
+      "interrupt": false,
+      "corner": "T8",
+      "type": "unstable_throttle",
+      "severity": "low",
+      "confidence": 0.61,
+      "related_metrics_granite": [
+        "throttle",
+        "wheel_spin",
+        "speed_kmh"
+      ],
+      "message": "Unstable throttle control detected at T8.",
+      "coaching_hint": "Use one smooth throttle application through T8 instead of pumping the pedal.",
+      "audio_key": "unstable_throttle",
+      "audio_file": "audio/unstable_throttle.wav",
+      "evidence": {
+        "throttle_std_excess": 0.16
+      },
+      "telemetry": {
+        "lap_time": 193.846,
+        "lap_distance": 4165.1,
+        "speed_kmh": 244.5642,
+        "track_pos": -0.8941,
+        "angle": -0.073,
+        "wheel_spin": 61.24,
+        "gear": 3,
+        "rpm": 6218.61,
+        "race_pos": 1,
+        "fuel": 97.9839,
+        "throttle": 0.1065,
+        "brake": 0.0,
+        "steer": 0.0
+      }
     }
   ]
 }
