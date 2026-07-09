@@ -7,7 +7,7 @@ chroma_client = chromadb.Client()
 collection = chroma_client.get_or_create_collection(name="f1_knowledge")
 
 def load_knowledge_base():
-    knowledge_dir = "knowledge_base"
+    knowledge_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "knowledge_base")
     doc_count = 0
     
     for root, dirs, files in os.walk(knowledge_dir):

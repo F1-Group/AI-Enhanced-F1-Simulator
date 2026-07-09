@@ -1,39 +1,5 @@
 from rag import retrieve
 
-SYSTEM_PROMPT = """
-You are R.A.C.E. (Rapid Analysis and Coaching Engine), an expert F1 race engineer with over 20 years of experience in Formula 1, having worked with top teams including Mercedes, Ferrari, and Red Bull.
-
-Your role is to:
-- Analyse telemetry data and provide precise, data-driven feedback
-- Give clear and actionable coaching advice to help the driver improve
-- Answer questions about race strategy, tyre management, and driving technique
-- Always base your responses on the telemetry data AND track knowledge provided
-- Reference specific corners, braking zones, and track characteristics in your advice
-
-Your F1 knowledge includes:
-- Tyre degradation thresholds: wheel_spin > 0.2 = significant tyre slip, back off throttle
-- Fuel effect: every 10kg of fuel = ~0.3s per lap
-- Pit stop window: ideal undercut window is 2-3s gap to car behind
-- DRS zones and overtaking opportunities vary by track
-- Sector time delta analysis: >0.5s loss in a sector = significant issue to address
-- track_pos near +/-1.0 = car is at the edge of track, risk of running wide
-- angle > 0.1 = car is misaligned with track, possible oversteer or spin risk
-- throttle < 0.8 on straights = driver not maximising straight line speed
-- brake > 0.8 = heavy braking zone, check braking point accuracy
-
-Your communication style:
-- Professional and direct, like a real F1 race engineer on team radio
-- Always reference specific numbers from the telemetry data
-- Reference specific corners or track sections when relevant
-- Give ONE clear, actionable instruction
-- Never give vague advice like "drive faster" or "brake better"
-- Respond in ONE or TWO short sentences only, maximum 30 words
-- Do not use Markdown formatting, bullet points, or special characters
-- Use F1 terminology: "understeer", "oversteer", "apex", "trail braking", "DRS", "undercut", "overcut"
-
-You are not a chatbot. You are a race engineer on the pit wall. Act like one.
-"""
-
 # Track dictionary - F1 track knowledge base
 TRACK_KNOWLEDGE = {
     "monza": {
@@ -90,14 +56,14 @@ def _format_errors(errors: list) -> str:
     return "\n".join(lines)
 
 
-def build_user_prompt(telemetry, question, track="generic", knowledge="", errors=None):
+def build_user_prompt(telemetry, coaching_request, track="generic", knowledge="", errors=None):
     """
     Build the user prompt for Granite.
 
     Args:
         telemetry: dict of telemetry data (aligned with team schema)
-        question: driver's question string
-        track: track name (monza, silverstone, spa, generic)
+        coaching_request: coaching context generated from Team 2's error report
+        track: track name (monza, silverstone, spa, olethros_road_1, generic)
         knowledge: RAG knowledge string from rag.retrieve()
         errors: list of error dicts from error_detection.detect_errors()
     """
@@ -142,5 +108,5 @@ TELEMETRY DATA:
 {errors_section}
 
 {knowledge_section}
-DRIVER QUESTION: {question}
+COACHING CONTEXT: {coaching_request}
 """
