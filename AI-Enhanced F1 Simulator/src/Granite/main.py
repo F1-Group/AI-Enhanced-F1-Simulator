@@ -1,8 +1,6 @@
 import sys
 import os
 import json
-import glob
-import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -12,7 +10,7 @@ from guardrail import apply_guardrail
 from coaching_style import get_system_prompt
 from rag import retrieve, load_knowledge_base
 from tts import generate_wav
-from audio_manager.audio_manager import AudioManager
+# from audio_manager.audio_manager import AudioManager
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -22,7 +20,7 @@ ERROR_REPORT_DIR_PATH = PROJECT_ROOT / "data" / "error_report"
 load_knowledge_base()
 
 # Initialise Audio Manager
-audio_manager = AudioManager()
+# audio_manager = AudioManager()
 
 
 def load_errors(error_report_path=None):
@@ -32,7 +30,7 @@ def load_errors(error_report_path=None):
     """
 
     if error_report_path is None:
-        reports = glob.glob("../data/error_report_lap*.json")
+        reports = list(ERROR_REPORT_DIR_PATH.glob("error_report_*.json"))
         if reports:
             error_report_path = sorted(reports)[-1]
 
@@ -145,11 +143,11 @@ for error in errors:
         print(f"TTS saved: {wav_path}")
 
         # Send .wav to Team 2's Audio Manager and wait for playback
-        audio_manager.stop_all()
-        audio_manager._clear_queue()
-        audio_manager.play_sound(wav_path, priority="slow")
-        print(f"Audio queued for playback")
-        audio_manager._audio_queue.join()
+        # audio_manager.stop_all()
+        # audio_manager._clear_queue()
+        # audio_manager.play_sound(wav_path, priority="slow")
+        # print(f"Audio queued for playback")
+        # audio_manager._audio_queue.join()
 
         # Save output JSON for Team 4 (Frontend)
         os.makedirs(PROJECT_ROOT / "data", exist_ok=True)
@@ -158,5 +156,5 @@ for error in errors:
         print(f"Coaching output saved to data/latest_coaching.json")
 
 # Shutdown Audio Manager cleanly
-audio_manager.shutdown()
+# audio_manager.shutdown()
 print("\nDone.")
