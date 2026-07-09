@@ -1,0 +1,16 @@
+Gear Selection and RPM in TORCS Racing
+
+GEAR SELECTION FOR CORNERS
+Each corner has an optimal exit gear. Being in the wrong gear at corner exit limits acceleration on the following straight. Downshift to the correct gear before turning in, not mid-corner.
+
+RPM AND POWER DELIVERY
+Keeping the engine in its power band (high RPM range) maximises acceleration out of corners. Too low a gear at low speed causes wheel spin. Too high a gear causes sluggish acceleration.
+
+DOWNSHIFT TIMING
+Complete all downshifts before the steering wheel begins to turn. Any driveline disturbance while cornering near the limit upsets tyre traction. Brake first, downshift during braking, then turn in with the correct gear already selected.
+
+UPSHIFT ON EXIT
+Upshift smoothly as speed builds on the exit. Shift too early and the engine drops out of its power band. Shift too late and the engine hits the rev limiter, losing acceleration.
+
+TORCS GEAR INDICATORS
+Monitor the gear and RPM telemetry fields. If RPM is consistently hitting maximum in a gear before the next corner, an earlier upshift is needed. If RPM is low on corner exit, a lower gear should have been selected for that corner.

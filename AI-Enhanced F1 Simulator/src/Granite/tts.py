@@ -49,7 +49,7 @@ def generate_wav(text: str, filename: str = OUTPUT_FILENAME) -> str:
 
     # Generate audio (pyttsx3 → may output AIFF-C on macOS)
     engine = pyttsx3.init()
-    engine.setProperty('rate', 160)
+    engine.setProperty('rate', 220)
     engine.setProperty('volume', 1.0)
 
     engine.save_to_file(text, raw_path)

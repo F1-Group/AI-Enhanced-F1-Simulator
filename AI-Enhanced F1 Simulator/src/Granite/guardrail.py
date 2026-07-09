@@ -13,17 +13,18 @@ RACING_KEYWORDS = [
     "lap", "sector", "tyre", "tire", "brake", "throttle", "gear",
     "speed", "corner", "pit", "overtake", "drs", "fuel", "stint",
     "understeer", "oversteer", "apex", "racing line", "time",
-    "wheel", "spin", "rpm", "engineer", "strategy", "gap"
+    "wheel", "spin", "rpm", "engineer", "strategy", "gap",
+    "braking", "detected", "turn", "exit", "entry", "time loss"
 ]
 
-def validate_input(question: str):
-    question_lower = question.lower()
+def validate_input(coaching_request: str):
+    request_lower = coaching_request.lower()
     for topic in BLOCKED_TOPICS:
-        if topic in question_lower:
-            return False, f"I can only answer questions related to racing. Please ask about your lap, tyres, strategy, or driving technique."
-    has_racing_keyword = any(kw in question_lower for kw in RACING_KEYWORDS)
-    if not has_racing_keyword and len(question.split()) > 3:
-        return False, "Please ask a question related to your current race or driving performance."
+        if topic in request_lower:
+            return False, "I can only provide racing coaching feedback. This request is not related to driving performance."
+    has_racing_keyword = any(kw in request_lower for kw in RACING_KEYWORDS)
+    if not has_racing_keyword and len(coaching_request.split()) > 3:
+        return False, "Please provide a racing-related coaching context."
     return True, None
 
 
@@ -72,12 +73,12 @@ def validate_output(response: str, error_type: str = "default"):
 
 # ─── JSON OUTPUT FOR UI TEAM ──────────────────────────────────────────────────
 
-def apply_guardrail(question: str, response: str, error: dict = None):
+def apply_guardrail(coaching_request: str, response: str, error: dict = None):
     """
     Apply guardrails and return a JSON object for the UI team.
 
     Args:
-        question: driver's question
+        coaching_request: coaching context generated from Team 2's error report
         response: Granite's raw response
         error: optional error dict from error_detection.py
 
@@ -89,7 +90,7 @@ def apply_guardrail(question: str, response: str, error: dict = None):
     severity = error.get("severity", None) if error else None
 
     # Check input
-    input_valid, input_error = validate_input(question)
+    input_valid, input_error = validate_input(coaching_request)
     if not input_valid:
         return {
             "is_valid": False,
@@ -97,7 +98,7 @@ def apply_guardrail(question: str, response: str, error: dict = None):
             "error_type": None,
             "severity": None,
             "corner": None,
-            "question": question
+            "coaching_context": coaching_request
         }
 
     # Check output
@@ -109,10 +110,10 @@ def apply_guardrail(question: str, response: str, error: dict = None):
         "error_type": error_type,
         "severity": severity,
         "corner": corner,
-        "question": question
+        "coaching_context": coaching_request
     }
 
 
-def apply_guardrail_json(question: str, response: str, error: dict = None) -> str:
+def apply_guardrail_json(coaching_request: str, response: str, error: dict = None) -> str:
     """Same as apply_guardrail but returns a JSON string."""
-    return json.dumps(apply_guardrail(question, response, error), indent=2)
+    return json.dumps(apply_guardrail(coaching_request, response, error), indent=2)

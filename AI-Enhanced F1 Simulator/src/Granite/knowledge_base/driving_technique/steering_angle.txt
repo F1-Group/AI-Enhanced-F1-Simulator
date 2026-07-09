@@ -1,0 +1,13 @@
+Steering Technique for TORCS Racing
+
+SMOOTH INPUTS
+Smooth, progressive steering inputs are essential. Abrupt or jerky steering causes rapid weight transfer, unsettles the car, and reduces grip. Load up the steering gradually into the corner and unwind it progressively on exit.
+
+APEX AND EXIT
+Aim for a smooth arc through the corner. Once the apex is clipped, unwind the steering lock progressively while simultaneously increasing throttle. Applying throttle before the steering is sufficiently unwound causes wheelspin and rear instability.
+
+TRACK POSITION
+Correct track position through a corner reduces the steering angle required, which keeps the car more stable and allows earlier throttle application on exit. A poor entry line forces large steering corrections mid-corner, which costs time and grip.
+
+STEERING AS FEEDBACK
+Steering feel reflects front tyre grip. If the car understeers, the front is overloaded — ease the steering and wait for grip to return before reapplying. If the car oversteers, the rear has lost traction — reduce throttle smoothly and catch with opposite lock if needed.

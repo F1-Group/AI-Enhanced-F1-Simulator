@@ -109,4 +109,8 @@ TELEMETRY DATA:
 
 {knowledge_section}
 COACHING CONTEXT: {coaching_request}
+
+REPLY IN ONE SENTENCE ONLY. Maximum 20 words. Be direct and specific. No explanations.
+
+REPLY IN ONE SENTENCE ONLY. Maximum 20 words. Be direct and specific. No explanations.
 """
