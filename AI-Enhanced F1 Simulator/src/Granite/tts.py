@@ -8,7 +8,8 @@ import os
 import subprocess
 from pathlib import Path
 
-AUDIO_OUTPUT_DIR = "audio"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+AUDIO_OUTPUT_DIR = PROJECT_ROOT / "audio"
 OUTPUT_FILENAME = "granite_coaching_output.wav"
 
 

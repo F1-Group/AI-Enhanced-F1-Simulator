@@ -258,3 +258,6 @@ $RECYCLE.BIN/
 *.csv
 data/
 
+# Audio
+*.wav
+audio/

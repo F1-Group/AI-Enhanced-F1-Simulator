@@ -2,6 +2,7 @@ import sys
 import os
 import json
 import csv
+from pathlib import Path
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -13,15 +14,14 @@ from coaching_style import get_system_prompt
 from rag import retrieve, load_knowledge_base
 from tts import generate_wav
 from audio_manager.audio_manager import AudioManager
-from pathlib import Path
 
-PROJECT_ROOT          = Path(__file__).resolve().parent.parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 ERROR_REPORT_DIR_PATH = PROJECT_ROOT / "data" / "error_report"
-GRANITE_DIR           = Path(__file__).parent
+GRANITE_DIR = Path(__file__).parent
 
 load_knowledge_base()
 
-# Initialise Audio Manager
+# Initialize Audio Manager
 audio_manager = AudioManager()
 
 
@@ -110,25 +110,27 @@ fake_telemetry = {
     "gap_behind": 4.2,
 }
 
-errors        = load_errors()
-style         = "technical"
+errors = load_errors()
+style = "technical"
 system_prompt = get_system_prompt(style)
-all_results   = []
+all_results = []
 
 # Process each error from Team 2's report
-coaching_summary = []
-
 for error in errors:
-    if error.get('layer') == 'fast':
-        print(f"\nSkipping fast layer error: {error['tag']}")
+    # Skip fast layer telemetry events
+    if error.get("layer") == "fast":
+        print(f"\nSkipping fast layer error: {error.get('tag', '(no tag)')}")
         continue
 
-    coaching_request = f"{error['message']} {error['coaching_hint']}"
+    # Safely parse error details to fix the NameError
+    error_type       = error.get("type")
+    coaching_request = f"{error.get('message', '')} {error.get('coaching_hint', '')}".strip()
 
-    print(f"\nError: [{error['severity'].upper()}] {error['type']} at {error['corner']}")
-    print(f"\nCoaching request: {coaching_request}")
+    print(f"\nError: [{str(error.get('severity', '?')).upper()}] {error_type} at {error.get('corner', '?')}")
+    print(f"Coaching request: {coaching_request}")
 
-    knowledge_chunks = retrieve(coaching_request, top_k=3)
+    # RAG Retrieval & Context Building
+    knowledge_chunks  = retrieve(coaching_request, top_k=3)
     knowledge_context = "\n\n".join(knowledge_chunks)
 
     user_prompt = build_user_prompt(
@@ -138,98 +140,72 @@ for error in errors:
         errors=errors,
     )
 
+    # Invoke Race Engineer LLM
     answer, is_fallback = ask_race_engineer(
         system_prompt, user_prompt, error_type=error_type
     )
 
+    # Apply Safety Guardrails
     result = apply_guardrail(coaching_request, answer, error=error)
-    print(f"{'[FALLBACK] ' if is_fallback else ''}Race engineer: {result['feedback']}")
+    print(f"{'[FALLBACK] ' if is_fallback else ''}Race engineer: {result.get('feedback', '')}")
 
     if result.get("is_valid", False):
         all_results.append(result)
 
+        # Audio Playback (Queued normally without wiping previous cues mid-lap)
         if is_fallback:
             wav_path = get_fallback_wav(error_type)
             if wav_path:
                 print(f"[Fallback] Playing pre-recorded: {wav_path}")
                 audio_manager.play_sound(wav_path, priority="slow", interrupt=False)
-            else:
-                print("[Fallback] No WAV found, skipping audio.")
         else:
             wav_path = generate_wav(result["feedback"])
             wav_abs  = str(GRANITE_DIR / wav_path)
             print(f"TTS saved: {wav_abs}")
             audio_manager.play_sound(wav_abs, priority="slow", interrupt=False)
 
-    output_dir = PROJECT_ROOT / "data"
-    os.makedirs(output_dir, exist_ok=True)
-    with open(output_dir / "latest_coaching.json", "w") as f:
-        json.dump(result, f, indent=2)
-
-    print(f"\nRace engineer: {result['feedback']}")
-
-    if result.get('is_valid', False):
-        # TTS
-        wav_path = generate_wav(result['feedback'])
-
-        # Convert to absolute path
-        wav_path = Path(__file__).resolve().parent.parent / wav_path
-
-        audio_manager.stop_all()
-        audio_manager._clear_queue()
-        audio_manager.play_sound(str(wav_path), priority="slow")
-        print(f"Audio queued for playback")
-        audio_manager._audio_queue.join()
-
-        # master list
-        coaching_summary.append(result)
-
-        # Renew latest_coaching.json
-        os.makedirs(PROJECT_ROOT / "data", exist_ok=True)
-        with open(PROJECT_ROOT / "data" / "latest_coaching.json", "w") as f:
+        # Persist step result
+        output_dir = PROJECT_ROOT / "data"
+        os.makedirs(output_dir, exist_ok=True)
+        with open(output_dir / "latest_coaching.json", "w") as f:
             json.dump(result, f, indent=2)
-        print(f"Latest coaching saved")
 
-# summary
-if coaching_summary:
-    summary_path = PROJECT_ROOT / "data" / "coaching_summary.json"
-    with open(summary_path, "w") as f:
-        json.dump({
-            "total_errors": len(coaching_summary),
-            "coaching_results": coaching_summary
-        }, f, indent=2)
-    print(f"\nCoaching summary saved: {len(coaching_summary)} errors processed")
+print("\nWaiting for individual coaching audio to finish...")
+audio_manager.wait_until_idle(timeout=120)
 
+# Post-Lap Dynamic Summary Section
+if all_results:
+    summary_text, is_fallback = generate_summary(all_results, system_prompt)
+    
+    if summary_text:
+        print(f"\nLap Summary:\n{summary_text}")
+        
+        # Playback the overall lap breakdown
+        if is_fallback:
+            wav_path = get_fallback_wav("sector_time_loss")
+            if wav_path:
+                audio_manager.play_sound(wav_path, priority="normal")
+        else:
+            summary_wav = generate_wav(summary_text, filename="lap_summary.wav")
+            summary_wav_abs = str(GRANITE_DIR / summary_wav)
+            audio_manager.play_sound(summary_wav_abs, priority="normal")
 
-# overall Overall summary
-if coaching_summary:
-    overall_summary = (
-        "Overall Overall needs improvement. "
-        "Focus on smoother throttle control, earlier braking, "
-        "and maintaining a consistent racing line."
-    )
+        # Save complete lap coaching summary structural data
+        summary_result = {
+            "type": "lap_summary",
+            "feedback": summary_text,
+            "is_fallback": is_fallback,
+            "total_errors": len(all_results),
+            "corners_affected": list({r.get("corner") for r in all_results}),
+        }
+        
+        output_dir = PROJECT_ROOT / "data"
+        os.makedirs(output_dir, exist_ok=True)
+        with open(output_dir / "lap_summary.json", "w") as f:
+            json.dump(summary_result, f, indent=2)
+        print("Lap summary saved to data/lap_summary.json")
 
-    Overall_path = PROJECT_ROOT / "data" / "Overall_summary.json"
-
-    with open(Overall_path, "w") as f:
-        json.dump({
-            "overall_summary": overall_summary
-        }, f, indent=2)
-
-    print("Overall summary saved")
-
-    # TTS for overall summary
-    wav_path = generate_wav(overall_summary)
-
-    wav_path = Path(__file__).resolve().parent.parent / wav_path
-
-    audio_manager.stop_all()
-    audio_manager._clear_queue()
-    audio_manager.play_sound(str(wav_path), priority="slow")
-
-    print("Overall summary audio queued")
-    audio_manager._audio_queue.join()
-
+    audio_manager.wait_until_idle(timeout=120)
 
 audio_manager.shutdown()
 print("\nDone.")
