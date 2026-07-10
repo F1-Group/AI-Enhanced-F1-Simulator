@@ -1,44 +1,68 @@
 """
-tts.py
-Converts Granite's text output into a .wav file
-and passes it to Team 2's Audio Manager for playback.
+tts.py (STABLE VERSION)
+Convert Granite text output into pygame-compatible PCM WAV.
 """
 
 import pyttsx3
 import os
+import subprocess
 from pathlib import Path
 
-
-# Output directory for generated audio files
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-AUDIO_OUTPUT_DIR = PROJECT_ROOT / "audio"
+AUDIO_OUTPUT_DIR = "audio"
 OUTPUT_FILENAME = "granite_coaching_output.wav"
 
 
+def _convert_to_pcm_wav(input_path: str) -> str:
+    input_path = Path(input_path)
+
+    output_path = input_path.with_name(
+        input_path.stem + "_pcm.wav"
+    )
+
+    result = subprocess.run([
+        "ffmpeg",
+        "-y",
+        "-i", str(input_path),
+        "-acodec", "pcm_s16le",
+        "-ar", "44100",
+        "-ac", "1",
+        str(output_path)
+    ], capture_output=True, text=True)
+
+    if result.returncode != 0:
+        raise RuntimeError("FFmpeg failed! See error above.")
+
+    return str(output_path)
+
 def generate_wav(text: str, filename: str = OUTPUT_FILENAME) -> str:
     """
-    Convert text to speech and save as .wav file.
-    Returns the path to the generated file.
+    Convert text to speech and return pygame-safe WAV path.
     """
-    # Make sure audio/ folder exists
+
     os.makedirs(AUDIO_OUTPUT_DIR, exist_ok=True)
-    output_path = os.path.join(AUDIO_OUTPUT_DIR, filename)
-    
+
+    raw_path = os.path.join(AUDIO_OUTPUT_DIR, filename)
+
+    # Generate audio (pyttsx3 → may output AIFF-C on macOS)
     engine = pyttsx3.init()
-    
-    # Optional: adjust voice settings
-    engine.setProperty('rate', 160)    # Speed (default ~200, slower = clearer)
-    engine.setProperty('volume', 1.0)  # Volume 0.0 to 1.0
-    
-    engine.save_to_file(text, output_path)
+    engine.setProperty('rate', 220)
+    engine.setProperty('volume', 1.0)
+
+    engine.save_to_file(text, raw_path)
     engine.runAndWait()
-    
-    print(f"TTS generated: {output_path}")
-    return output_path
+
+    print(f"TTS generated (raw): {raw_path}")
+
+    # Convert to PCM WAV for pygame
+    safe_path = _convert_to_pcm_wav(raw_path)
+
+    print(f"TTS converted (PCM safe): {safe_path}")
+
+    return safe_path
 
 
 if __name__ == "__main__":
-    # Quick test
-    test_text = "You braked 80 metres too late at Turn 1. Fix your braking point."
+    test_text = "You braked too late at Turn 1. Fix braking point."
     path = generate_wav(test_text)
-    print(f"Saved to: {path}")
+    print(f"Saved: {path}")
+    
