@@ -29,10 +29,6 @@ def _convert_to_pcm_wav(input_path: str) -> str:
         str(output_path)
     ], capture_output=True, text=True)
 
-    # 🔥 DEBUG MUST SEE THIS
-    print("FFMPEG RETURN CODE:", result.returncode)
-    print("FFMPEG STDERR:\n", result.stderr)
-
     if result.returncode != 0:
         raise RuntimeError("FFmpeg failed! See error above.")
 
