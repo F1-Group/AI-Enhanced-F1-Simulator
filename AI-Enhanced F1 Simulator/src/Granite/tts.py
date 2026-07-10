@@ -45,7 +45,7 @@ def generate_wav(text: str, filename: str = OUTPUT_FILENAME) -> str:
 
     # Generate audio (pyttsx3 → may output AIFF-C on macOS)
     engine = pyttsx3.init()
-    engine.setProperty('rate', 160)
+    engine.setProperty('rate', 220)
     engine.setProperty('volume', 1.0)
 
     engine.save_to_file(text, raw_path)
@@ -65,3 +65,4 @@ if __name__ == "__main__":
     test_text = "You braked too late at Turn 1. Fix braking point."
     path = generate_wav(test_text)
     print(f"Saved: {path}")
+    
