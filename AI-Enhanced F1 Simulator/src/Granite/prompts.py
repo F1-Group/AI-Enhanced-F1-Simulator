@@ -67,8 +67,6 @@ def build_user_prompt(telemetry, coaching_request, track="generic", knowledge=""
         knowledge: RAG knowledge string from rag.retrieve()
         errors: list of error dicts from error_detection.detect_errors()
     """
-    # Calculate lap delta
-    lap_delta = round(telemetry['lap_time'] - telemetry['best_lap'], 2)
 
     # Get track knowledge
     track_info = TRACK_KNOWLEDGE.get(track.lower(), TRACK_KNOWLEDGE["generic"])
@@ -85,32 +83,22 @@ Sector notes: {track_info['sector_notes']}
 Tyre advice: {track_info['tyre_info']}
 
 TELEMETRY DATA:
-- Timestamp: {telemetry['timestamp']}s
 - Lap distance: {telemetry['lap_distance']}m
 - Speed: {telemetry['speed_kmh']} km/h
 - Track position (centerline offset): {telemetry['track_pos']}
 - Car angle vs track: {telemetry['angle']}
 - Wheel spin: {telemetry['wheel_spin']}
-- Current lap time: {telemetry['lap_time']}s (delta to best: +{lap_delta}s)
-- Best lap reference: {telemetry['best_lap']}s
+- Current lap time: {telemetry['lap_time']}s
 - Throttle input: {telemetry['throttle']}
 - Brake input: {telemetry['brake']}
 - Steering angle: {telemetry['steer']}
 - Gear: {telemetry['gear']}
 - RPM: {telemetry['rpm']}
-- Sector 1: {telemetry['sector_1']}s
-- Sector 2: {telemetry['sector_2']}s
-- Sector 3: {telemetry['sector_3']}s
-- Laps remaining: {telemetry['laps_remaining']}
-- Gap to car ahead: {telemetry['gap_ahead']}s
-- Gap to car behind: {telemetry['gap_behind']}s
 
 {errors_section}
 
 {knowledge_section}
 COACHING CONTEXT: {coaching_request}
-
-REPLY IN ONE SENTENCE ONLY. Maximum 20 words. Be direct and specific. No explanations.
 
 REPLY IN ONE SENTENCE ONLY. Maximum 20 words. Be direct and specific. No explanations.
 """

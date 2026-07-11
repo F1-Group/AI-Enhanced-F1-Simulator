@@ -3,6 +3,12 @@ import threading
 import time
 import subprocess
 from pathlib import Path
+
+SRC_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = SRC_DIR.parent
+sys.path.insert(0, str(SRC_DIR))
+ERROR_REPORT_DIR = PROJECT_ROOT / "data" / "error_report"
+
 from data_pipeline.input import InputHandler
 from data_pipeline.client import Client
 from data_pipeline.logger import CSVLogger
@@ -10,11 +16,6 @@ from data_pipeline.cache import cache, GameStatus
 from granite.rag import load_knowledge_base
 from audio_manager.audio_manager import AudioManager
 from granite.ai_core import process_all_errors_pipeline  
-
-SRC_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = SRC_DIR.parent
-sys.path.insert(0, str(SRC_DIR))
-ERROR_REPORT_DIR = PROJECT_ROOT / "data" / "error_report"
 
 
 # BACKGROUND FILE WATCHER THREAD
