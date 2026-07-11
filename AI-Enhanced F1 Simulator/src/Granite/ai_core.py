@@ -2,6 +2,13 @@ import sys
 import os
 import json
 from pathlib import Path
+
+GRANITE_DIR = Path(__file__).resolve().parent
+SRC_DIR = GRANITE_DIR.parent
+PROJECT_ROOT = SRC_DIR.parent
+
+sys.path.insert(0, str(SRC_DIR))
+
 from granite.prompts import build_user_prompt
 from granite.granite_client import ask_race_engineer
 from granite.guardrail import apply_guardrail
@@ -34,34 +41,8 @@ def process_single_error(error, errors, system_prompt, audio_manager, force_fall
 
     print(f"[AI] Analyzing Infraction: [{str(error.get('severity', '?')).upper()}] {error_type} at {error.get('corner', '?')}")
     
-    # TIMING ALIGNMENT FALLBACK PROTECTION
-    true_telemetry = error.get("telemetry_snapshot")
-
-    if not true_telemetry:
-        print(f"[AI Hint] 'telemetry_snapshot' missing from JSON. Injecting complete testing fallback.")
-        true_telemetry = {
-            "timestamp": error.get("timestamp", 0.0),
-            "lap_distance": 1500.0,
-            "speed_kmh": 185.5,
-            "track_pos": 0.5,
-            "angle": 0.0,
-            "wheel_spin": 0.05,
-            "lap_time": error.get("timestamp", 12.34),  
-            "best_lap": 90.15,
-            "throttle": 0.5,
-            "brake": 0.2,
-            "steer": 0.0,
-            "gear": 4,
-            "rpm": 9500,
-            "sector_1": 31.25,
-            "sector_2": 33.40,
-            "sector_3": 25.50,
-            "laps_remaining": 3,
-            "gap_ahead": 1.5,
-            "gap_behind": 2.4
-        }
-    else:
-        print(f"[AI Success] Successfully parsed time-aligned telemetry frame provided by Team 2.")
+    telemetry = error.get("telemetry")
+    print(f"[AI Success] Successfully parsed time-aligned telemetry frame provided by Team 2.")
 
     # Bypass HTTP overhead if quota is exhausted or connection failed at startup
     if force_fallback or not _RUNTIME_LLM_OK:
@@ -74,7 +55,7 @@ def process_single_error(error, errors, system_prompt, audio_manager, force_fall
 
         # Package context together for the LLM
         user_prompt = build_user_prompt(
-            true_telemetry, 
+            telemetry, 
             coaching_request,
             track="olethros_road_1",
             knowledge=knowledge_context,
@@ -255,8 +236,8 @@ if __name__ == "__main__":
     # Warm up mock components needed for execution
     try:
         from audio_manager.audio_manager import AudioManager
-        from granite.rag import load_knowledge_base
-        from granite.granite_client import init_granite_model, get_ai_link_status
+        from rag import load_knowledge_base
+        from granite_client import init_granite_model, get_ai_link_status
         
         print("\n[Test Init] Warming up local workspace modules...")
         audio_manager = AudioManager()
