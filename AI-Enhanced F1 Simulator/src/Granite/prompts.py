@@ -1,4 +1,4 @@
-from rag import retrieve
+from .rag import retrieve
 
 # Track dictionary - F1 track knowledge base
 TRACK_KNOWLEDGE = {

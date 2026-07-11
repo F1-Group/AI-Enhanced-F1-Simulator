@@ -27,7 +27,7 @@ import pandas as pd
 from .fast_layer import FastLayer
 from .alignment import build_baseline, distance_grid
 from .error_detection import detect_corners
-from .granite_adapter import coach_report
+# from .granite_adapter import coach_report
 from .lap_utils import LAP_RESET_DROP_M, clean_telemetry, load_telemetry, split_laps
 from .run_analysis import (DEFAULT_EXPERT, LATEST_POINTER,
                            TELEMETRY_FIELDS, ERROR_REPORT_DIR_PATH, analyse_lap, session_id_from,
@@ -145,7 +145,7 @@ class LiveCoach:
               f"{report['player_lap_time_s']}s vs expert {report['expert_lap_time_s']}s, "
               f"{len(report['errors'])} errors -> {output.name}")
 
-        coach_report(report, self.manager, use_granite=self.use_granite)
+        # coach_report(report, self.manager, use_granite=self.use_granite)
 
     def follow(self, csv_path, idle_timeout_s, max_seconds=None):
         self.session_id = session_id_from(csv_path)
