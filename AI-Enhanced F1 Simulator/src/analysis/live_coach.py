@@ -35,6 +35,11 @@ from .run_analysis import (DEFAULT_EXPERT, LATEST_POINTER,
 
 POLL_S = 0.05
 MIN_LAP_FRACTION = 0.95
+REALTIME_ANALYSIS_INTERVAL_S = 0.75
+MIN_REALTIME_ROWS = 50
+LAP_TIME_RESET_DROP_S = 2.0
+LAP_TIME_RESET_MAX_S = 2.0
+LAP_COUNTER_FIELDS = ("lap_count", "lap_number", "lap", "laps", "completed_laps")
 
 
 def wait_for_recording(timeout_s, freshness_s=10.0):
@@ -71,6 +76,33 @@ def _read_complete_line(f):
     return line.rstrip("\n")
 
 
+def _lap_counter(frame):
+    for field in LAP_COUNTER_FIELDS:
+        if field in frame:
+            return frame[field]
+    return None
+
+
+def _lap_finished(frame, prev_distance, prev_lap_time, prev_lap_counter):
+    if prev_distance is not None and frame["lap_distance"] < prev_distance - LAP_RESET_DROP_M:
+        return True
+
+    lap_time = frame.get("lap_time")
+    if (
+        prev_lap_time is not None
+        and lap_time is not None
+        and prev_lap_time - lap_time >= LAP_TIME_RESET_DROP_S
+        and lap_time <= LAP_TIME_RESET_MAX_S
+    ):
+        return True
+
+    lap_counter = _lap_counter(frame)
+    if prev_lap_counter is not None and lap_counter is not None and lap_counter > prev_lap_counter:
+        return True
+
+    return False
+
+
 class LiveCoach:
     def __init__(self, expert_laps, manager, use_granite=True):
         self.expert_laps = expert_laps
@@ -85,6 +117,8 @@ class LiveCoach:
         self.lap_number = 0
         self.session_id = None
         self._schema_warned = False
+        self._reported_error_tags = set()
+        self._realtime_report_count = 0
 
         # Slow-layer work (pandas + Granite network calls + TTS) runs on its
         # own thread so the 50 Hz fast layer never goes blind at lap
@@ -93,11 +127,33 @@ class LiveCoach:
         self._worker = threading.Thread(target=self._lap_worker, daemon=True)
         self._worker.start()
 
+        # Real-time slow-layer snapshots are analysed separately from finished
+        # laps. The queue keeps only the newest snapshot so live driving never
+        # waits behind stale partial-lap work.
+        self._snapshots = queue.Queue(maxsize=1)
+        self._snapshot_worker = threading.Thread(target=self._snapshot_worker_loop, daemon=True)
+        self._snapshot_worker.start()
+
     def on_frame(self, frame):
         self.fast_layer.check(frame)
 
     def on_lap(self, rows):
         self._laps.put(rows)
+        self._reported_error_tags.clear()
+
+    def on_snapshot(self, rows):
+        if len(rows) < MIN_REALTIME_ROWS:
+            return
+        snapshot = list(rows)
+        try:
+            self._snapshots.put_nowait(snapshot)
+        except queue.Full:
+            try:
+                self._snapshots.get_nowait()
+                self._snapshots.task_done()
+            except queue.Empty:
+                pass
+            self._snapshots.put_nowait(snapshot)
 
     def finish(self, timeout=180.0):
         """Wait for queued lap analyses to complete, but never forever.
@@ -129,6 +185,44 @@ class LiveCoach:
             finally:
                 self._laps.task_done()
 
+    def _snapshot_worker_loop(self):
+        while True:
+            rows = self._snapshots.get()
+            try:
+                self._process_snapshot(rows)
+            except Exception as exc:
+                print(f"[coach] Real-time analysis failed: {type(exc).__name__}: {exc}")
+            finally:
+                self._snapshots.task_done()
+
+    def _process_snapshot(self, rows):
+        lap = clean_telemetry(pd.DataFrame(rows))
+        if lap.empty:
+            return
+
+        report, _ = analyse_lap(lap, self.expert_laps, lap_number=self.lap_number + 1)
+        new_errors = [
+            error for error in report["errors"]
+            if error["tag"] not in self._reported_error_tags
+        ]
+        if not new_errors:
+            return
+
+        os.makedirs(ERROR_REPORT_DIR_PATH, exist_ok=True)
+        self._reported_error_tags.update(error["tag"] for error in new_errors)
+        self._realtime_report_count += 1
+        realtime_report = dict(report)
+        realtime_report["source"] = "team2_realtime_slow_layer"
+        realtime_report["is_realtime"] = True
+        realtime_report["errors"] = new_errors
+        output = write_report(
+            realtime_report,
+            ERROR_REPORT_DIR_PATH /
+            f"error_report_{self.session_id}_lap{self.lap_number + 1}_realtime{self._realtime_report_count}.json"
+        )
+        tags = ", ".join(error["tag"] for error in new_errors)
+        print(f"\n[coach] Real-time error detected: {tags} -> {output.name}")
+
     def _process_lap(self, rows):
         lap = clean_telemetry(pd.DataFrame(rows))
         if lap["lap_distance"].max() < MIN_LAP_FRACTION * self.track_length:
@@ -154,6 +248,9 @@ class LiveCoach:
         header = None
         lap_rows = []
         prev_distance = None
+        prev_lap_time = None
+        prev_lap_counter = None
+        next_realtime_analysis = time.time() + REALTIME_ANALYSIS_INTERVAL_S
 
         with open(csv_path, encoding="utf-8") as f:
             last_data = time.time()
@@ -201,11 +298,20 @@ class LiveCoach:
 
                 self.on_frame(frame)
                 d = frame["lap_distance"]
-                if prev_distance is not None and d < prev_distance - LAP_RESET_DROP_M:
-                    self.on_lap(lap_rows)
+                lap_time = frame.get("lap_time")
+                lap_counter = _lap_counter(frame)
+                if _lap_finished(frame, prev_distance, prev_lap_time, prev_lap_counter):
+                    if lap_rows:
+                        self.on_lap(lap_rows)
                     lap_rows = []
+                    next_realtime_analysis = time.time() + REALTIME_ANALYSIS_INTERVAL_S
                 prev_distance = d
+                prev_lap_time = lap_time
+                prev_lap_counter = lap_counter
                 lap_rows.append(frame)
+                if time.time() >= next_realtime_analysis:
+                    self.on_snapshot(lap_rows)
+                    next_realtime_analysis = time.time() + REALTIME_ANALYSIS_INTERVAL_S
 
         # Player recordings often end right at the finish line without one
         # more reset row, so flush whatever is buffered as the final lap.
