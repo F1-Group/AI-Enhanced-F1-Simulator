@@ -27,32 +27,19 @@ def init_granite_model():
     return model
 
 def get_ai_link_status():
-    # Health check interface for the UI team to verify the IBM Watsonx API connection.
+    """Health check interface to verify IBM Watsonx API connection."""
     try:
-        # Send a minimal 1-token prompt to check connection and API quota
         test_messages = [{"role": "user", "content": "ping"}]
-        
-        # Replace with your actual Watsonx model invocation syntax
         model.chat(messages=test_messages)
-        
-        return {
-            "llm_connected": True,
-            "message": "AI Link operational."
-        }
+        return {"llm_connected": True, "message": "AI Link operational."}
     except Exception as e:
         error_msg = str(e)
-        # Catching the token quota exhaustion (403) or network failure
         if "403" in error_msg or "quota" in error_msg.lower():
-            return {
-                "llm_connected": False,
-                "message": "AI quota exhausted (403 Quota Reached)."
-            }
-        return {
-            "llm_connected": False,
-            "message": f"AI connection failed: {error_msg}"
-        }
+            return {"llm_connected": False, "message": "AI quota exhausted (403 Quota Reached)."}
+        return {"llm_connected": False, "message": f"AI connection failed: {error_msg}"}
 
 FALLBACK_SCRIPTS = {
+    "late_braking": "Brake earlier before the corner and release more smoothly for better entry stability.",
     "poor_corner_exit": "Corner exit speed too low. Apply throttle earlier and more progressively.",
     "poor_track_position": "You are off the ideal racing line. Follow the baseline more closely.",
     "unstable_throttle": "Throttle is unstable. Use one smooth application instead of pumping.",
@@ -67,17 +54,11 @@ def get_fallback_text(error_type: str) -> str:
     return FALLBACK_SCRIPTS.get(error_type, FALLBACK_DEFAULT)
 
 
-def get_fallback_wav(error_type: str):
-    wav_path = AUDIO_DIR / f"fallback_{error_type}_pcm.wav"
-    if wav_path.exists():
-        return str(wav_path)
-    any_fallback = list(AUDIO_DIR.glob("fallback_*_pcm.wav"))
-    if any_fallback:
-        return str(any_fallback[0])
-    return None
-
-
 def ask_race_engineer(system_prompt, user_prompt, max_retries=2, wait_seconds=5, error_type=None):
+    """
+    Call Granite and return coaching text as a string.
+    Falls back to a rule-based text if the API is unavailable.
+    """
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user",   "content": user_prompt}
@@ -86,8 +67,7 @@ def ask_race_engineer(system_prompt, user_prompt, max_retries=2, wait_seconds=5,
     for attempt in range(1, max_retries + 1):
         try:
             response = model.chat(messages=messages)
-            text = response['choices'][0]['message']['content']
-            return text, False
+            return response['choices'][0]['message']['content']
         except Exception as e:
             error_text = str(e)
             if "429" in error_text or "consumption_limit_reached" in error_text:
@@ -103,4 +83,4 @@ def ask_race_engineer(system_prompt, user_prompt, max_retries=2, wait_seconds=5,
 
     fallback_text = get_fallback_text(error_type or "")
     print(f"[Fallback] Using rule-based text: {fallback_text}")
-    return fallback_text, True
+    return fallback_text

@@ -30,7 +30,7 @@ def validate_input(coaching_request: str):
 
 # ─── OUTPUT GUARDRAIL ──────────────────────────────────────────────────────────
 
-MAX_WORDS = 40
+MAX_WORDS = 20
 
 INVALID_PHRASES = [
     "i don't know",
@@ -46,12 +46,12 @@ INVALID_PHRASES = [
 ]
 
 FALLBACK_RESPONSES = {
-    "default": "Focus on your braking points and maintain consistent throttle application through the corners.",
+    "default": "Focus on braking points and consistent throttle application.",
     "late_braking": "Move your braking point earlier and trail brake into the apex.",
     "poor_corner_exit": "Apply throttle earlier and more progressively on corner exit.",
-    "poor_track_position": "Follow the racing line more closely and avoid large steering corrections.",
+    "poor_track_position": "Follow the racing line and avoid large steering corrections.",
     "unstable_throttle": "Use one smooth throttle application instead of pumping the pedal.",
-    "sector_time_loss": "Focus on the key corners in the slow sector to recover time.",
+    "sector_time_loss": "Focus on the key corners in this sector to recover time.",
 }
 
 def validate_output(response: str, error_type: str = "default"):
@@ -59,15 +59,18 @@ def validate_output(response: str, error_type: str = "default"):
     for phrase in INVALID_PHRASES:
         if phrase in response_lower:
             return False, FALLBACK_RESPONSES.get(error_type, FALLBACK_RESPONSES["default"])
-    word_count = len(response.split())
+
+    words = response.split()
+    word_count = len(words)
+
     if word_count > MAX_WORDS:
-        sentences = response.split('.')
-        truncated = '. '.join(sentences[:2]).strip()
-        if truncated and not truncated.endswith('.'):
-            truncated += '.'
+        # 直接截斷到MAX_WORDS個字
+        truncated = ' '.join(words[:MAX_WORDS]).rstrip(',;') + '.'
         return True, truncated
+
     if word_count < 3:
         return False, FALLBACK_RESPONSES.get(error_type, FALLBACK_RESPONSES["default"])
+
     return True, response
 
 
@@ -117,3 +120,9 @@ def apply_guardrail(coaching_request: str, response: str, error: dict = None):
 def apply_guardrail_json(coaching_request: str, response: str, error: dict = None) -> str:
     """Same as apply_guardrail but returns a JSON string."""
     return json.dumps(apply_guardrail(coaching_request, response, error), indent=2)
+
+
+def apply_guardrail_simple(question: str, response: str):
+    """Returns (is_valid, text) tuple for granite_adapter.py compatibility."""
+    result = apply_guardrail(question, response)
+    return result["is_valid"], result["feedback"]

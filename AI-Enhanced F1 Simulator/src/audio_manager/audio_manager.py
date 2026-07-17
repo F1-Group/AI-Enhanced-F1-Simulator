@@ -13,7 +13,7 @@ except ImportError:
 
 DEFAULT_TEMPLATE_PATH = Path(__file__).resolve().parent.parent.parent / "mock" / "error_template.json"
 COOLDOWN_SECONDS = 4.0
-SPEECH_TIMEOUT_SECONDS = 8.0
+SPEECH_TIMEOUT_SECONDS = 30.0
 
 BUILTIN_ALERTS = {
     "brake_now": {
