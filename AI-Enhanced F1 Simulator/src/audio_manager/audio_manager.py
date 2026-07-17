@@ -145,6 +145,24 @@ class AudioManager:
             return False
         return self._enqueue(clean_text, description, priority=priority, interrupt=interrupt, mode="speech")
 
+    def play_text(self, text, priority="slow", interrupt=False, cooldown_key=None):
+        """Queue generated coaching text without creating a temporary file."""
+        clean_text = " ".join(str(text).split())
+        if not clean_text:
+            return False
+        if cooldown_key:
+            now = time.monotonic()
+            with self._lock:
+                if now - self._last_played.get(cooldown_key, 0) < self.cooldown_seconds:
+                    return False
+                self._last_played[cooldown_key] = now
+        return self._enqueue_speech(
+            clean_text,
+            cooldown_key or "generated coaching",
+            priority=priority,
+            interrupt=interrupt,
+        )
+
     def _speak_text(self, text):
         if self._say_command:
             subprocess.run([self._say_command, text], timeout=SPEECH_TIMEOUT_SECONDS, check=False)
