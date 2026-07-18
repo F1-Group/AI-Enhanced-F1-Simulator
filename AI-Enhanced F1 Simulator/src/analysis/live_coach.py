@@ -21,20 +21,25 @@ import queue
 import threading
 import time
 from pathlib import Path
-import os
 import pandas as pd
 
 from .fast_layer import FastLayer
 from .alignment import build_baseline, distance_grid
 from .error_detection import detect_corners
-# from .granite_adapter import coach_report
+from .granite_adapter import coach_error
 from .lap_utils import LAP_RESET_DROP_M, clean_telemetry, load_telemetry, split_laps
 from .run_analysis import (DEFAULT_EXPERT, LATEST_POINTER,
-                           TELEMETRY_FIELDS, ERROR_REPORT_DIR_PATH, analyse_lap, session_id_from,
+                           TELEMETRY_FIELDS, PROJECT_ROOT, analyse_lap, session_id_from,
                            write_report)
 
 POLL_S = 0.05
 MIN_LAP_FRACTION = 0.95
+REALTIME_ANALYSIS_INTERVAL_S = 0.75
+MIN_REALTIME_ROWS = 50
+LAP_TIME_RESET_DROP_S = 2.0
+LAP_TIME_RESET_MAX_S = 2.0
+LAP_COUNTER_FIELDS = ("lap_count", "lap_number", "lap", "laps", "completed_laps")
+COACHING_SUMMARY_PATH = PROJECT_ROOT / "data" / "coaching_summary.json"
 
 
 def wait_for_recording(timeout_s, freshness_s=10.0):
@@ -71,6 +76,33 @@ def _read_complete_line(f):
     return line.rstrip("\n")
 
 
+def _lap_counter(frame):
+    for field in LAP_COUNTER_FIELDS:
+        if field in frame:
+            return frame[field]
+    return None
+
+
+def _lap_finished(frame, prev_distance, prev_lap_time, prev_lap_counter):
+    if prev_distance is not None and frame["lap_distance"] < prev_distance - LAP_RESET_DROP_M:
+        return True
+
+    lap_time = frame.get("lap_time")
+    if (
+        prev_lap_time is not None
+        and lap_time is not None
+        and prev_lap_time - lap_time >= LAP_TIME_RESET_DROP_S
+        and lap_time <= LAP_TIME_RESET_MAX_S
+    ):
+        return True
+
+    lap_counter = _lap_counter(frame)
+    if prev_lap_counter is not None and lap_counter is not None and lap_counter > prev_lap_counter:
+        return True
+
+    return False
+
+
 class LiveCoach:
     def __init__(self, expert_laps, manager, use_granite=True):
         self.expert_laps = expert_laps
@@ -85,6 +117,11 @@ class LiveCoach:
         self.lap_number = 0
         self.session_id = None
         self._schema_warned = False
+        self._reported_error_tags = {}
+        self._event_lock = threading.Lock()
+        self._summary_lock = threading.Lock()
+        self._lap_reports = []
+        self._feedback = []
 
         # Slow-layer work (pandas + Granite network calls + TTS) runs on its
         # own thread so the 50 Hz fast layer never goes blind at lap
@@ -93,11 +130,38 @@ class LiveCoach:
         self._worker = threading.Thread(target=self._lap_worker, daemon=True)
         self._worker.start()
 
+        # Real-time slow-layer snapshots are analysed separately from finished
+        # laps. The queue keeps only the newest snapshot so live driving never
+        # waits behind stale partial-lap work.
+        self._snapshots = queue.Queue(maxsize=1)
+        self._snapshot_worker = threading.Thread(target=self._snapshot_worker_loop, daemon=True)
+        self._snapshot_worker.start()
+
+        # This is the Team 2 -> Team 3 boundary. Blocking get() sleeps while
+        # there are no events, instead of polling the filesystem.
+        self._error_events = queue.Queue()
+        self._event_worker = threading.Thread(target=self._event_worker_loop, daemon=True)
+        self._event_worker.start()
+
     def on_frame(self, frame):
         self.fast_layer.check(frame)
 
     def on_lap(self, rows):
         self._laps.put(rows)
+
+    def on_snapshot(self, rows):
+        if len(rows) < MIN_REALTIME_ROWS:
+            return
+        snapshot = list(rows)
+        try:
+            self._snapshots.put_nowait(snapshot)
+        except queue.Full:
+            try:
+                self._snapshots.get_nowait()
+                self._snapshots.task_done()
+            except queue.Empty:
+                pass
+            self._snapshots.put_nowait(snapshot)
 
     def finish(self, timeout=180.0):
         """Wait for queued lap analyses to complete, but never forever.
@@ -108,26 +172,110 @@ class LiveCoach:
         drained, False if we gave up.
         """
         deadline = time.time() + timeout
-        while self._laps.unfinished_tasks:
-            if time.time() >= deadline:
-                print(f"[coach] Warning: giving up on {self._laps.unfinished_tasks} "
-                      f"pending lap analysis(es) after {timeout:.0f}s - Granite or "
-                      f"the network appears stalled. Reports for those laps were "
-                      f"NOT written; re-run 'python -m analysis.run_analysis' on "
-                      f"the recording to generate them offline.")
-                return False
-            time.sleep(0.2)
-        return True
+        queues = (self._snapshots, self._laps, self._error_events)
+        completed = False
+        try:
+            while any(work.unfinished_tasks for work in queues):
+                if time.time() >= deadline:
+                    pending = sum(work.unfinished_tasks for work in queues)
+                    print(f"[coach] Warning: giving up on {pending} pending in-memory "
+                          f"task(s) after {timeout:.0f}s; Granite or the network appears stalled.")
+                    return False
+                time.sleep(0.2)
+            completed = True
+            return True
+        finally:
+            # The unified artifact is the only live-workflow JSON written.
+            # Even a timed-out AI call must not lose already completed laps.
+            self._write_summary()
+            if completed:
+                for work in queues:
+                    work.put(None)
+                for worker in (self._snapshot_worker, self._worker, self._event_worker):
+                    worker.join(timeout=1.0)
 
     def _lap_worker(self):
         while True:
             rows = self._laps.get()
             try:
+                if rows is None:
+                    return
                 self._process_lap(rows)
             except Exception as exc:
                 print(f"[coach] Lap analysis failed: {type(exc).__name__}: {exc}")
             finally:
                 self._laps.task_done()
+
+    def _snapshot_worker_loop(self):
+        while True:
+            rows = self._snapshots.get()
+            try:
+                if rows is None:
+                    return
+                self._process_snapshot(rows)
+            except Exception as exc:
+                print(f"[coach] Real-time analysis failed: {type(exc).__name__}: {exc}")
+            finally:
+                self._snapshots.task_done()
+
+    def _event_worker_loop(self):
+        while True:
+            event = self._error_events.get(block=True)
+            try:
+                if event is None:
+                    return
+                feedback = coach_error(event, self.manager, use_granite=self.use_granite)
+                feedback["lap_number"] = event.get("lap_number")
+                feedback["is_realtime"] = event.get("is_realtime", False)
+                with self._summary_lock:
+                    self._feedback.append(feedback)
+            except Exception as exc:
+                print(f"[coach] AI event processing failed: {type(exc).__name__}: {exc}")
+            finally:
+                self._error_events.task_done()
+
+    def _publish_new_errors(self, report, lap_number, is_realtime):
+        with self._event_lock:
+            seen = self._reported_error_tags.setdefault(lap_number, set())
+            new_errors = []
+            for error in report["errors"]:
+                if error["tag"] in seen:
+                    continue
+                seen.add(error["tag"])
+                new_errors.append(error)
+        for error in new_errors:
+            event = dict(error)
+            event["lap_number"] = lap_number
+            event["is_realtime"] = is_realtime
+            self._error_events.put(event)
+        return new_errors
+
+    def _write_summary(self):
+        with self._summary_lock:
+            summary = {
+                "source": "in_memory_live_coach",
+                "session_id": self.session_id,
+                "generated_at": pd.Timestamp.now().isoformat(timespec="seconds"),
+                "lap_count": len(self._lap_reports),
+                "laps": list(self._lap_reports),
+                "ai_feedback": list(self._feedback),
+            }
+        COACHING_SUMMARY_PATH.parent.mkdir(parents=True, exist_ok=True)
+        write_report(summary, COACHING_SUMMARY_PATH)
+        print(f"[coach] Unified summary written to {COACHING_SUMMARY_PATH.name}")
+
+    def _process_snapshot(self, rows):
+        lap = clean_telemetry(pd.DataFrame(rows))
+        if lap.empty:
+            return
+
+        report, _ = analyse_lap(lap, self.expert_laps, lap_number=self.lap_number + 1)
+        lap_number = self.lap_number + 1
+        new_errors = self._publish_new_errors(report, lap_number, is_realtime=True)
+        if not new_errors:
+            return
+        tags = ", ".join(error["tag"] for error in new_errors)
+        print(f"\n[coach] Real-time error queued in memory: {tags}")
 
     def _process_lap(self, rows):
         lap = clean_telemetry(pd.DataFrame(rows))
@@ -138,14 +286,12 @@ class LiveCoach:
         self.lap_number += 1
         report, _ = analyse_lap(lap, self.expert_laps, lap_number=self.lap_number)
 
-        os.makedirs(ERROR_REPORT_DIR_PATH, exist_ok = True)
-        output = write_report(report, ERROR_REPORT_DIR_PATH /
-                              f"error_report_{self.session_id}_lap{self.lap_number}.json")
+        with self._summary_lock:
+            self._lap_reports.append(report)
+        self._publish_new_errors(report, self.lap_number, is_realtime=False)
         print(f"\n[coach] Lap {self.lap_number} finished: "
               f"{report['player_lap_time_s']}s vs expert {report['expert_lap_time_s']}s, "
-              f"{len(report['errors'])} errors -> {output.name}")
-
-        # coach_report(report, self.manager, use_granite=self.use_granite)
+              f"{len(report['errors'])} errors accumulated in memory")
 
     def follow(self, csv_path, idle_timeout_s, max_seconds=None):
         self.session_id = session_id_from(csv_path)
@@ -154,6 +300,9 @@ class LiveCoach:
         header = None
         lap_rows = []
         prev_distance = None
+        prev_lap_time = None
+        prev_lap_counter = None
+        next_realtime_analysis = time.time() + REALTIME_ANALYSIS_INTERVAL_S
 
         with open(csv_path, encoding="utf-8") as f:
             last_data = time.time()
@@ -201,11 +350,20 @@ class LiveCoach:
 
                 self.on_frame(frame)
                 d = frame["lap_distance"]
-                if prev_distance is not None and d < prev_distance - LAP_RESET_DROP_M:
-                    self.on_lap(lap_rows)
+                lap_time = frame.get("lap_time")
+                lap_counter = _lap_counter(frame)
+                if _lap_finished(frame, prev_distance, prev_lap_time, prev_lap_counter):
+                    if lap_rows:
+                        self.on_lap(lap_rows)
                     lap_rows = []
+                    next_realtime_analysis = time.time() + REALTIME_ANALYSIS_INTERVAL_S
                 prev_distance = d
+                prev_lap_time = lap_time
+                prev_lap_counter = lap_counter
                 lap_rows.append(frame)
+                if time.time() >= next_realtime_analysis:
+                    self.on_snapshot(lap_rows)
+                    next_realtime_analysis = time.time() + REALTIME_ANALYSIS_INTERVAL_S
 
         # Player recordings often end right at the finish line without one
         # more reset row, so flush whatever is buffered as the final lap.

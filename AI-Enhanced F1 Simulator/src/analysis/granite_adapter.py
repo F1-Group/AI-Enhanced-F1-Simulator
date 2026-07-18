@@ -3,16 +3,13 @@
 For each top error the flow is:
     error JSON -> Granite prompt (Team 3's build_user_prompt + RAG)
                -> coaching text  (ask_race_engineer + guardrail)
-               -> speech         (macOS TTS as a stand-in for Team 3's gTTS)
-               -> AudioManager.play_sound()
+               -> AudioManager's in-memory speech queue
 
 If Granite is not available (no API key, package missing, network down),
-the adapter falls back to the pre-recorded per-type audio clip via
-AudioManager.play_error(), so the coaching loop keeps working in demos.
+the adapter speaks the deterministic coaching hint through the same queue.
 """
 
 import os
-import subprocess
 import sys
 from pathlib import Path
 
@@ -66,15 +63,34 @@ def _granite_coaching_text(error):
     return text if is_valid else None
 
 
-def _synthesize(text, name):
-    """Temporary macOS TTS stand-in until Team 3 wires up gTTS/pyttsx3."""
-    out = PROJECT_ROOT / "audio" / f"tts_{name}.wav"
-    out.parent.mkdir(exist_ok=True)
-    # Text goes via stdin so coaching that starts with "-" is never parsed
-    # as a command-line option.
-    subprocess.run(["say", "-o", str(out), "--data-format=LEI16@22050"],
-                   input=text.encode("utf-8"), check=True)
-    return out
+def coach_error(error, manager, use_granite=True):
+    """Process one in-memory event and return summary-ready AI feedback."""
+    text = None
+    source = "deterministic_fallback"
+    if use_granite and "telemetry" in error:
+        try:
+            text = _granite_coaching_text(error)
+            if text:
+                source = "granite"
+        except Exception as exc:
+            print(f"[coach] Granite unavailable ({type(exc).__name__}); "
+                  f"using deterministic coaching.")
+
+    text = text or error.get("coaching_hint") or error.get("message") or "Driving alert"
+    queued = manager.play_text(
+        text,
+        priority=error.get("priority", "slow"),
+        interrupt=error.get("interrupt", False),
+        cooldown_key=error.get("tag"),
+    )
+    return {
+        "tag": error.get("tag"),
+        "type": error.get("type"),
+        "corner": error.get("corner"),
+        "coaching_text": text,
+        "feedback_source": source,
+        "audio_queued": queued,
+    }
 
 
 def coach_report(report, manager, max_errors=2, use_granite=True):
@@ -89,28 +105,7 @@ def coach_report(report, manager, max_errors=2, use_granite=True):
             continue
         coached_types.add(error["type"])
 
-        text = None
-        if use_granite and "telemetry" in error:
-            try:
-                text = _granite_coaching_text(error)
-            except Exception as exc:
-                print(f"[coach] Granite unavailable ({type(exc).__name__}); "
-                      f"falling back to pre-recorded audio.")
-
-        spoken = False
-        if text:
-            try:
-                wav = _synthesize(text, error["type"])
-                print(f"[coach] Granite says: {text}")
-                manager.play_sound(str(wav), priority="slow")
-                spoken = True
-            except Exception as exc:
-                # e.g. `say` does not exist on the team's Windows machines -
-                # coaching must degrade to the pre-recorded clip, never crash.
-                print(f"[coach] TTS failed ({type(exc).__name__}); "
-                      f"using pre-recorded audio.")
-        if not spoken:
-            manager.play_error(error)
+        coach_error(error, manager, use_granite=use_granite)
 
         if len(coached_types) >= max_errors:
             break

@@ -1,13 +1,32 @@
 import json
 import queue
+import shutil
+import subprocess
 import threading
 import time
 from pathlib import Path
 
-import pygame
+try:
+    import pygame
+except ImportError:
+    pygame = None
 
 DEFAULT_TEMPLATE_PATH = Path(__file__).resolve().parent.parent.parent / "mock" / "error_template.json"
 COOLDOWN_SECONDS = 4.0
+SPEECH_TIMEOUT_SECONDS = 30.0
+
+BUILTIN_ALERTS = {
+    "brake_now": {
+        "message": "Brake now",
+        "priority": "urgent",
+        "interrupt": True,
+    },
+    "off_track": {
+        "message": "You are off track",
+        "priority": "high",
+        "interrupt": False,
+    },
+}
 
 PRIORITY_ORDER = {
     "urgent": 0,
@@ -23,10 +42,11 @@ class AudioManager:
 
     def __init__(self, template_path=DEFAULT_TEMPLATE_PATH, cooldown_seconds=COOLDOWN_SECONDS):
         self.project_root = Path(__file__).resolve().parent.parent.parent
-        self.template_path = self.project_root / template_path
+        template_path = Path(template_path)
+        self.template_path = template_path if template_path.is_absolute() else self.project_root / template_path
         self.cooldown_seconds = cooldown_seconds
-
-        pygame.mixer.init()
+        self._pygame_available = self._init_pygame()
+        self._say_command = shutil.which("say")
 
         self._errors = self._load_errors()
         self._sounds = {}
@@ -39,6 +59,17 @@ class AudioManager:
 
         self._worker = threading.Thread(target=self._audio_loop, daemon=True)
         self._worker.start()
+
+    def _init_pygame(self):
+        if pygame is None:
+            print("pygame is not installed; using speech fallback for audio alerts.")
+            return False
+        try:
+            pygame.mixer.init()
+            return True
+        except pygame.error as error:
+            print(f"pygame mixer unavailable; using speech fallback: {error}")
+            return False
 
     def _load_errors(self):
         if not self.template_path.exists():
@@ -53,6 +84,8 @@ class AudioManager:
         return {error["tag"]: error for error in template["errors"]}
 
     def _get_sound(self, tag):
+        if not self._pygame_available:
+            raise RuntimeError("pygame mixer is unavailable")
         if tag not in self._sounds:
             audio_file = self._errors[tag]["audio_file"]
             audio_path = self.project_root / audio_file
@@ -63,6 +96,24 @@ class AudioManager:
             self._sounds[tag] = pygame.mixer.Sound(str(audio_path))
 
         return self._sounds[tag]
+
+    def _message_for_tag(self, tag):
+        if tag in BUILTIN_ALERTS:
+            return BUILTIN_ALERTS[tag]["message"]
+        if tag in self._errors:
+            error = self._errors[tag]
+            return error.get("coaching_hint") or error.get("message") or tag.replace("_", " ")
+        return tag.replace("_", " ")
+
+    def _message_for_error(self, error):
+        tag = error.get("tag")
+        if tag in BUILTIN_ALERTS:
+            return BUILTIN_ALERTS[tag]["message"]
+        return (
+            error.get("coaching_hint")
+            or error.get("message")
+            or (tag or "Driving alert").replace("_", " ")
+        )
 
     def _resolve_priority(self, priority):
         return PRIORITY_ORDER.get(priority, PRIORITY_ORDER["normal"])
@@ -75,77 +126,128 @@ class AudioManager:
             except queue.Empty:
                 break
 
-    def _enqueue(self, sound, description, priority="normal", interrupt=False):
+    def _enqueue(self, payload, description, priority="normal", interrupt=False, mode="sound"):
         if interrupt:
             self.stop_all()
             self._clear_queue()
 
         with self._lock:
             self._counter += 1
-            item = (self._resolve_priority(priority), self._counter, sound, description)
+            item = (self._resolve_priority(priority), self._counter, mode, payload, description)
             self._audio_queue.put(item)
 
         print(f"Queued audio: {description} | priority={priority} | interrupt={interrupt}")
         return True
 
+    def _enqueue_speech(self, text, description, priority="normal", interrupt=False):
+        clean_text = " ".join(str(text).split())
+        if not clean_text:
+            return False
+        return self._enqueue(clean_text, description, priority=priority, interrupt=interrupt, mode="speech")
+
+    def play_text(self, text, priority="slow", interrupt=False, cooldown_key=None):
+        """Queue generated coaching text without creating a temporary file."""
+        clean_text = " ".join(str(text).split())
+        if not clean_text:
+            return False
+        if cooldown_key:
+            now = time.monotonic()
+            with self._lock:
+                if now - self._last_played.get(cooldown_key, 0) < self.cooldown_seconds:
+                    return False
+                self._last_played[cooldown_key] = now
+        return self._enqueue_speech(
+            clean_text,
+            cooldown_key or "generated coaching",
+            priority=priority,
+            interrupt=interrupt,
+        )
+
+    def _speak_text(self, text):
+        if self._say_command:
+            subprocess.run([self._say_command, text], timeout=SPEECH_TIMEOUT_SECONDS, check=False)
+            return True
+        try:
+            import pyttsx3
+        except ImportError:
+            print(f"Speech fallback unavailable. Alert text: {text}")
+            return False
+
+        engine = pyttsx3.init()
+        engine.say(text)
+        engine.runAndWait()
+        return True
+
     def _audio_loop(self):
         while self._running:
             try:
-                _, _, sound, description = self._audio_queue.get(timeout=0.1)
+                _, _, mode, payload, description = self._audio_queue.get(timeout=0.1)
             except queue.Empty:
                 continue
 
             try:
-                channel = sound.play()
-                print(f"Playing audio: {description}")
+                if mode == "speech":
+                    print(f"Speaking audio: {description}")
+                    self._speak_text(payload)
+                else:
+                    channel = payload.play()
+                    print(f"Playing audio: {description}")
 
-                if channel:
-                    while channel.get_busy() and self._running:
-                        time.sleep(0.05)
+                    if channel:
+                        while channel.get_busy() and self._running:
+                            time.sleep(0.05)
 
-            except pygame.error as error:
-                print(error)
+            except Exception as error:
+                print(f"Audio playback failed for {description}: {error}")
             finally:
                 self._audio_queue.task_done()
 
     def play(self, tag, priority=None, interrupt=None):
-        """Play a predefined audio clip by error tag."""
-        if tag not in self._errors:
-            print(f"No audio mapping found for tag: {tag}")
-            return False
+        """Play a predefined audio clip by error tag, falling back to speech."""
+        mapping = self._errors.get(tag) or BUILTIN_ALERTS.get(tag)
+        if mapping is None:
+            mapping = {"priority": "normal", "interrupt": False, "message": self._message_for_tag(tag)}
 
-        error = self._errors[tag]
-        priority = priority or error.get("priority", "normal")
-        interrupt = interrupt if interrupt is not None else error.get("interrupt", False)
+        priority = priority or mapping.get("priority", "normal")
+        interrupt = interrupt if interrupt is not None else mapping.get("interrupt", False)
 
         now = time.time()
         if now - self._last_played.get(tag, 0) < self.cooldown_seconds:
             return False
+        self._last_played[tag] = now
 
-        try:
-            sound = self._get_sound(tag)
-            self._last_played[tag] = now
-            return self._enqueue(sound, tag, priority=priority, interrupt=interrupt)
-        except (pygame.error, FileNotFoundError) as error:
-            print(error)
-            return False
+        if tag in self._errors:
+            try:
+                sound = self._get_sound(tag)
+                return self._enqueue(sound, tag, priority=priority, interrupt=interrupt)
+            except Exception as error:
+                print(f"Falling back to speech for {tag}: {error}")
 
-    def play_sound(self, file_path, priority="slow", interrupt=False):
-        """Play a Team 3 generated .wav file."""
+        return self._enqueue_speech(
+            mapping.get("message") or self._message_for_tag(tag),
+            tag,
+            priority=priority,
+            interrupt=interrupt,
+        )
+
+    def play_sound(self, file_path, priority="slow", interrupt=False, fallback_text=None):
+        """Play a Team 3 generated .wav file, or speak fallback text."""
         audio_path = Path(file_path)
         if not audio_path.is_absolute():
             audio_path = self.project_root / audio_path
 
-        if not audio_path.exists():
-            print(f"Audio file not found: {audio_path}")
-            return False
+        if self._pygame_available and audio_path.exists():
+            try:
+                sound = pygame.mixer.Sound(str(audio_path))
+                return self._enqueue(sound, str(audio_path), priority=priority, interrupt=interrupt)
+            except Exception as error:
+                print(f"Audio file playback failed for {audio_path}: {error}")
+        else:
+            print(f"Audio file unavailable: {audio_path}")
 
-        try:
-            sound = pygame.mixer.Sound(str(audio_path))
-            return self._enqueue(sound, str(audio_path), priority=priority, interrupt=interrupt)
-        except pygame.error as error:
-            print(error)
-            return False
+        if fallback_text:
+            return self._enqueue_speech(fallback_text, str(audio_path), priority=priority, interrupt=interrupt)
+        return False
 
     def play_error(self, error):
         """Play from a real error JSON produced by Team 2's detection algorithm."""
@@ -166,7 +268,21 @@ class AudioManager:
             if now - self._last_played.get(cooldown_key, 0) < self.cooldown_seconds:
                 return False
             self._last_played[cooldown_key] = now
-            return self.play_sound(audio_file, priority=priority, interrupt=interrupt)
+            return self.play_sound(
+                audio_file,
+                priority=priority,
+                interrupt=interrupt,
+                fallback_text=self._message_for_error(error),
+            )
+
+        fallback_text = self._message_for_error(error)
+        if fallback_text:
+            cooldown_key = tag or fallback_text
+            now = time.time()
+            if now - self._last_played.get(cooldown_key, 0) < self.cooldown_seconds:
+                return False
+            self._last_played[cooldown_key] = now
+            return self._enqueue_speech(fallback_text, cooldown_key, priority=priority, interrupt=interrupt)
 
         print(f"Invalid error object, missing tag or audio_file: {error}")
         return False
@@ -184,7 +300,8 @@ class AudioManager:
         """
         deadline = None if timeout is None else time.time() + timeout
         while self._running:
-            if self._audio_queue.unfinished_tasks == 0 and not pygame.mixer.get_busy():
+            mixer_busy = self._pygame_available and pygame.mixer.get_busy()
+            if self._audio_queue.unfinished_tasks == 0 and not mixer_busy:
                 return True
             if deadline is not None and time.time() >= deadline:
                 return False
@@ -192,13 +309,15 @@ class AudioManager:
         return False
 
     def stop_all(self):
-        pygame.mixer.stop()
+        if self._pygame_available:
+            pygame.mixer.stop()
 
     def shutdown(self):
         self._running = False
         self.stop_all()
         self._clear_queue()
-        pygame.mixer.quit()
+        if self._pygame_available:
+            pygame.mixer.quit()
 
 
 if __name__ == "__main__":
