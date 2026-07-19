@@ -43,16 +43,30 @@ def resample_lap(lap, grid):
 
 
 def align_nearest(lap, grid):
-    """Nearest-neighbour alignment of a lap onto the shared distance grid.
-
-    For every grid point (e.g. 500.0 m) this picks the telemetry row whose
-    lap_distance is closest (e.g. the player sample at 500.2 m). Vectorised
-    with np.searchsorted, so it stays fast even on 50 Hz logs.
+    """Nearest-neighbour alignment with Live-Snapshot awareness.
+    
+    Prevents future grid points from stealing the last available frame
+    during active streaming analysis.
     """
     lap = make_monotonic(lap)
     d = lap["lap_distance"].to_numpy()
+    
+    if len(d) == 0:
+        # Handle empty telemetry data safely.
+        out = pd.DataFrame(0.0, index=np.arange(len(grid)), columns=CHANNELS)
+        out.insert(0, "lap_distance", grid)
+        out["align_gap_m"] = 999.0
+        return out
+
+    # Find the maximum distance the player has covered in the current lap.
+    max_player_dist = d[-1]
 
     right = np.searchsorted(d, grid)
+    
+    # Create a mask for grid points that are in the "future" (where the player has not arrived yet).
+    # Leave a tiny buffer, and isolate all points that exceed max_player_dist.
+    future_mask = grid > (max_player_dist + 0.1)
+
     right = np.clip(right, 1, len(d) - 1)
     left = right - 1
 
@@ -61,9 +75,21 @@ def align_nearest(lap, grid):
 
     out = lap.iloc[nearest][CHANNELS].reset_index(drop=True)
     out.insert(0, "lap_distance", grid)
-    # How far the chosen sample really is from the grid point; big gaps mean
-    # the car was off-track / reversing there and the row is unreliable.
+    
+    # Calculate the actual distance gap for alignment.
     out["align_gap_m"] = np.abs(d[nearest] - grid)
+    
+    # Clear telemetry data for future grid points that the driver has not reached yet.
+    for col in CHANNELS:
+        if col == "lap_time":
+            out.loc[future_mask, col] = np.nan
+        else:
+            # Reset speed, throttle, and brake to zero for future points.
+            out.loc[future_mask, col] = 0.0
+
+    # Mark as a massive gap so downstream filters automatically ignore it.
+    out.loc[future_mask, "align_gap_m"] = 999.0
+    
     return out
 
 
