@@ -8,6 +8,7 @@ interrupt any slow-layer coaching that is currently playing.
 """
 
 import numpy as np
+import time
 
 from .lap_utils import SPEED_MAX_VALID
 
@@ -28,6 +29,7 @@ class FastLayer:
         # (approach_start, apex) intervals for every corner
         self._zones = [(c["start_m"] - APPROACH_ZONE_M, c["apex_m"]) for c in corners]
         self._manager = manager
+        self._last_fast_play = {}
 
     def _approaching_corner(self, d):
         return any(start <= d <= apex for start, apex in self._zones)
@@ -40,6 +42,7 @@ class FastLayer:
         """
         d = frame["lap_distance"]
         speed = frame["speed_kmh"]
+        current_time = time.time()
 
         # Collisions spike the speed sensor past 1000 km/h (see lap_utils);
         # a glitched frame must never fire an urgent interrupt.
@@ -49,21 +52,22 @@ class FastLayer:
         if self._approaching_corner(d):
             expert_speed = float(np.interp(d, self._dist, self._speed))
             if speed > expert_speed + OVERSPEED_KMH and frame["brake"] < BRAKE_LOW:
-                self._manager.play("brake_now")
-                return "brake_now"
+                if current_time - self._last_fast_play.get("brake_now", 0.0) > 3.0:
+                    self._manager.play("brake_now")
+                    self._last_fast_play["brake_now"] = current_time
+                    return "brake_now"
 
         if abs(frame["track_pos"]) > OFF_TRACK_POS:
-            self._manager.play_error({
-                "tag": "off_track",
-                "type": "poor_track_position",
-                # Distinct cooldown key: the live off-track warning must not
-                # share a cooldown bucket with the slow layer's
-                # poor_track_position coaching (they would suppress each other).
-                "audio_key": "off_track",
-                "audio_file": "audio/poor_track_position.wav",
-                "priority": "high",
-                "interrupt": False,
-            })
-            return "off_track"
+            if current_time - self._last_fast_play.get("off_track", 0.0) > 3.0:
+                self._last_fast_play["off_track"] = current_time
+                self._manager.play_error({
+                    "tag": "off_track",
+                    "type": "poor_track_position",
+                    "audio_key": "off_track",
+                    "audio_file": "audio/poor_track_position.wav",
+                    "priority": "high",
+                    "interrupt": True,
+                })
+                return "off_track"
 
         return None

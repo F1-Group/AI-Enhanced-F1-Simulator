@@ -29,7 +29,11 @@ def clean_telemetry(df):
     """
     spikes = (df["speed_kmh"] < 0.0) | (df["speed_kmh"] > SPEED_MAX_VALID)
     df.loc[spikes, "speed_kmh"] = np.nan
-    df["speed_kmh"] = df["speed_kmh"].interpolate(limit_direction="both")
+
+    if df["speed_kmh"].isna().all():
+        df["speed_kmh"] = 0.0
+    else:
+        df["speed_kmh"] = df["speed_kmh"].interpolate(limit_direction="both")
     return df
 
 

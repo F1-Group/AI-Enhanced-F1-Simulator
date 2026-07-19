@@ -34,9 +34,21 @@ def get_ai_link_status():
         return {"llm_connected": True, "message": "AI Link operational."}
     except Exception as e:
         error_msg = str(e)
+        
+        # Intercept specific 403 quota exhaustion errors from IBM watsonx.ai
         if "403" in error_msg or "quota" in error_msg.lower():
-            return {"llm_connected": False, "message": "AI quota exhausted (403 Quota Reached)."}
-        return {"llm_connected": False, "message": f"AI connection failed: {error_msg}"}
+            status_msg = (
+                "IBM watsonx.ai Granite connection failed! Reason: API quota exhausted (403 Quota Reached). "
+                "System has automatically switched to fallback mode using local basic analysis."
+            )
+            return {"llm_connected": False, "message": status_msg}
+        
+        # Catch other types of network timeouts or general API connection failures
+        status_msg = (
+            f"IBM watsonx.ai Granite connection failed! Reason: {error_msg}. "
+            f"System has automatically switched to fallback mode using local basic analysis."
+        )
+        return {"llm_connected": False, "message": status_msg}
 
 FALLBACK_SCRIPTS = {
     "late_braking": "Brake earlier before the corner and release more smoothly for better entry stability.",

@@ -64,7 +64,6 @@ def validate_output(response: str, error_type: str = "default"):
     word_count = len(words)
 
     if word_count > MAX_WORDS:
-        # 直接截斷到MAX_WORDS個字
         truncated = ' '.join(words[:MAX_WORDS]).rstrip(',;') + '.'
         return True, truncated
 
