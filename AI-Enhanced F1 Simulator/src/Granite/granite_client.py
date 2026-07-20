@@ -1,52 +1,48 @@
 import os
 import time
-from dotenv import load_dotenv
-from ibm_watsonx_ai import Credentials
-from ibm_watsonx_ai.foundation_models import ModelInference
+import subprocess
 from pathlib import Path
+import ollama
 
-os.environ.pop("HTTP_PROXY", None)
-os.environ.pop("HTTPS_PROXY", None)
-
-load_dotenv()
-
-credentials = Credentials(
-    url="https://us-south.ml.cloud.ibm.com",
-    api_key=os.getenv("GRANITE_API_KEY")
-)
-model = None
+MODEL_NAME = "granite3-dense:2b"
 
 def init_granite_model():
-    global model
-    if model is None:
-        model = ModelInference(
-            model_id="ibm/granite-4-h-small",
-            credentials=credentials,
-            project_id=os.getenv("GRANITE_PROJECT_ID")
-        )
-    return model
+    """自動檢查並啟動 Ollama 服務與 Granite 2B 模型"""
+    print(f"[Ollama] Initializing local Granite engine ({MODEL_NAME})...")
+    
+    # 1. 檢查 Ollama 背景服務是否已在運行，若沒運行則嘗試自動啟動
+    try:
+        ollama.list()
+    except Exception:
+        print("[Ollama] Service not running. Attempting to start Ollama background process...")
+        try:
+            # 在背景啟動 Ollama 服務 (Mac / Linux)
+            subprocess.Popen(["ollama", "serve"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            time.sleep(2)  # 等待服務啟動
+        except Exception as e:
+            print(f"[Ollama Error] Could not auto-start Ollama process: {e}")
+
+    # 2. 預熱/預載入模型 (Warm-up)，讓第一句語音推論更快速
+    try:
+        ollama.chat(model=MODEL_NAME, messages=[{"role": "user", "content": "hi"}])
+        print(f"[Ollama SUCCESS] Model '{MODEL_NAME}' loaded successfully into memory.")
+    except Exception as e:
+        print(f"[Ollama Warning] Model load failed. Did you download it with 'ollama pull {MODEL_NAME}'? Error: {e}")
+
+    return None
 
 def get_ai_link_status():
-    """Health check interface to verify IBM Watsonx API connection."""
+    """Health check interface to verify local Ollama API connection."""
     try:
         test_messages = [{"role": "user", "content": "ping"}]
-        model.chat(messages=test_messages)
-        return {"llm_connected": True, "message": "AI Link operational."}
+        ollama.chat(model=MODEL_NAME, messages=test_messages)
+        return {"llm_connected": True, "message": f"Local Ollama Granite ({MODEL_NAME}) operational."}
     except Exception as e:
         error_msg = str(e)
-        
-        # Intercept specific 403 quota exhaustion errors from IBM watsonx.ai
-        if "403" in error_msg or "quota" in error_msg.lower():
-            status_msg = (
-                "IBM watsonx.ai Granite connection failed! Reason: API quota exhausted (403 Quota Reached). "
-                "System has automatically switched to fallback mode using local basic analysis."
-            )
-            return {"llm_connected": False, "message": status_msg}
-        
-        # Catch other types of network timeouts or general API connection failures
         status_msg = (
-            f"IBM watsonx.ai Granite connection failed! Reason: {error_msg}. "
-            f"System has automatically switched to fallback mode using local basic analysis."
+            f"Local Ollama connection failed! Reason: {error_msg}. "
+            f"Please ensure 'ollama run granite3-dense:2b' is running in Terminal. "
+            f"System switched to fallback mode."
         )
         return {"llm_connected": False, "message": status_msg}
 
@@ -66,10 +62,10 @@ def get_fallback_text(error_type: str) -> str:
     return FALLBACK_SCRIPTS.get(error_type, FALLBACK_DEFAULT)
 
 
-def ask_race_engineer(system_prompt, user_prompt, max_retries=2, wait_seconds=5, error_type=None):
+def ask_race_engineer(system_prompt, user_prompt, max_retries=2, wait_seconds=2, error_type=None):
     """
-    Call Granite and return coaching text as a string.
-    Falls back to a rule-based text if the API is unavailable.
+    Call local Ollama Granite and return coaching text as a string.
+    Falls back to a rule-based text if Ollama is unavailable.
     """
     messages = [
         {"role": "system", "content": system_prompt},
@@ -78,19 +74,18 @@ def ask_race_engineer(system_prompt, user_prompt, max_retries=2, wait_seconds=5,
 
     for attempt in range(1, max_retries + 1):
         try:
-            response = model.chat(messages=messages)
-            return response['choices'][0]['message']['content']
+            # 使用 local ollama chat 替代 model.chat
+            response = ollama.chat(
+                model=MODEL_NAME,
+                messages=messages
+            )
+            return response['message']['content']
         except Exception as e:
             error_text = str(e)
-            if "429" in error_text or "consumption_limit_reached" in error_text:
-                print(f"[Rate limited] Attempt {attempt}/{max_retries}. Waiting {wait_seconds}s...")
-                if attempt < max_retries:
-                    time.sleep(wait_seconds)
-                else:
-                    print("[Rate limited] Max retries reached. Using fallback.")
-                    break
+            print(f"[Local Granite Error] Attempt {attempt}/{max_retries}: {error_text}")
+            if attempt < max_retries:
+                time.sleep(wait_seconds)
             else:
-                print(f"[Granite error] {error_text}")
                 break
 
     fallback_text = get_fallback_text(error_type or "")

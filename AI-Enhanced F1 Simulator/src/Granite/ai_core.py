@@ -23,7 +23,60 @@ _ERROR_REPLY_MARKERS = (
     "I'm currently experiencing high demand",
 )
 
+def process_single_error(error, system_prompt, audio_manager, force_fallback=False):
+    """精準區分快慢層的處理邏輯，並僅印出最終 Feedback"""
+    global _RUNTIME_LLM_OK
+    
+    error_type = error.get("type") or error.get("tag") or "generic_error"
+    coaching_request = f"{error.get('message', '')} {error.get('coaching_hint', '')}".strip()
 
+    # ==========================================
+    # ⚡ 1. FAST LAYER：快層事件攔截 (完全不重複處理)
+    # ==========================================
+    EMERGENCY_TYPES = ["off_track", "collision_warning", "brake_now"]
+    if error_type in EMERGENCY_TYPES or error.get("priority") == "high":
+        # 🛑 fast_layer.py 已經在 50Hz 主迴圈播過了，Queue 裡的快層殘餘事件直接丟棄！
+        return
+
+    # ==========================================
+    # 🧠 2. SLOW LAYER：戰術與技術指導 (走 Granite 2B 本地推論)
+    # ==========================================
+    if force_fallback or not _RUNTIME_LLM_OK:
+        answer_text = get_fallback_text(error_type)
+    else:
+        # RAG 知識庫檢索 + Granite 2B 推論
+        knowledge_chunks = retrieve(coaching_request, top_k=2)
+        knowledge_context = "\n".join(knowledge_chunks)
+        
+        user_prompt = build_user_prompt(
+            error.get("telemetry", {}),
+            coaching_request,
+            track="olethros_road_1",
+            knowledge=knowledge_context,
+            errors=[]
+        )
+
+        try:
+            answer_text = ask_race_engineer(system_prompt, user_prompt, error_type=error_type)
+        except Exception:
+            answer_text = get_fallback_text(error_type)
+
+    # 執行 Guardrail 檢查後播放
+    result = apply_guardrail(coaching_request, answer_text, error=error)
+    if result and result.get("is_valid", False):
+        feedback_text = result.get("feedback", answer_text)
+        
+        # 🟢 2. 控制台印出慢層 Feedback
+        print(f"\n[Slow Layer Feedback]: {feedback_text}")
+        
+        audio_manager.play_text(
+            feedback_text,
+            priority="normal",
+            cooldown_key=f"{error_type}_{error.get('corner')}"  # 避免同一個彎道重複碎碎唸
+        )
+    return result
+
+'''
 def process_single_error(error, system_prompt, audio_manager, force_fallback=False):
     """Processes an isolated telemetry infraction."""
     global _RUNTIME_LLM_OK
@@ -93,7 +146,7 @@ def process_single_error(error, system_prompt, audio_manager, force_fallback=Fal
         cooldown_key=error.get("tag"),
     )
     return result
-
+'''
 
 def generate_summary(all_results, system_prompt, force_fallback=False):
     """Compiles all isolated coaching insights into a macro lap review summary."""
@@ -175,7 +228,6 @@ def ai_queue_consumer_loop(event_queue, audio_manager, stop_event, is_llm_availa
         except Exception as e:
             print(f"[AI Thread Warning] Infraction processing failed: {e}")
         finally:
-            event_queue.path = None
             event_queue.task_done()
 
     # Cleanup block for forced exits

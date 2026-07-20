@@ -101,6 +101,7 @@ class LiveCoach:
         self.event_output_queue = event_output_queue
         self.use_granite = use_granite
         self.cache = cache
+        self._is_draining = False
 
         target_expert = expert_path or DEFAULT_EXPERT
         self.expert_laps = split_laps(load_telemetry(target_expert))
@@ -116,6 +117,15 @@ class LiveCoach:
         self._schema_warned = False
         self._tag_last_queued_time = {}
         self._corner_last_queued_time = {}
+        self.cooldown_config = {
+            "off_track": 3.0,          # 衝出賽道 3 秒內不重複叫
+            "late_braking": 3.5,       # 煞車過晚 3.5 秒內不重複叫
+            "poor_corner_exit": 4.0,   # 出彎問題 4 秒內不重複叫
+            "sector_time_loss": 10.0,  # Sector 時間差 10 秒內不重複叫
+            "default": 3.0
+        }
+
+
         self._event_lock = threading.Lock()
         self._summary_lock = threading.Lock()
         self._lap_reports = []
@@ -169,6 +179,7 @@ class LiveCoach:
         first call also loads the RAG models). Returns True when everything
         drained, False if we gave up.
         """
+        self._is_draining = True
         deadline = time.time() + timeout
         queues = (self._snapshots, self._laps)
         completed = False
@@ -211,6 +222,9 @@ class LiveCoach:
                 self._snapshots.task_done()
 
     def _publish_new_errors(self, report, lap_number, is_realtime):
+        if self._is_draining:
+            return []
+        
         with self._event_lock:
             # Define priority weights
             priority_weights = {"urgent": 0, "high": 1, "normal": 2, "low": 3, "slow": 4}
@@ -256,23 +270,26 @@ class LiveCoach:
                         location_best_error[loc] = (weight, error)
 
             # Implement timeline-based cross-signal throttling defense
-            CORNER_COOLDOWN_S = 4.0 
             now = time.time()
             new_errors = []
 
             for loc, (weight, error) in location_best_error.items():
+                error_type = error.get("type") or error.get("tag") or "generic_error"
+                # 動態取得該違規類別對應的冷卻秒數
+                cooldown_s = self.cooldown_config.get(error_type, self.cooldown_config["default"])
+
                 if loc in self._corner_last_queued_time:
-                    if now - self._corner_last_queued_time[loc] < CORNER_COOLDOWN_S:
+                    if now - self._corner_last_queued_time[loc] < cooldown_s:
                         continue 
-                
+
                 self._corner_last_queued_time[loc] = now
                 new_errors.append(error)
-                
+
         # Limit the maximum number of errors sent per lap or snapshot,
         # then push to the external IPC queue
         MAX_ERRORS_PER_LAP = 2  
         errors_to_process = new_errors[:MAX_ERRORS_PER_LAP]
-        
+
         for error in errors_to_process:
             event = dict(error)
             event["lap_number"] = lap_number
@@ -280,15 +297,18 @@ class LiveCoach:
             event["session_id"] = self.session_id
             event["creation_realtime"] = time.time()
 
-            # If the event is a real-time analysis containing numerical feedback
-            if is_realtime and event.get("coaching_hint"):
-               # Prioritize it in the AudioManager to prevent timeouts from canned audio backlogs
+            # 🟢 設定合理的播放優先順序，防止語音打架
+            error_type = event.get("type") or event.get("tag")
+            if error_type in ["off_track", "brake_now"]:
                 event["priority"] = "high"
-                event["interrupt"] = True
-            
+                event["interrupt"] = True  # 只有極度危險的狀況才允許打斷
+            else:
+                event["priority"] = "normal"
+                event["interrupt"] = False # 其他 LLM coaching 順暢排隊
+
             event.pop("_location_key", None)
             self.event_output_queue.put(event)
-            
+
         return errors_to_process
 
     def _process_snapshot(self, rows):
@@ -357,6 +377,9 @@ class LiveCoach:
                 if line is None:
                     if time.time() - last_data > idle_timeout_s:
                         print("[Coach] Data stream idled out - ending session.")
+                        # 🛑 1. 新增：比賽結束立刻切斷舊語音，不再播放賽中的積壓錯誤！
+                        if self.manager:
+                            self.manager.stop_all()
                         break
                     time.sleep(POLL_S)
                     continue

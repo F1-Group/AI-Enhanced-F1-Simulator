@@ -95,6 +95,7 @@ def main():
         if 'ai_thread' in locals() and ai_thread.is_alive():
             print("\n[Main] Awaiting AI Thread to finish macro summary report (generating JSON)...")
             # Allow enough time for the LLM to generate the report and write it to disk.
+            shared_event_queue.put(None)
             ai_thread.join(timeout=30)
 
         print("\n" + "="*50)
@@ -108,6 +109,7 @@ def main():
         while not shared_event_queue.empty():
             try:
                 shared_event_queue.get_nowait()
+                shared_event_queue.task_done()
             except queue.Empty:
                 break
 
