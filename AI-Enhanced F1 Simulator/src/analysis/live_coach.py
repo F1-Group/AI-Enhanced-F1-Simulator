@@ -118,10 +118,10 @@ class LiveCoach:
         self._tag_last_queued_time = {}
         self._corner_last_queued_time = {}
         self.cooldown_config = {
-            "off_track": 3.0,          # 衝出賽道 3 秒內不重複叫
-            "late_braking": 3.5,       # 煞車過晚 3.5 秒內不重複叫
-            "poor_corner_exit": 4.0,   # 出彎問題 4 秒內不重複叫
-            "sector_time_loss": 10.0,  # Sector 時間差 10 秒內不重複叫
+            "off_track": 3.0,
+            "late_braking": 3.5,
+            "poor_corner_exit": 4.0,
+            "sector_time_loss": 10.0,
             "default": 3.0
         }
 
@@ -275,7 +275,6 @@ class LiveCoach:
 
             for loc, (weight, error) in location_best_error.items():
                 error_type = error.get("type") or error.get("tag") or "generic_error"
-                # 動態取得該違規類別對應的冷卻秒數
                 cooldown_s = self.cooldown_config.get(error_type, self.cooldown_config["default"])
 
                 if loc in self._corner_last_queued_time:
@@ -297,14 +296,13 @@ class LiveCoach:
             event["session_id"] = self.session_id
             event["creation_realtime"] = time.time()
 
-            # 🟢 設定合理的播放優先順序，防止語音打架
             error_type = event.get("type") or event.get("tag")
             if error_type in ["off_track", "brake_now"]:
                 event["priority"] = "high"
-                event["interrupt"] = True  # 只有極度危險的狀況才允許打斷
+                event["interrupt"] = True
             else:
                 event["priority"] = "normal"
-                event["interrupt"] = False # 其他 LLM coaching 順暢排隊
+                event["interrupt"] = False
 
             event.pop("_location_key", None)
             self.event_output_queue.put(event)
@@ -377,7 +375,6 @@ class LiveCoach:
                 if line is None:
                     if time.time() - last_data > idle_timeout_s:
                         print("[Coach] Data stream idled out - ending session.")
-                        # 🛑 1. 新增：比賽結束立刻切斷舊語音，不再播放賽中的積壓錯誤！
                         if self.manager:
                             self.manager.stop_all()
                         break

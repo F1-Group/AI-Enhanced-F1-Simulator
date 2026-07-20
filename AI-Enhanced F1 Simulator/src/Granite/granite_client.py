@@ -1,5 +1,7 @@
 import os
 import time
+import platform
+import shutil
 import subprocess
 from pathlib import Path
 import ollama
@@ -7,22 +9,53 @@ import ollama
 MODEL_NAME = "granite3-dense:2b"
 
 def init_granite_model():
-    """自動檢查並啟動 Ollama 服務與 Granite 2B 模型"""
+    """Automatically check and start the Ollama service and Granite 2B model (supports Win / Mac / Linux)."""
     print(f"[Ollama] Initializing local Granite engine ({MODEL_NAME})...")
     
-    # 1. 檢查 Ollama 背景服務是否已在運行，若沒運行則嘗試自動啟動
+    os_type = platform.system()
+    
+    # Check if the Ollama background service is running
     try:
         ollama.list()
     except Exception:
         print("[Ollama] Service not running. Attempting to start Ollama background process...")
         try:
-            # 在背景啟動 Ollama 服務 (Mac / Linux)
-            subprocess.Popen(["ollama", "serve"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            time.sleep(2)  # 等待服務啟動
+            if os_type == "Windows":
+                # Windows logic: Find the Ollama executable and launch it in the background without a CMD window
+                ollama_bin = shutil.which("ollama.exe") or shutil.which("ollama")
+                if not ollama_bin:
+                    # Common default installation path on Windows
+                    local_appdata = os.environ.get("LOCALAPPDATA", "")
+                    candidate = os.path.join(local_appdata, "Programs", "Ollama", "ollama.exe")
+                    if os.path.exists(candidate):
+                        ollama_bin = candidate
+
+                if ollama_bin:
+                    # CREATE_NO_WINDOW (0x08000000) prevents the black CMD window from popping up
+                    subprocess.Popen(
+                        [ollama_bin, "serve"],
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                        creationflags=0x08000000
+                    )
+                else:
+                    raise FileNotFoundError("Ollama executable not found in PATH or standard directory.")
+            else:
+                # macOS / Linux logic
+                subprocess.Popen(
+                    ["ollama", "serve"],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL
+                )
+
+            # Give Windows a slightly longer wait time (buffer) to start the service
+            wait_time = 3.0 if os_type == "Windows" else 2.0
+            time.sleep(wait_time)
+            
         except Exception as e:
             print(f"[Ollama Error] Could not auto-start Ollama process: {e}")
 
-    # 2. 預熱/預載入模型 (Warm-up)，讓第一句語音推論更快速
+    # Pre-load the model into memory
     try:
         ollama.chat(model=MODEL_NAME, messages=[{"role": "user", "content": "hi"}])
         print(f"[Ollama SUCCESS] Model '{MODEL_NAME}' loaded successfully into memory.")
@@ -74,7 +107,6 @@ def ask_race_engineer(system_prompt, user_prompt, max_retries=2, wait_seconds=2,
 
     for attempt in range(1, max_retries + 1):
         try:
-            # 使用 local ollama chat 替代 model.chat
             response = ollama.chat(
                 model=MODEL_NAME,
                 messages=messages
