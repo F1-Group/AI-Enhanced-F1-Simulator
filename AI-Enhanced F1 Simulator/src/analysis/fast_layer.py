@@ -53,12 +53,14 @@ class FastLayer:
             expert_speed = float(np.interp(d, self._dist, self._speed))
             if speed > expert_speed + OVERSPEED_KMH and frame["brake"] < BRAKE_LOW:
                 if current_time - self._last_fast_play.get("brake_now", 0.0) > 3.0:
+                    print(f"\n[Fast Layer Feedback]: Brake now")
                     self._manager.play("brake_now")
                     self._last_fast_play["brake_now"] = current_time
                     return "brake_now"
 
         if abs(frame["track_pos"]) > OFF_TRACK_POS:
             if current_time - self._last_fast_play.get("off_track", 0.0) > 3.0:
+                print(f"\n[Fast Layer Feedback]: You are off track")
                 self._last_fast_play["off_track"] = current_time
                 self._manager.play_error({
                     "tag": "off_track",

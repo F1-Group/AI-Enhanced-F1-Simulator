@@ -149,7 +149,7 @@ class AudioManager:
             return False
         return self._enqueue(clean_text, description, priority=priority, interrupt=interrupt, mode="speech")
 
-    def play_text(self, text, priority="slow", interrupt=False, cooldown_key=None):
+    def play_text(self, text, priority="normal", interrupt=False, cooldown_key=None):
         """Queue generated coaching text without creating a temporary file."""
         clean_text = " ".join(str(text).split())
         if not clean_text:
@@ -162,7 +162,7 @@ class AudioManager:
                 self._last_played[cooldown_key] = now
         return self._enqueue_speech(
             clean_text,
-            cooldown_key or "generated coaching",
+            "AI Coaching Speech",
             priority=priority,
             interrupt=interrupt,
         )
@@ -199,15 +199,17 @@ class AudioManager:
                 self._audio_queue.task_done()
                 break
 
-            # Drop the event if it has been in the queue for more than 1.5 seconds.
-            if time.monotonic() - created_time > 1.5:
+            # Drop the event if it has been in the queue for more than 2.5 seconds.
+            if time.monotonic() - created_time > 2.5:
                 print(f"[Timeout Dropped] {description} is too old ({time.monotonic() - created_time:.2f}s old), skipping.")
                 self._audio_queue.task_done()
                 continue
 
             try:
                 if mode == "speech":
-                    print(f"Speaking audio: {description}")
+                    log_desc = description if description in BUILTIN_ALERTS else "AI Coaching Speech"
+                    print(f"Speaking audio: {log_desc}")
+                    
                     if self._running:
                         self._speak_text(payload)
                 else:
