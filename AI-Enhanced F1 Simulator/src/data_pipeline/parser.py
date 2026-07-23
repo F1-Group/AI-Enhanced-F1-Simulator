@@ -32,7 +32,7 @@ def clean_my_data(raw_string):
 
     # Speed conversion (speedX * 3.6)
     speed_x = float(raw_data.get('speedX', 0.0))
-    cleaned_data['speed_kmh'] = speed_x * 3.6
+    cleaned_data['speed_kmh'] = speed_x
 
     # Basic vehicle dynamics
     cleaned_data['track_pos'] = float(raw_data.get('trackPos', 0.0))
