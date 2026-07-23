@@ -1,135 +1,185 @@
 import sys
 import threading
 import time
-import queue
+import subprocess
 from pathlib import Path
 
 SRC_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SRC_DIR.parent
 sys.path.insert(0, str(SRC_DIR))
+ERROR_REPORT_DIR = PROJECT_ROOT / "data" / "error_report"
 
 from data_pipeline.input import InputHandler
 from data_pipeline.client import Client
 from data_pipeline.logger import CSVLogger
-from data_pipeline.cache import cache
+from data_pipeline.cache import cache, GameStatus
 from granite.rag import load_knowledge_base
 from audio_manager.audio_manager import AudioManager
-from analysis.live_coach import LiveCoach
-from granite.ai_core import ai_queue_consumer_loop 
+from granite.ai_core import process_all_errors_pipeline
+from ui.dashboard import TelemetryDashboard
+
+
+# BACKGROUND FILE WATCHER THREAD
+def ai_file_watcher_loop(audio_manager, stop_event, llm_connected):
+    """
+    Background worker thread for Team 3:
+    Monitors Team 2's output directory and instantly fires the AI pipeline 
+    the second a NEW JSON report file lands, ignoring all past historical files.
+    """
+    print(f"[Main] File watcher thread active (LLM Connected: {llm_connected}). Monitoring Team 2 JSON outputs...")
+    
+    # On startup, immediately mark all pre-existing files as "already processed"
+    processed_files = set()
+    if ERROR_REPORT_DIR.exists():
+        processed_files = {f.name for f in ERROR_REPORT_DIR.glob("error_report_*.json")}
+        if processed_files:
+            print(f"[Main] Safely ignored {len(processed_files)} historical reports found in directory.")
+
+    # Ensure target log directories exist
+    ERROR_REPORT_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Run the loop while checking your stop_event
+    while not stop_event.is_set():
+        try:
+            # Query all current JSON reports created by Team 2
+            current_files = {f.name for f in ERROR_REPORT_DIR.glob("error_report_*.json")}
+            
+            # Find files that are ACTUALLY new (present in directory but not in our processed set)
+            new_files = current_files - processed_files
+            
+            if new_files:
+                # Sort them to process the absolute latest one first
+                latest_new_file_name = sorted(list(new_files))[-1]
+                latest_file_path = ERROR_REPORT_DIR / latest_new_file_name
+                
+                print(f"\n[Main] Detected REAL NEW Team 2 report: {latest_new_file_name}")
+                print(f"[Main] Triggering Core AI Pipeline...")
+
+                process_all_errors_pipeline(
+                    audio_manager, 
+                    error_report_path=latest_file_path, 
+                    is_llm_available=llm_connected
+                )
+                
+                # Update our set so we never process this file (or any older files) again
+                processed_files.update(current_files)
+                    
+        except Exception as e:
+            print(f"[Main] Exception caught in file monitor loop: {e}")
+            
+        time.sleep(0.5)  # Scan every 500ms to conserve CPU cycles
+
 
 def main():
     print("\n" + "="*50)
     print("[Main] Initiating early workspace warm-up...")
     audio_manager = AudioManager()
+
     llm_connected = True
 
-    # AI Core and RAG Knowledge Base Initialization
-    print("\n" + "="*50)
-    print("[Main] Initializing AI Components & Knowledge Base...")
-    
-    llm_connected = False
+    # Initiating early workspace
     try:
         from granite.granite_client import init_granite_model, get_ai_link_status
+
         init_granite_model()
-        load_knowledge_base()
         
+        # Load heavy vector embeddings right now so we experience zero lag inside the live loop
+        load_knowledge_base()
+        print("[Main] RAG Knowledge Base primed and ready in memory!")
+        
+        # Verify IBM Watsonx API connectivity status before UI handoff
+        print("[Main] Testing live AI server link state...")
         ai_status = get_ai_link_status()
+        
         llm_connected = ai_status.get("llm_connected", True)
         
-        if not llm_connected:
-            # Catch Granite connection failure (e.g., 403 quota exceeded) without interrupting the system.
-            print(f"[AI System Warning] {ai_status.get('message')}")
+        if llm_connected:
+            print(f"[Main] {ai_status['message']} Ready for UI state handoff.")
         else:
-            print(f"[AI System Info] {ai_status.get('message')}")
-
+            print(f"[Main WARNING] {ai_status['message']}")
+            print("[Main WARNING] Continuing execution under local Rule-Based Fallback protocol.")
+            # audio_manager.shutdown()
+            # sys.exit(1)
     except Exception as e:
-        print(f"[Main CRITICAL] AI Architecture Initialization failed: {e}")
+        print(f"[Main CRITICAL] Team 3 Knowledge Base failed initialization, aborting: {e}")
         audio_manager.shutdown()
         sys.exit(1)
-        
     print("="*50 + "\n")
-    
 
-    # Start the data streaming pipeline
+    # Data pipeline
     handler = InputHandler()
     logger = CSVLogger()
     client = Client(handler, logger, cache)
+
     print("[Main] Starting Data Pipeline connection thread...")
     client_thread = threading.Thread(target=client.start, daemon=True)
     client_thread.start()
-    time.sleep(0.5)
 
-    # Create the in-memory core IPC communication pipeline
-    shared_event_queue = queue.Queue()
+    time.sleep(0.5)  # Allow data stream a split second to stabilize
+
     ai_stop_event = threading.Event()
-
-    # Launch the AI background consumer thread
-    print("[Main] Launching AI Queue Consumer Thread...")
     ai_thread = threading.Thread(
-        target=ai_queue_consumer_loop, 
-        args=(shared_event_queue, audio_manager, ai_stop_event, llm_connected), 
+        target=ai_file_watcher_loop, 
+        args=(audio_manager, ai_stop_event, llm_connected), 
         daemon=True
     )
     ai_thread.start()
 
-    # Instantiate LiveCoach and hand over control of the analysis process
+    # Analyais Data
+    print("[Main] Automatically launching Live Coach subprocess...")
+    coach_process = subprocess.Popen(
+        [sys.executable, "-m", "analysis.live_coach"],
+        stdout=None,
+        stderr=None,
+        cwd=str(SRC_DIR)
+    )
+
+    print("[Main] Launching telemetry dashboard...")
+    dash = TelemetryDashboard()
+
+    def wait_for_race_end():
+        try:
+            while cache.get_status() not in (GameStatus.ERROR, GameStatus.FINISHED):
+                time.sleep(0.1)
+
+            if cache.get_status() == GameStatus.FINISHED:
+                print("[Main] Game finished. Waiting for post-game AI analysis to complete...")
+                ai_timeout = 120.0
+                start_wait = time.time()
+                while time.time() - start_wait < ai_timeout:
+                    time.sleep(0.2)
+        finally:
+            dash.root.after(0, dash.close)
+
+    watcher_thread = threading.Thread(target=wait_for_race_end, daemon=True)
+    watcher_thread.start()
+
     try:
-        coach = LiveCoach(
-            manager=audio_manager, 
-            event_output_queue=shared_event_queue, 
-            use_granite=llm_connected,
-            cache=cache
-        )
-        
-        print("[Main] Handing over to LiveCoach for streaming and error detection...")
-        # Blocking execution: enter the main file tracking and error detection loop.
-        coach.start_coaching_loop(wait_timeout=120.0, idle_timeout_s=10.0)
-        
+        dash.run()
     except KeyboardInterrupt:
         print("\n[Main] Keyboard interrupt. Lost connection to TORCS.")
     except Exception as e:
         print(f"[Main] Unexpected error in orchestration loop: {e}")
     finally:
+        print("[Main] Stopping data pipeline client and connections...")
+        client.stop()
 
-        # Wait for the AI thread to finish any remaining tasks and the final summary.
-        if 'ai_thread' in locals() and ai_thread.is_alive():
-            print("\n[Main] Awaiting AI Thread to finish macro summary report (generating JSON)...")
-            # Allow enough time for the LLM to generate the report and write it to disk.
-            shared_event_queue.put(None)
-            ai_thread.join(timeout=30)
-
-        print("\n" + "="*50)
-        print("[Main] Initiating comprehensive system shutdown...")
-
-        # Signal remaining background threads to force-stop after the Summary is successfully written.
-        print("[Main] Signaling background threads to halt...")
+        print("[Main] Signaling AI File Watcher thread to stop...")
         ai_stop_event.set()
 
-        print("[Main] Flushing shared event queue...")
-        while not shared_event_queue.empty():
-            try:
-                shared_event_queue.get_nowait()
-                shared_event_queue.task_done()
-            except queue.Empty:
-                break
-
-        # Stop data streaming pipeline and network connections
-        print("[Main] Stopping data pipeline client and connections...")
+        print("[Main] Terminating Live Coach subprocess...")
+        coach_process.terminate()
         try:
-            client.stop()
-        except Exception as e:
-            print(f"[Main Warning] Error stopping client: {e}")
-
-        # Release audio manager resources
+            coach_process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            coach_process.kill()
+            
         print("[Main] Releasing AI Audio Manager resources...")
-        try:
-            audio_manager.shutdown()
-        except Exception as e:
-            print(f"[Main Warning] Error shutting down audio manager: {e}")
+        audio_manager.shutdown()
 
-        print("[Main] All sub-systems halted successfully.")
-        print("="*50 + "\n")
+        print("[Main] System exited cleanly.")
         sys.exit(0)
+
 
 if __name__ == '__main__':
     main()
