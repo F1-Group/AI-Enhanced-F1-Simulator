@@ -235,14 +235,14 @@ class LiveCoach:
                 
                 # Prioritize reading the structured corner field
                 if error.get("corner"):
-                    location_key = f"T{error['corner']}"
+                    location_key = error["corner"]
                 else:
                     # Fall back to text feature matching if structured field is missing
                     msg = error.get("message", "")
                     hint = error.get("coaching_hint", "")
                     for i in range(1, 15):
-                        if f"T{i}" in msg or f"T{i}" in hint:
-                            location_key = f"T{i}"
+                        if f"turn{i}" in msg or f"turn{i}" in hint:
+                            location_key = f"turn{i}"
                             break
                     if not location_key:
                         for s in (1, 2, 3):

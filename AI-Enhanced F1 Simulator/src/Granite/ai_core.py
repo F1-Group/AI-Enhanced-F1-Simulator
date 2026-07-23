@@ -116,7 +116,7 @@ def ai_queue_consumer_loop(event_queue, audio_manager, stop_event, is_llm_availa
     global _RUNTIME_LLM_OK
     _RUNTIME_LLM_OK = is_llm_available
     
-    system_prompt = get_system_prompt("technical")
+    system_prompt = get_system_prompt("supportive")
     all_results = []
     
     print("[AI Thread] Async Consumer active. Listening to shared_event_queue...")
