@@ -15,7 +15,8 @@ from data_pipeline.logger import CSVLogger
 from data_pipeline.cache import cache, GameStatus
 from granite.rag import load_knowledge_base
 from audio_manager.audio_manager import AudioManager
-from granite.ai_core import process_all_errors_pipeline  
+from granite.ai_core import process_all_errors_pipeline
+from ui.dashboard import TelemetryDashboard
 
 
 # BACKGROUND FILE WATCHER THREAD
@@ -133,20 +134,28 @@ def main():
         cwd=str(SRC_DIR)
     )
 
-    # Main thread
+    print("[Main] Launching telemetry dashboard...")
+    dash = TelemetryDashboard()
+
+    def wait_for_race_end():
+        try:
+            while cache.get_status() not in (GameStatus.ERROR, GameStatus.FINISHED):
+                time.sleep(0.1)
+
+            if cache.get_status() == GameStatus.FINISHED:
+                print("[Main] Game finished. Waiting for post-game AI analysis to complete...")
+                ai_timeout = 120.0
+                start_wait = time.time()
+                while time.time() - start_wait < ai_timeout:
+                    time.sleep(0.2)
+        finally:
+            dash.root.after(0, dash.close)
+
+    watcher_thread = threading.Thread(target=wait_for_race_end, daemon=True)
+    watcher_thread.start()
+
     try:
-        while cache.get_status() not in (GameStatus.ERROR, GameStatus.FINISHED):
-            time.sleep(0.1)
-        current_status = cache.get_status()
-        if current_status == GameStatus.FINISHED:
-            print("[Main] Game finished. Waiting for post-game AI analysis to complete...")
-            ai_timeout = 120.0 
-            start_wait = time.time()
-            while True:
-                if time.time() - start_wait > ai_timeout:
-                    print("[Main] Warning: Post-game AI analysis timed out. Proceeding to shutdown.")
-                    break
-                time.sleep(0.2)
+        dash.run()
     except KeyboardInterrupt:
         print("\n[Main] Keyboard interrupt. Lost connection to TORCS.")
     except Exception as e:
