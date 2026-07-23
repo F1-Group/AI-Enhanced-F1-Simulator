@@ -9,11 +9,11 @@ PROJECT_ROOT = SRC_DIR.parent
 
 sys.path.insert(0, str(SRC_DIR))
 
-from granite.prompts import build_user_prompt
-from granite.granite_client import ask_race_engineer, init_granite_model, get_ai_link_status
-from granite.guardrail import apply_guardrail
-from granite.coaching_style import get_system_prompt
-from granite.rag import retrieve, load_knowledge_base
+from Granite.prompts import build_user_prompt
+from Granite.granite_client import ask_race_engineer, init_granite_model, get_ai_link_status
+from Granite.guardrail import apply_guardrail
+from Granite.coaching_style import get_system_prompt
+from Granite.rag import retrieve, load_knowledge_base
 
 # Global dynamic fallback lock flag for runtime circuit breaking
 _RUNTIME_LLM_OK = True
