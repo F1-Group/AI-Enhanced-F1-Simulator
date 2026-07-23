@@ -4,7 +4,7 @@ from .rag import retrieve
 TRACK_KNOWLEDGE = {
     "olethros_road_1": {
         "name": "Olethros Road 1 (TORCS)",
-        "key_corners": "T1, T2, T3, T4, T5, T6, T7, T8, T9 (9 corners auto-detected from telemetry)",
+        "key_corners": "turn1, turn2, turn3, turn4, turn5, turn6, turn7, turn8, turn9 (9 corners auto-detected from telemetry)",
         "characteristics": "Mixed road circuit with 9 corners. Combination of slow technical corners and medium speed sections. Lap time approximately 175 seconds at expert pace.",
         "sector_notes": "S1: first 3 corners, S2: middle section corners 4-6, S3: final corners 7-9 to finish line",
         "tyre_info": "Mixed circuit with varying corner speeds. Smooth throttle application critical on corner exits. Braking consistency key across all 9 corners."

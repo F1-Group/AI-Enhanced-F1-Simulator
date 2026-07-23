@@ -53,7 +53,7 @@ MAX_ALIGN_GAP_M = 20.0          # grid points with worse alignment are ignored
 
 
 def detect_corners(baseline):
-    """Number the track's corners (T1, T2, ...) from the expert steer trace."""
+    """Number the track's corners (turn1, turn2, ...) from the expert steer trace."""
     if baseline.empty or "steer" not in baseline:
         return []
 
@@ -94,7 +94,7 @@ def detect_corners(baseline):
     for n, (s, e) in enumerate(seg for seg in merged if seg[1] - seg[0] >= CORNER_MIN_LENGTH_M):
         zone = (baseline["lap_distance"] >= s) & (baseline["lap_distance"] <= e)
         apex = float(baseline.loc[zone, "lap_distance"][baseline.loc[zone, "speed_kmh"].idxmin()])
-        corners.append({"name": f"T{n + 1}", "start_m": float(s), "end_m": float(e), "apex_m": apex})
+        corners.append({"name": f"turn{n + 1}", "start_m": float(s), "end_m": float(e), "apex_m": apex})
     return corners
 
 
