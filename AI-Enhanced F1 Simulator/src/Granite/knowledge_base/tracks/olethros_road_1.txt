@@ -4,13 +4,13 @@ The circuit has an expert reference lap time of approximately 175 seconds. The t
 
 CORNER CHARACTERISTICS
 
-The circuit has 9 corners numbered T1 through T9, automatically detected from the expert steering trace. Each corner is classified by the error detection system based on the driver's telemetry compared to the expert baseline.
+The circuit has 9 corners numbered turn1 through turn9, automatically detected from the expert steering trace. Each corner is classified by the error detection system based on the driver's telemetry compared to the expert baseline.
 
-Slow corners (typically T1, T4, T7) require heavy braking from medium speed and precise throttle application on exit. These corners are the most common source of late braking errors and poor corner exit deficits. The driver must be patient with the throttle and wait until the car is pointing straight before applying full power.
+Slow corners (typically turn1, turn4, turn7) require heavy braking from medium speed and precise throttle application on exit. These corners are the most common source of late braking errors and poor corner exit deficits. The driver must be patient with the throttle and wait until the car is pointing straight before applying full power.
 
-Medium speed corners (typically T2, T5, T8) require trail braking on entry and smooth progressive throttle on exit. Understeer at the apex is a common issue caused by too much entry speed or turning in too early. The correct approach is a late turn-in point, hitting the apex cleanly, and using the full width of the track on exit.
+Medium speed corners (typically turn2, turn5, turn8) require trail braking on entry and smooth progressive throttle on exit. Understeer at the apex is a common issue caused by too much entry speed or turning in too early. The correct approach is a late turn-in point, hitting the apex cleanly, and using the full width of the track on exit.
 
-Fast corners (typically T3, T6, T9) require commitment and smooth steering inputs. Any hesitation or sudden steering correction will unsettle the car and cause tyre slip. The driver should look through the corner and maintain a consistent steering angle through the apex.
+Fast corners (typically turn3, turn6, turn9) require commitment and smooth steering inputs. Any hesitation or sudden steering correction will unsettle the car and cause tyre slip. The driver should look through the corner and maintain a consistent steering angle through the apex.
 
 RACING LINE
 
@@ -38,8 +38,8 @@ Track position deviation during cornering increases lateral tyre load and accele
 
 SECTOR ANALYSIS
 
-Sector 1 covers the first three corners. Time loss in Sector 1 is typically caused by a poor exit from T3, which reduces entry speed onto the straight leading into Sector 2.
+Sector 1 covers the first three corners. Time loss in Sector 1 is typically caused by a poor exit from turn3, which reduces entry speed onto the straight leading into Sector 2.
 
-Sector 2 covers corners T4 through T6 and is the most technical section of the circuit. Time loss in Sector 2 is the most common source of overall lap time deficit. The driver should focus on consistent braking points and clean apex hits through this section.
+Sector 2 covers corners turn4 through turn6 and is the most technical section of the circuit. Time loss in Sector 2 is the most common source of overall lap time deficit. The driver should focus on consistent braking points and clean apex hits through this section.
 
-Sector 3 covers corners T7 through T9 and the final run to the finish line. A good exit from T9 is critical as it leads directly onto the main straight. Losing time in Sector 3 through a poor T9 exit costs speed across the entire following straight.
+Sector 3 covers corners turn7 through turn9 and the final run to the finish line. A good exit from turn9 is critical as it leads directly onto the main straight. Losing time in Sector 3 through a poor turn9 exit costs speed across the entire following straight.
