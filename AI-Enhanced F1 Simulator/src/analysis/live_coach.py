@@ -179,13 +179,14 @@ class LiveCoach:
         first call also loads the RAG models). Returns True when everything
         drained, False if we gave up.
         """
-        self._is_draining = True
+    
         deadline = time.time() + timeout
         queues = (self._snapshots, self._laps)
         completed = False
         try:
             while any(work.unfinished_tasks for work in queues):
                 if time.time() >= deadline:
+                    self._is_draining = True
                     return False
                 time.sleep(0.2)
             completed = True
@@ -362,6 +363,8 @@ class LiveCoach:
                         # Stop audio immediately, block speakers, and flush all queues
                         if self.manager:
                             self.manager.shutdown()
+
+                        self.finish(timeout=5.0)  
 
                         # Send a poison pill to the AI queue to wrap up immediately
                         if self.event_output_queue:
