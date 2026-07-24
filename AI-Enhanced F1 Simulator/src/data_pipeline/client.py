@@ -128,6 +128,7 @@ class Client:
                 cleaned_packet['throttle'] = state['accel']
                 cleaned_packet['brake'] = state['brake']
                 cleaned_packet['steer'] = state['steer']
+                self.cache.update_telemetry(cleaned_packet)
                 self.logger.log_row(cleaned_packet)
                 
                 # Send action back to TORCS

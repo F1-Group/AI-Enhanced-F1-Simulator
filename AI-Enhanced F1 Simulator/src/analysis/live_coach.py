@@ -179,13 +179,14 @@ class LiveCoach:
         first call also loads the RAG models). Returns True when everything
         drained, False if we gave up.
         """
-        self._is_draining = True
+    
         deadline = time.time() + timeout
         queues = (self._snapshots, self._laps)
         completed = False
         try:
             while any(work.unfinished_tasks for work in queues):
                 if time.time() >= deadline:
+                    self._is_draining = True
                     return False
                 time.sleep(0.2)
             completed = True
@@ -235,14 +236,14 @@ class LiveCoach:
                 
                 # Prioritize reading the structured corner field
                 if error.get("corner"):
-                    location_key = f"T{error['corner']}"
+                    location_key = error["corner"]
                 else:
                     # Fall back to text feature matching if structured field is missing
                     msg = error.get("message", "")
                     hint = error.get("coaching_hint", "")
                     for i in range(1, 15):
-                        if f"T{i}" in msg or f"T{i}" in hint:
-                            location_key = f"T{i}"
+                        if f"turn{i}" in msg or f"turn{i}" in hint:
+                            location_key = f"turn{i}"
                             break
                     if not location_key:
                         for s in (1, 2, 3):
@@ -362,6 +363,8 @@ class LiveCoach:
                         # Stop audio immediately, block speakers, and flush all queues
                         if self.manager:
                             self.manager.shutdown()
+
+                        self.finish(timeout=5.0)  
 
                         # Send a poison pill to the AI queue to wrap up immediately
                         if self.event_output_queue:
