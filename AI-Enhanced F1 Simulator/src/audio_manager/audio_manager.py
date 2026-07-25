@@ -169,12 +169,17 @@ class AudioManager:
 
     def _speak_text(self, text):
         if self.os_type == "Darwin" and self._say_command:
-            subprocess.run(
-                [self._say_command, "-v", self.active_voice_id, text],
-                timeout=SPEECH_TIMEOUT_SECONDS,
-                check=False
-            )
-            return True
+            try:
+                proc = subprocess.Popen(
+                    [self._say_command, "-v", self.active_voice_id, text],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL
+                )
+                proc.wait()
+                return True
+            except Exception as error:
+                print(f"[Audio Error] macOS TTS failed: {error}")
+                return False
         elif self.os_type == "Windows" and self.tts_engine:
             try:
                 self.tts_engine.say(text)

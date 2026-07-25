@@ -17,13 +17,8 @@ from granite.rag import retrieve
 from granite.granite_client import get_fallback_text
 
 _RUNTIME_LLM_OK = True
-_ERROR_REPLY_MARKERS = (
-    "Error contacting race engineer",
-    "Error: Max retries reached",
-    "I'm currently experiencing high demand",
-)
 
-def process_single_error(error, system_prompt, audio_manager, force_fallback=False):
+def process_single_error(error, system_prompt, audio_manager, force_fallback=False, feedback_callback=None):
     """Processes an isolated telemetry infraction."""
     global _RUNTIME_LLM_OK
     
@@ -31,9 +26,19 @@ def process_single_error(error, system_prompt, audio_manager, force_fallback=Fal
     coaching_request = f"{error.get('message', '')} {error.get('coaching_hint', '')}".strip()
 
     # Fast Layer Event Interception
-    EMERGENCY_TYPES = ["off_track", "collision_warning", "brake_now"]
-    if error_type in EMERGENCY_TYPES or error.get("priority") == "high":
-        return
+    if error.get("priority") == "high" or error_type in ["brake_now", "off_track"]:
+        fast_text = error.get("message") or error.get("coaching_hint") or f"URGENT: {error_type.upper()}"
+
+        if feedback_callback:
+            feedback_callback(fast_text, layer="fast")
+
+        audio_manager.play_text(
+            fast_text,
+            priority="high",
+            cooldown_key=f"fast_{error_type}_{error.get('corner', 'general')}"
+        )
+
+        return None
 
     # Only enable the fallback script for slow-layer review when disconnected.
     if force_fallback or not _RUNTIME_LLM_OK:
@@ -56,11 +61,15 @@ def process_single_error(error, system_prompt, audio_manager, force_fallback=Fal
         except Exception:
             answer_text = get_fallback_text(error_type)
 
-    # Execute Guardrails
+    # Execute Guardrails & Slow Layer Feedback
     result = apply_guardrail(coaching_request, answer_text, error=error)
     if result and result.get("is_valid", False):
         feedback_text = result.get("feedback", answer_text)
         print(f"\n[Slow Layer Feedback]: {feedback_text}")
+
+        if feedback_callback:
+            feedback_callback(feedback_text, layer="slow")
+
         # Broadcast to the driver in real time.
         audio_manager.play_text(
             feedback_text,
@@ -108,37 +117,33 @@ def generate_summary(all_results, system_prompt, force_fallback=False):
         return "Significant time lost in this sector. Focus on corner exits.", True
 
 
-def ai_queue_consumer_loop(event_queue, audio_manager, stop_event, is_llm_available=True):
-    """
-    Asynchronously consumes error events from the queue. Receiving 'None' indicates 
-    that LiveCoach has finished the lap with no new events, which triggers the final summary.
-    """
+def ai_queue_consumer_loop(event_queue, audio_manager, stop_event, is_llm_available=True, feedback_callback=None, style="supportive"):
     global _RUNTIME_LLM_OK
     _RUNTIME_LLM_OK = is_llm_available
     
-    system_prompt = get_system_prompt("supportive")
+    system_prompt = get_system_prompt(style)
     all_results = []
     
     print("[AI Thread] Async Consumer active. Listening to shared_event_queue...")
 
-    # Use a non-blocking timeout to balance immediate stopping and normal lap completion.
     while not stop_event.is_set():
         try:
-            # Add a timeout so the thread periodically returns to the while condition to check stop_event.
             event = event_queue.get(block=True, timeout=1.0)
         except queue.Empty:
             continue
-        
-        # Receiving the poison pill 'None' indicates the upstream LiveCoach 
-        # has finished broadcasting successfully, breaking the loop to generate the final summary.
+
         if event is None:
-            print("[AI Thread] Poison pill 'None' received. Preparing lap summary...")
+            print("[AI Thread] Poison pill 'None' received. Race finished cleanly.")
             event_queue.task_done()
             break
             
         try:
             result = process_single_error(
-                event, system_prompt, audio_manager, force_fallback=(not _RUNTIME_LLM_OK)
+                event, 
+                system_prompt,
+                audio_manager,
+                force_fallback=(not _RUNTIME_LLM_OK),
+                feedback_callback=feedback_callback
             )
             if result:
                 merged = dict(result)
@@ -151,53 +156,49 @@ def ai_queue_consumer_loop(event_queue, audio_manager, stop_event, is_llm_availa
         finally:
             event_queue.task_done()
 
-    # Cleanup block for forced exits
+    if audio_manager:
+        if hasattr(audio_manager, "stop_all"):
+            audio_manager.stop_all()
+        elif hasattr(audio_manager, "clear"):
+            audio_manager.clear()
+
     if stop_event.is_set():
-        print("[AI Thread] Stop signal detected! Flushing remaining events in queue...")
+        print("[AI Thread] Force stop signal detected. Aborting summary generation.")
         while not event_queue.empty():
             try:
                 event_queue.get_nowait()
                 event_queue.task_done()
             except queue.Empty:
                 break
-        print("[AI Thread] Queue flushed. Thread exiting immediately without summary.")
         return 
 
-
-    # Macro analysis report generation and storage upon lap completion
     if not all_results:
         print("[AI Thread] No infractions recorded. Exiting cleanly.")
+        with open(PROJECT_ROOT / "data" / "lap_summary.json", "w", encoding="utf-8") as f:
+            json.dump({"type": "lap_summary", "feedback": "Clean session with no major infractions recorded!"}, f, indent=2, ensure_ascii=False)
         return
 
-    print(f"[AI Thread] Draining audio play queue, awaiting idle state...")
-    audio_manager.wait_until_idle(timeout=60)
-
-    # Store local records locally
     coaching_summary_path = PROJECT_ROOT / "data" / "coaching_summary.json"
     coaching_summary_path.parent.mkdir(parents=True, exist_ok=True)
     try:
         with open(coaching_summary_path, "w", encoding="utf-8") as f:
             json.dump({"total_errors": len(all_results), "coaching_results": all_results}, f, indent=2, ensure_ascii=False)
-        print(f"[AI SUCCESS] Infraction logs saved to {coaching_summary_path.name}")
     except Exception as e:
         print(f"[AI Error] Failed to write coaching_summary: {e}")
 
-    # Generate and play the macro analysis
     try:
+        print("[AI Thread] Generating final post-race summary (Silent mode)...")
         summary_text, _ = generate_summary(all_results, system_prompt, force_fallback=(not _RUNTIME_LLM_OK))
         if summary_text:
-            print(f"\n[AI Lap Summary Overview]: {summary_text}\n")
-            audio_manager.play_text(summary_text, priority="normal")
-
             summary_result = {
-                "type": "lap_summary", "feedback": summary_text,
-                "total_errors": len(all_results), "corners_affected": list({r.get("corner") for r in all_results})
+                "type": "lap_summary", 
+                "feedback": summary_text,
+                "total_errors": len(all_results), 
+                "corners_affected": list({r.get("corner") for r in all_results})
             }
             
             with open(PROJECT_ROOT / "data" / "lap_summary.json", "w", encoding="utf-8") as f:
                 json.dump(summary_result, f, indent=2, ensure_ascii=False)
-            print("[AI SUCCESS] Summary logs saved to data/lap_summary.json.")
+            print("[AI SUCCESS] Summary successfully generated and saved to data/lap_summary.json.")
     except Exception as e:
         print(f"[AI Error] Macro debrief generation failed: {e}")
-        
-    audio_manager.wait_until_idle(timeout=60)
