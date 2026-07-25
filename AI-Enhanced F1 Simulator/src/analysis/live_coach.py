@@ -38,7 +38,7 @@ LAP_COUNTER_FIELDS = ("lap_count", "lap_number", "lap", "laps", "completed_laps"
 COACHING_SUMMARY_PATH = PROJECT_ROOT / "data" / "coaching_summary.json"
 
 
-def wait_for_recording(timeout_s, freshness_s=10.0):
+def wait_for_recording(timeout_s, freshness_s=10.0, stop_event=None):
     """Block until latest_data.txt points at a recently written file.
 
     Team 1's logger never deletes the pointer, so after every session a stale
@@ -47,6 +47,10 @@ def wait_for_recording(timeout_s, freshness_s=10.0):
     """
     deadline = time.time() + timeout_s
     while time.time() < deadline:
+        if stop_event and stop_event.is_set():
+            print("[Coach] stop_event set while waiting for recording. Exiting.")
+            return None
+
         if LATEST_POINTER.exists():
             path = Path(LATEST_POINTER.read_text().strip())
             if path.exists() and time.time() - path.stat().st_mtime < freshness_s:
@@ -110,7 +114,7 @@ class LiveCoach:
         self.track_length = max(lap["lap_distance"].max() for lap in self.expert_laps)
         baseline = build_baseline(self.expert_laps[1:] or self.expert_laps,
                                   distance_grid(self.track_length))
-        self.fast_layer = FastLayer(baseline, detect_corners(baseline), manager)
+        self.fast_layer = FastLayer(baseline, detect_corners(baseline), manager, event_queue=self.event_output_queue)
         
         self.lap_number = 0
         self.session_id = None
@@ -145,11 +149,22 @@ class LiveCoach:
         self._snapshot_worker = threading.Thread(target=self._snapshot_worker_loop, daemon=True)
         self._snapshot_worker.start()
 
-    def start_coaching_loop(self, wait_timeout=120.0, idle_timeout_s=10.0, max_seconds=None):
+    def start_coaching_loop(self, wait_timeout=120.0, idle_timeout_s=10.0, max_seconds=None, stop_event=None):
         """Handle the wait for dynamic file generation and start the telemetry tracking loop."""
         print(f"[Coach] Waiting for active recording CSV...")
-        csv_path = wait_for_recording(timeout_s=wait_timeout)
-        self.follow(csv_path, idle_timeout_s=idle_timeout_s, max_seconds=max_seconds)
+
+        if stop_event and stop_event.is_set():
+            return
+
+        try:
+            csv_path = wait_for_recording(timeout_s=wait_timeout, stop_event=stop_event)
+            if csv_path is None:
+                return
+        except SystemExit:
+            print("[Coach] No active recording found or cancelled.")
+            return
+
+        self.follow(csv_path, idle_timeout_s=idle_timeout_s, max_seconds=max_seconds, stop_event=stop_event)
 
     def on_frame(self, frame):
         self.fast_layer.check(frame)
@@ -179,6 +194,10 @@ class LiveCoach:
         first call also loads the RAG models). Returns True when everything
         drained, False if we gave up.
         """
+
+        # Set the draining flag immediately at the start of race cleanup to 
+        # reject all subsequent coaching broadcasts
+        self._is_draining = True
     
         deadline = time.time() + timeout
         queues = (self._snapshots, self._laps)
@@ -186,7 +205,6 @@ class LiveCoach:
         try:
             while any(work.unfinished_tasks for work in queues):
                 if time.time() >= deadline:
-                    self._is_draining = True
                     return False
                 time.sleep(0.2)
             completed = True
@@ -291,6 +309,10 @@ class LiveCoach:
         errors_to_process = new_errors[:MAX_ERRORS_PER_LAP]
 
         for error in errors_to_process:
+            if self._is_draining:
+                print("[Coach] Session draining... Skipping audio event push.")
+                continue
+
             event = dict(error)
             event["lap_number"] = lap_number
             event["is_realtime"] = is_realtime
@@ -339,7 +361,7 @@ class LiveCoach:
             self._lap_reports.append(report)
         self._publish_new_errors(report, self.lap_number, is_realtime=False)
 
-    def follow(self, csv_path, idle_timeout_s, max_seconds=None):
+    def follow(self, csv_path, idle_timeout_s, max_seconds=None, stop_event=None):
         self.session_id = session_id_from(csv_path)
         print(f"[Coach] Following telemetry logs from {csv_path.name}...")
         start = time.time()
@@ -353,24 +375,17 @@ class LiveCoach:
         with open(csv_path, encoding="utf-8") as f:
             last_data = time.time()
             while True:
+                if stop_event and stop_event.is_set():
+                    print("[Coach] Stop event detected. Exiting telemetry loop.")
+                    return
+
                 if self.cache:
                     from data_pipeline.cache import GameStatus
                     
                     if self.cache.get_status() == GameStatus.ERROR:
                         print("[Coach] GameStatus.ERROR detected! (Data pipeline lost connection)")
-                        print("[Coach] Forcing emergency shutdown of audio manager...")
-                        
-                        # Stop audio immediately, block speakers, and flush all queues
-                        if self.manager:
-                            self.manager.shutdown()
 
-                        self.finish(timeout=5.0)  
-
-                        # Send a poison pill to the AI queue to wrap up immediately
-                        if self.event_output_queue:
-                            self.event_output_queue.put(None)
-
-                        # Break the telemetry tracking loop instantly to end async processing
+                        print("[Coach] GameStatus.ERROR detected! Exiting coaching loop cleanly...")
                         return
                 if max_seconds and time.time() - start > max_seconds:
                     break
@@ -429,7 +444,3 @@ class LiveCoach:
 
         print("[Coach] Telemetry end detected. Draining analysis...")
         self.finish()
-
-        if self.event_output_queue:
-            print("[Coach] Injecting completion Poison Pill to AI Worker.")
-            self.event_output_queue.put(None)

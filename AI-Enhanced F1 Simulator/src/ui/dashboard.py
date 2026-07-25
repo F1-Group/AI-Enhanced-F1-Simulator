@@ -3,42 +3,23 @@
 # python3 dashboard.py to show the dashboard with fake data if TORCS isn't running
 
 import json
-import math
 import time
+import threading
 import tkinter as tk
-from tkinter import messagebox
 from pathlib import Path
 
+# Try to load the internal cache module and game status
 try:
     from data_pipeline.cache import cache, GameStatus
     USING_REAL_CACHE = True
 except ImportError:
-    print("cache.py not found - running the dashboard with fake data instead")
+    print("[Dashboard Warning] cache.py not found - running with mock data fallback.")
     USING_REAL_CACHE = False
 
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-COACHING_FILE = PROJECT_ROOT / "data" / "latest_coaching.json"
-
+SUMMARY_FILE = PROJECT_ROOT / "data" / "lap_summary.json"
 TRACK_LENGTH_M = 6283.0
-
-
-def get_fake_telemetry():
-    t = time.time()
-    return {
-        "speed_kmh": 180 + 40 * math.sin(t * 0.3),
-        "gear": int(3 + 2 * abs(math.sin(t * 0.2))),
-        "rpm": 8000 + 4000 * abs(math.sin(t * 0.4)),
-        "throttle": max(0, math.sin(t * 0.5)),
-        "brake": max(0, -math.sin(t * 0.5) * 0.8),
-        "fuel": max(0, 100 - (t % 100)),
-        "lap_time": t % 90,
-        "lap_distance": (t * 50) % TRACK_LENGTH_M,
-        "track_pos": math.sin(t * 0.1) * 0.6,
-        "angle": math.sin(t * 0.2) * 0.15,
-        "wheel_spin": 40 + 40 * abs(math.sin(t * 0.6)),
-        "race_pos": 3,
-    }
-
 
 BG = "#0d0d0d"
 PANEL_BG = "#1a1a1a"
@@ -52,7 +33,6 @@ YELLOW = "#e0c43c"
 ORANGE = "#e07a3c"
 PURPLE = "#9b59b6"
 
-
 def format_lap_time(seconds):
     if seconds is None or seconds <= 0:
         return "--:--.---"
@@ -62,9 +42,7 @@ def format_lap_time(seconds):
 
 
 class RPMGauge(tk.Canvas):
-
     MAX_RPM = 18000
-
     def __init__(self, parent, size=140, **kwargs):
         super().__init__(parent, width=size, height=size, bg=PANEL_BG, highlightthickness=0, **kwargs)
         self.size = size
@@ -74,23 +52,11 @@ class RPMGauge(tk.Canvas):
         self.delete("all")
         cx = cy = self.size / 2
         r = self.size / 2 - 10
-
-        # background track for the arc
-        self.create_arc(cx - r, cy - r, cx + r, cy + r, start=220, extent=-260,
-                         style="arc", outline=BORDER, width=8)
-
+        self.create_arc(cx - r, cy - r, cx + r, cy + r, start=220, extent=-260, style="arc", outline=BORDER, width=8)
         fraction = min(rpm / self.MAX_RPM, 1.0)
-        if fraction < 0.6:
-            colour = GREEN
-        elif fraction < 0.85:
-            colour = YELLOW
-        else:
-            colour = RED
-
+        colour = GREEN if fraction < 0.6 else (YELLOW if fraction < 0.85 else RED)
         if fraction > 0:
-            self.create_arc(cx - r, cy - r, cx + r, cy + r, start=220,
-                             extent=-fraction * 260, style="arc", outline=colour, width=8)
-
+            self.create_arc(cx - r, cy - r, cx + r, cy + r, start=220, extent=-fraction * 260, style="arc", outline=colour, width=8)
         self.create_text(cx, cy - 8, text=f"{int(rpm):,}", fill=WHITE, font=("Courier", 13, "bold"))
         self.create_text(cx, cy + 12, text="RPM", fill=GREY, font=("Courier", 9))
 
@@ -100,11 +66,9 @@ class RPMGauge(tk.Canvas):
 
 class BarWidget(tk.Canvas):
     """just a rectangle that fills up based on a 0-1 value, used for throttle/brake/fuel/wheelspin"""
-
     def __init__(self, parent, colour, width=180, height=18, **kwargs):
         super().__init__(parent, width=width, height=height, bg=PANEL_BG, highlightthickness=0, **kwargs)
-        self.w = width
-        self.h = height
+        self.w, self.h = width, height
         self.colour = colour
         self._draw(0)
 
@@ -123,18 +87,15 @@ class BarWidget(tk.Canvas):
 
 class TrackPositionBar(tk.Canvas):
     # track_pos is -1 to 1, -1 = left edge, +1 = right edge, 0 = dead center
-
     def __init__(self, parent, width=180, height=22, **kwargs):
         super().__init__(parent, width=width, height=height, bg=PANEL_BG, highlightthickness=0, **kwargs)
-        self.w = width
-        self.h = height
+        self.w, self.h = width, height
         self._draw(0.0)
 
     def _draw(self, pos):
         self.delete("all")
         self.create_rectangle(0, 0, self.w, self.h, fill=BORDER, outline="")
         self.create_line(self.w / 2, 0, self.w / 2, self.h, fill=GREY)
-
         pos = max(-1.2, min(1.2, pos))
         marker_x = (pos + 1.2) / 2.4 * self.w
         colour = RED if abs(pos) > 1.0 else GREEN
@@ -145,77 +106,523 @@ class TrackPositionBar(tk.Canvas):
 
 
 class TelemetryDashboard:
+    REFRESH_MS = 50
 
-    REFRESH_MS = 50          
-    COACH_REFRESH_MS = 1000  
-
-    def __init__(self):
+    def __init__(self, init_callback=None, start_race_callback=None, on_game_finished_callback=None):
         self.root = tk.Tk()
-        self.root.title("Telemetry Dashboard - Olethros Road 1")
+        self.root.title("AI Race Telemetry System")
+        self.root.geometry("800x600")
         self.root.configure(bg=BG)
         self.root.resizable(False, False)
 
+        # External callback interfaces
+        self.init_callback = init_callback
+        self.start_race_callback = start_race_callback
+        self.on_game_finished_callback = on_game_finished_callback
+
+        # Status variables
+        self.llm_connected = False
         self.best_lap = None
         self.prev_lap = None
         self._last_lap_time_seen = 0.0
-        self._last_coach_text = None
-        self._shown_connection_popup = False
+        self.selected_style = "supportive"
 
-        self._build_ui()
-        self.root.after(self.REFRESH_MS, self._update)
-        self.root.after(self.COACH_REFRESH_MS, self._update_coach_panel)
+        # Frame containers for each page
+        self.home_frame = None
+        self.instructions_frame = None
+        self.init_frame = None
+        self.new_race_frame = None
+        self.connecting_frame = None
+        self.error_frame = None
+        self.dashboard_frame = None
+        self.summary_frame = None
 
-    # building the window 
+        # Open the home page on startup
+        self._build_home_page()
 
-    def _build_ui(self):
-        title_frame = tk.Frame(self.root, bg=BG, pady=6)
+
+    # Home Page
+    def _build_home_page(self):
+        if self.home_frame:
+            self.home_frame.destroy()
+
+        self.home_frame = tk.Frame(self.root, bg=BG)
+        self.home_frame.pack(fill="both", expand=True)
+
+        center_box = tk.Frame(self.home_frame, bg=BG)
+        center_box.place(relx=0.5, rely=0.5, anchor="center")
+
+        tk.Label(center_box, text="AI Race Telemetry & Coaching System", fg=BLUE, bg=BG,
+                 font=("Courier", 26, "bold"), justify="center").pack(pady=(0, 15))
+        tk.Label(center_box, text="TORCS Simulator Companion", fg=GREY, bg=BG,
+                 font=("Courier", 18)).pack(pady=(0, 40))
+
+        btn_box = tk.Frame(center_box, bg=BG)
+        btn_box.pack()
+
+        btn_start = tk.Button(
+            btn_box, text="START SYSTEM", fg="black", bg=WHITE,
+            activebackground=GREY, activeforeground="black",
+            font=("Courier", 18, "bold"), width=16, height=2, bd=1,
+            command=self._on_click_start
+        )
+        btn_start.pack(side="left", padx=15)
+
+        btn_how_to_play = tk.Button(
+            btn_box, text="HOW TO PLAY", fg="black", bg=BLUE,
+            activebackground="#64b5f6", activeforeground="black",
+            font=("Courier", 18, "bold"), width=16, height=2, bd=1,
+            command=self._on_click_how_to_play
+        )
+        btn_how_to_play.pack(side="left", padx=15)
+
+    def _on_click_start(self):
+        self.home_frame.pack_forget()
+        self._build_init_page()
+        self._start_async_init()
+
+    def _on_click_how_to_play(self):
+        self.home_frame.pack_forget()
+        self._build_instructions_page()
+
+    # How To Play Page
+    def _build_instructions_page(self):
+        if self.instructions_frame:
+            self.instructions_frame.destroy()
+
+        self.instructions_frame = tk.Frame(self.root, bg=BG)
+        self.instructions_frame.pack(fill="both", expand=True)
+
+        center_box = tk.Frame(self.instructions_frame, bg=BG)
+        center_box.place(relx=0.5, rely=0.5, anchor="center")
+
+        tk.Label(
+            center_box, text="HOW TO PLAY & SYSTEM GUIDE", fg=BLUE, bg=BG,
+            font=("Courier", 26, "bold")
+        ).pack(pady=(0, 25))
+
+        instructions_text = (
+            "1. Start TORCS Simulator on your PC.\n"
+            "2. Select 'Race' -> 'Quick Race' and configure UDP server (Port 3001).\n"
+            "3. Click 'START SYSTEM' on the Home screen to connect.\n"
+            "4. Monitor real-time speed, RPM, throttle, and track status on Live Dashboard.\n"
+            "5. Receive live coaching advice from AI Race Engineer in the console."
+        )
+
+        tk.Label(
+            center_box, text=instructions_text, fg=WHITE, bg=PANEL_BG,
+            font=("Courier", 14), justify="left", padx=25, pady=20, bd=1, relief="solid"
+        ).pack(pady=(0, 30))
+
+        btn_back = tk.Button(
+            center_box, text="BACK TO HOME", fg="black", bg=WHITE,
+            activebackground=GREY, activeforeground="black",
+            font=("Courier", 18, "bold"), width=18, height=2, bd=1,
+            command=self._on_click_back_from_instructions
+        )
+        btn_back.pack()
+
+    def _on_click_back_from_instructions(self):
+        self.instructions_frame.pack_forget()
+        self._build_home_page()
+
+    # AI Core & RAG Initialization Page
+    def _build_init_page(self):
+        if self.init_frame:
+            self.init_frame.destroy()
+
+        self.init_frame = tk.Frame(self.root, bg=BG)
+        self.init_frame.pack(fill="both", expand=True)
+
+        center_box = tk.Frame(self.init_frame, bg=BG)
+        center_box.place(relx=0.5, rely=0.5, anchor="center")
+
+        self.lbl_init_status = tk.Label(
+            center_box, text="Initializing AI Core & RAG Knowledge Base...", 
+            fg=YELLOW, bg=BG, font=("Courier", 21, "bold"), justify="center"
+        )
+        self.lbl_init_status.pack(pady=(0, 15))
+
+        self.lbl_init_sub = tk.Label(
+            center_box, text="Please wait while backend models load...", 
+            fg=GREY, bg=BG, font=("Courier", 15), justify="center"
+        )
+        self.lbl_init_sub.pack(pady=(0, 30))
+
+        self.btn_retry = tk.Button(
+            center_box, text="RETRY INITIALIZATION", fg="black", bg=RED,
+            activebackground="#f26666", activeforeground="black",
+            font=("Courier", 18, "bold"), width=22, height=2, bd=0,
+            command=self._start_async_init
+        )
+
+    def _start_async_init(self):
+        self.btn_retry.pack_forget()
+        self.lbl_init_status.config(text="Initializing AI Core & RAG Knowledge Base...", fg=YELLOW)
+        self.lbl_init_sub.config(text="Please wait while backend models load...", fg=GREY)
+
+        threading.Thread(target=self._worker_init_thread, daemon=True).start()
+
+    def _worker_init_thread(self):
+        success = False
+        llm_connected = False
+        msg = ""
+
+        if self.init_callback:
+            success, llm_connected, msg = self.init_callback()
+        else:
+            time.sleep(1.0)
+            success = True
+            llm_connected = False
+            msg = "LLM API failed to connect. Running in offline mode."
+
+        self.root.after(0, self._on_init_finished, success, llm_connected, msg)
+
+    def _on_init_finished(self, success, llm_connected, msg):
+        self.llm_connected = llm_connected
+        if not success:
+            self.lbl_init_status.config(text="Initialization Failed!", fg=RED)
+            self.lbl_init_sub.config(text=f"Error: {msg}", fg=RED)
+            self.btn_retry.pack(pady=10)
+        else:
+            if not llm_connected:
+                self._show_center_warning_card(msg)
+            else:
+                self.init_frame.pack_forget()
+                self._build_new_race_page()
+
+    def _show_center_warning_card(self, msg):
+        self.lbl_init_status.pack_forget()
+        self.lbl_init_sub.pack_forget()
+
+        warning_card = tk.Frame(self.init_frame, bg=PANEL_BG, highlightbackground=YELLOW, highlightthickness=2, padx=30, pady=25)
+        warning_card.place(relx=0.5, rely=0.5, anchor="center")
+
+        tk.Label(
+            warning_card, text="AI CONNECTION WARNING", fg=YELLOW, bg=PANEL_BG,
+            font=("Courier", 21, "bold")
+        ).pack(pady=(0, 15))
+
+        warning_text = msg if msg else "LLM API disconnected. System running in fallback mode."
+        tk.Label(
+            warning_card, text=warning_text, fg=WHITE, bg=PANEL_BG,
+            font=("Courier", 15), wraplength=550, justify="center"
+        ).pack(pady=(0, 20))
+
+        btn_ok = tk.Button(
+            warning_card, text="OK", fg="black", bg=WHITE,
+            activebackground=BLUE, activeforeground="black",
+            font=("Courier", 18, "bold"), width=10, bd=1,
+            command=self._on_warning_ok_clicked
+        )
+        btn_ok.pack()
+
+    def _on_warning_ok_clicked(self):
+        self.init_frame.pack_forget()
+        self._build_new_race_page()
+
+
+    # Ready Page
+    def _build_new_race_page(self):
+        if self.new_race_frame:
+            self.new_race_frame.destroy()
+
+        self.new_race_frame = tk.Frame(self.root, bg=BG)
+        self.new_race_frame.pack(fill="both", expand=True)
+
+        center_box = tk.Frame(self.new_race_frame, bg=BG)
+        center_box.place(relx=0.5, rely=0.5, anchor="center")
+
+        tk.Label(
+            center_box, text="SYSTEM READY", fg=GREEN, bg=BG,
+            font=("Courier", 33, "bold"), justify="center"
+        ).pack(pady=(0, 10))
+
+        tk.Label(
+            center_box, text="Launch TORCS simulator and press NEW RACE to start live session", fg=GREY, bg=BG,
+            font=("Courier", 13), justify="center"
+        ).pack(pady=(0, 25))
+
+        # AI Coach Style selection area
+        style_box = tk.Frame(center_box, bg=PANEL_BG, highlightbackground=BORDER, highlightthickness=1, padx=20, pady=12)
+        style_box.pack(pady=(0, 30))
+
+        tk.Label(
+            style_box, text="AI Engineer Persona Style:", fg=WHITE, bg=PANEL_BG,
+            font=("Courier", 12, "bold")
+        ).pack(side="left", padx=(0, 15))
+
+        self.style_var = tk.StringVar(value=self.selected_style)
+        
+        # Create style dropdown menu
+        style_options = ["supportive", "technical","aggressive"]
+        style_dropdown = tk.OptionMenu(style_box, self.style_var, *style_options, command=self._on_style_change)
+        style_dropdown.config(
+            bg=BORDER, fg=YELLOW, activebackground=PANEL_BG, activeforeground=YELLOW,
+            font=("Courier", 11, "bold"), highlightthickness=0, bd=1, width=12
+        )
+        style_dropdown["menu"].config(bg=PANEL_BG, fg=WHITE, font=("Courier", 11))
+        style_dropdown.pack(side="left")
+
+        btn_new_race = tk.Button(
+            center_box, text="NEW RACE", fg="black", bg="#3ce070",
+            activebackground="#288f4a", activeforeground="black",
+            font=("Courier", 22, "bold"), width=16, height=2, bd=0,
+            command=self._on_click_new_race
+        )
+        btn_new_race.pack()
+
+    def _on_style_change(self, value):
+        self.selected_style = value
+        print(f"[Dashboard] Selected AI Coaching Style: {self.selected_style}")
+
+    def _on_click_new_race(self):
+        if SUMMARY_FILE.exists():
+            try:
+                SUMMARY_FILE.unlink()
+            except Exception:
+                pass
+
+        self.new_race_frame.pack_forget()
+        self._build_connecting_page()
+
+        if self.start_race_callback:
+            # Pass selected_style to the main program to start
+            self.start_race_callback(self.llm_connected, style=self.selected_style)
+
+        self.root.after(100, self._check_torcs_connection)
+
+
+    # Connecting Page
+    def _build_connecting_page(self):
+        if self.connecting_frame:
+            self.connecting_frame.destroy()
+
+        self.connecting_frame = tk.Frame(self.root, bg=BG)
+        self.connecting_frame.pack(fill="both", expand=True)
+
+        center_box = tk.Frame(self.connecting_frame, bg=BG)
+        center_box.place(relx=0.5, rely=0.5, anchor="center")
+
+        tk.Label(
+            center_box, text="CONNECTING TO SIMULATOR...", fg=YELLOW, bg=BG,
+            font=("Courier", 27, "bold"), justify="center"
+        ).pack(pady=(0, 15))
+
+        tk.Label(
+            center_box, text="Waiting for TORCS UDP socket connection on port 3001...", fg=GREY, bg=BG,
+            font=("Courier", 15), justify="center"
+        ).pack()
+
+    def _check_torcs_connection(self):
+        if not self.connecting_frame or not self.connecting_frame.winfo_ismapped():
+            return
+
+        if USING_REAL_CACHE:
+            status = cache.get_status()
+            telemetry = cache.get_telemetry()
+            
+            # Switch to dashboard only when data is received or GameStatus changes to RACING
+            if status == GameStatus.RACING or telemetry is not None:
+                print("[Dashboard] Connection established! Moving to Live Dashboard.")
+                self.connecting_frame.pack_forget()
+                self._build_dashboard_ui()
+                self.root.after(self.REFRESH_MS, self._update)
+                return
+
+            # Jump to error page if an error occurs
+            if status == GameStatus.ERROR:
+                print("[Dashboard] Connection error detected.")
+                self.connecting_frame.pack_forget()
+                self._show_error_page("Failed to establish UDP connection with TORCS.")
+                return
+        else:
+            self.connecting_frame.pack_forget()
+            self._build_dashboard_ui()
+            self.root.after(self.REFRESH_MS, self._update)
+            return
+
+        self.root.after(200, self._check_torcs_connection)
+
+
+    # Error Page
+    def _show_error_page(self, error_message):
+        if self.error_frame:
+            self.error_frame.destroy()
+
+        self.error_frame = tk.Frame(self.root, bg=BG)
+        self.error_frame.pack(fill="both", expand=True)
+
+        center_box = tk.Frame(self.error_frame, bg=BG)
+        center_box.place(relx=0.5, rely=0.5, anchor="center")
+
+        tk.Label(
+            center_box, text="CONNECTION ERROR", fg=RED, bg=BG,
+            font=("Courier", 30, "bold"), justify="center"
+        ).pack(pady=(0, 15))
+
+        tk.Label(
+            center_box, text=error_message, fg=WHITE, bg=BG,
+            font=("Courier", 16), wraplength=600, justify="center"
+        ).pack(pady=(0, 10))
+
+        tk.Label(
+            center_box, text="Please make sure TORCS simulator is running with UDP server enabled.", fg=GREY, bg=BG,
+            font=("Courier", 13), justify="center"
+        ).pack(pady=(0, 35))
+
+        btn_back = tk.Button(
+            center_box, text="BACK TO NEW RACE", fg="black", bg=WHITE,
+            activebackground=BORDER, activeforeground="black",
+            font=("Courier", 18, "bold"), width=20, height=2, bd=1,
+            command=self._on_click_back_to_new_race
+        )
+        btn_back.pack()
+
+    def _on_click_back_to_new_race(self):
+        print("[Dashboard] Returning to NEW RACE setup page...")
+        
+        if self.error_frame:
+            self.error_frame.destroy()
+
+        # Delete lap_summary.json from the previous race
+        if SUMMARY_FILE.exists():
+            try:
+                SUMMARY_FILE.unlink()
+            except Exception:
+                pass
+
+        self._build_new_race_page()
+
+
+    # Post-Race Summary Page
+    def _build_summary_page(self):
+        if self.summary_frame:
+            self.summary_frame.destroy()
+
+        self.summary_frame = tk.Frame(self.root, bg=BG)
+        self.summary_frame.pack(fill="both", expand=True)
+
+        center_box = tk.Frame(self.summary_frame, bg=BG)
+        center_box.place(relx=0.5, rely=0.5, anchor="center")
+
+        tk.Label(
+            center_box, text="RACE FINISHED", fg=GREEN, bg=BG,
+            font=("Courier", 28, "bold"), justify="center"
+        ).pack(pady=(0, 10))
+
+        tk.Label(
+            center_box, text="POST-RACE AI COACHING SUMMARY", fg=BLUE, bg=BG,
+            font=("Courier", 16, "bold"), justify="center"
+        ).pack(pady=(0, 20))
+
+        summary_card = tk.Frame(center_box, bg=PANEL_BG, highlightbackground=BORDER, highlightthickness=1, padx=25, pady=20)
+        summary_card.pack(pady=(0, 30))
+
+        tk.Label(
+            summary_card, text="AI Race Engineer Debrief", fg=YELLOW, bg=PANEL_BG,
+            font=("Courier", 14, "bold"), anchor="w"
+        ).pack(fill="x", pady=(0, 10))
+
+        lbl_summary_body = tk.Label(
+            summary_card, text="Compiling AI Summary... Please wait...", fg=WHITE, bg=PANEL_BG,
+            font=("Courier", 13), wraplength=580, justify="left"
+        )
+        lbl_summary_body.pack()
+
+
+        btn_back = tk.Button(
+            center_box, text="MAIN MENU", fg="black", bg=WHITE,
+            activebackground=GREY, activeforeground="black",
+            font=("Courier", 16, "bold"), width=16, height=2, bd=1,
+            command=self._on_click_back_to_menu_from_summary
+        )
+        btn_back.pack()
+
+        # Poll until the JSON file is written to ensure the latest summary is displayed
+        
+        def _poll_for_summary(retries=30):
+            if SUMMARY_FILE.exists():
+                try:
+                    with open(SUMMARY_FILE, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                        text = data.get("feedback", "No summary text generated.")
+                        lbl_summary_body.config(text=text)
+                        return
+                except Exception:
+                    pass
+            
+            if retries > 0:
+                self.root.after(500, lambda: _poll_for_summary(retries - 1))
+            else:
+                lbl_summary_body.config(text="No infractions recorded or summary generation timed out.")
+
+        _poll_for_summary()
+
+    def _on_click_back_to_menu_from_summary(self):
+        # Delete old lap_summary.json immediately when leaving the Summary page
+        if SUMMARY_FILE.exists():
+            try:
+                SUMMARY_FILE.unlink()
+                print("[Dashboard] Cleaned up previous lap_summary.json.")
+            except Exception as e:
+                print(f"[Dashboard Warning] Could not delete old summary: {e}")
+
+        if self.summary_frame:
+            self.summary_frame.pack_forget()
+        self._build_home_page()
+
+
+    # Live Telemetry Dashboard UI
+    def _build_dashboard_ui(self):
+        if self.dashboard_frame:
+            self.dashboard_frame.destroy()
+
+        self.dashboard_frame = tk.Frame(self.root, bg=BG)
+        self.dashboard_frame.pack(fill="both", expand=True)
+
+        title_frame = tk.Frame(self.dashboard_frame, bg=BG, pady=6)
         title_frame.pack(fill="x", padx=10)
 
-        tk.Label(title_frame, text="Live Telemetry Dashboard", fg=BLUE, bg=BG,
-                 font=("Courier", 18, "bold")).pack(side="left")
-
+        tk.Label(title_frame, text="Live Telemetry Dashboard", fg=BLUE, bg=BG, font=("Courier", 18, "bold")).pack(side="left")
         self.lbl_session = tk.Label(title_frame, text="Olethros Road 1", fg=GREY, bg=BG, font=("Courier", 11))
         self.lbl_session.pack(side="left", padx=20)
 
-        tk.Frame(self.root, bg=BORDER, height=1).pack(fill="x", padx=10)
+        tk.Frame(self.dashboard_frame, bg=BORDER, height=1).pack(fill="x", padx=10)
 
-        content = tk.Frame(self.root, bg=BG)
+        content = tk.Frame(self.dashboard_frame, bg=BG)
         content.pack(fill="both", expand=True, padx=10, pady=8)
 
         self._build_left_panel(content)
         self._build_center_panel(content)
         self._build_right_panel(content)
 
-        tk.Frame(self.root, bg=BORDER, height=1).pack(fill="x", padx=10)
+        tk.Frame(self.dashboard_frame, bg=BORDER, height=1).pack(fill="x", padx=10)
         self._build_bottom_row()
+        self.root.focus_force()
 
     def _panel(self, parent, title, col):
         outer = tk.Frame(parent, bg=PANEL_BG, highlightbackground=BORDER, highlightthickness=1)
         outer.grid(row=0, column=col, sticky="nsew", padx=4, pady=2)
         parent.columnconfigure(col, weight=1)
-
         if title:
             tk.Label(outer, text=title, fg=GREY, bg=PANEL_BG, font=("Courier", 8)).pack(anchor="w", padx=8, pady=(6, 0))
-
         inner = tk.Frame(outer, bg=PANEL_BG)
         inner.pack(fill="both", expand=True, padx=8, pady=6)
         return inner
 
     def _build_left_panel(self, parent):
         p = self._panel(parent, "", 0)
-
         tk.Label(p, text="Race Position", fg=GREY, bg=PANEL_BG, font=("Courier", 9)).pack(anchor="w")
         self.lbl_race_pos = tk.Label(p, text="--", fg=ORANGE, bg=PANEL_BG, font=("Courier", 28, "bold"))
         self.lbl_race_pos.pack(anchor="w", pady=2)
 
         tk.Frame(p, bg=BORDER, height=1).pack(fill="x", pady=6)
-
         tk.Label(p, text="Current Lap", fg=GREY, bg=PANEL_BG, font=("Courier", 9)).pack(anchor="w")
         self.lbl_current_lap = tk.Label(p, text="--:--.---", fg=YELLOW, bg=PANEL_BG, font=("Courier", 20, "bold"))
         self.lbl_current_lap.pack(anchor="w", pady=(2, 0))
 
         tk.Frame(p, bg=BORDER, height=1).pack(fill="x", pady=6)
-
         tk.Label(p, text="Previous Lap", fg=GREY, bg=PANEL_BG, font=("Courier", 9)).pack(anchor="w")
         self.lbl_prev_lap = tk.Label(p, text="--:--.---", fg=GREEN, bg=PANEL_BG, font=("Courier", 14, "bold"))
         self.lbl_prev_lap.pack(anchor="w")
@@ -226,14 +633,12 @@ class TelemetryDashboard:
 
     def _build_center_panel(self, parent):
         p = self._panel(parent, "", 1)
-
         tk.Label(p, text="Speed", fg=GREY, bg=PANEL_BG, font=("Courier", 9)).pack()
         self.lbl_speed = tk.Label(p, text="0", fg=WHITE, bg=PANEL_BG, font=("Courier", 52, "bold"))
         self.lbl_speed.pack()
         tk.Label(p, text="km/h", fg=GREY, bg=PANEL_BG, font=("Courier", 10)).pack()
 
         tk.Frame(p, bg=BORDER, height=1).pack(fill="x", pady=8)
-
         gear_row = tk.Frame(p, bg=PANEL_BG)
         gear_row.pack()
         self.gear_box = tk.Label(gear_row, text="1", fg=WHITE, bg=BORDER, font=("Courier", 36, "bold"), width=3)
@@ -241,7 +646,6 @@ class TelemetryDashboard:
         tk.Label(gear_row, text="gear", fg=GREY, bg=PANEL_BG, font=("Courier", 9)).pack(side="left")
 
         tk.Frame(p, bg=BORDER, height=1).pack(fill="x", pady=8)
-
         for label, colour, attr in [("Throttle", RED, "throttle_bar"), ("Brake", BLUE, "brake_bar")]:
             row = tk.Frame(p, bg=PANEL_BG)
             row.pack(fill="x", pady=3)
@@ -251,13 +655,11 @@ class TelemetryDashboard:
             setattr(self, attr, bar)
 
         tk.Frame(p, bg=BORDER, height=1).pack(fill="x", pady=8)
-
         tk.Label(p, text="Track Position", fg=GREY, bg=PANEL_BG, font=("Courier", 9)).pack(anchor="w")
         self.track_pos_bar = TrackPositionBar(p, width=160, height=20)
         self.track_pos_bar.pack(anchor="w", pady=(2, 0))
 
         tk.Frame(p, bg=BORDER, height=1).pack(fill="x", pady=8)
-
         tk.Label(p, text="Fuel", fg=GREY, bg=PANEL_BG, font=("Courier", 9)).pack(anchor="w")
         fuel_row = tk.Frame(p, bg=PANEL_BG)
         fuel_row.pack(fill="x", pady=3)
@@ -268,7 +670,6 @@ class TelemetryDashboard:
 
     def _build_right_panel(self, parent):
         p = self._panel(parent, "", 2)
-
         tk.Label(p, text="Wheel Spin", fg=GREY, bg=PANEL_BG, font=("Courier", 9)).pack(anchor="w")
         self.wheel_spin_bar = BarWidget(p, colour=GREEN, width=160, height=18)
         self.wheel_spin_bar.pack(anchor="w", pady=(2, 6))
@@ -276,18 +677,16 @@ class TelemetryDashboard:
         self.lbl_wheel_spin.pack(anchor="w")
 
         tk.Frame(p, bg=BORDER, height=1).pack(fill="x", pady=8)
-
         tk.Label(p, text="Car Angle vs Track", fg=GREY, bg=PANEL_BG, font=("Courier", 9)).pack(anchor="w")
         self.lbl_angle = tk.Label(p, text="0.00 rad", fg=WHITE, bg=PANEL_BG, font=("Courier", 16, "bold"))
         self.lbl_angle.pack(anchor="w", pady=(2, 0))
 
         tk.Frame(p, bg=BORDER, height=1).pack(fill="x", pady=8)
-
         self.lbl_off_track = tk.Label(p, text="ON TRACK", fg=GREEN, bg=PANEL_BG, font=("Courier", 14, "bold"))
         self.lbl_off_track.pack(anchor="w", pady=(6, 0))
 
     def _build_bottom_row(self):
-        bottom = tk.Frame(self.root, bg=BG)
+        bottom = tk.Frame(self.dashboard_frame, bg=BG)
         bottom.pack(fill="x", padx=10, pady=6)
 
         rpm_panel = tk.Frame(bottom, bg=PANEL_BG, highlightbackground=BORDER, highlightthickness=1)
@@ -298,78 +697,105 @@ class TelemetryDashboard:
 
         coach_panel = tk.Frame(bottom, bg=PANEL_BG, highlightbackground=BORDER, highlightthickness=1)
         coach_panel.pack(side="left", padx=4, fill="both", expand=True)
-        tk.Label(coach_panel, text="Race Engineer", fg=GREY, bg=PANEL_BG, font=("Courier", 8)).pack(anchor="w", padx=8, pady=(6, 0))
-        self.lbl_coach = tk.Label(coach_panel, text="(waiting for first lap...)", fg=WHITE, bg=PANEL_BG,
-                                   font=("Courier", 11, "italic"), wraplength=380, justify="left")
-        self.lbl_coach.pack(padx=12, pady=10, anchor="w")
+        tk.Label(coach_panel, text="Race Engineer Console", fg=GREY, bg=PANEL_BG, font=("Courier", 8)).pack(anchor="w", padx=8, pady=(4, 0))
 
-    # data 
+        self.txt_coach = tk.Text(
+            coach_panel, 
+            bg=PANEL_BG, 
+            fg=WHITE, 
+            font=("Courier", 9),
+            bd=0, 
+            highlightthickness=0,
+            wrap="word",
+            height=6
+        )
+        self.txt_coach.pack(padx=8, pady=6, fill="both", expand=True)
+
+        self.txt_coach.tag_config("fast", foreground=YELLOW, font=("Courier", 9, "bold"))
+        self.txt_coach.tag_config("slow", foreground=WHITE, font=("Courier", 9, "normal"))
+        self.txt_coach.tag_config("summary", foreground=GREEN, font=("Courier", 9, "bold"))
+        self.txt_coach.tag_config("time", foreground=GREY, font=("Courier", 8))
+
+        self.txt_coach.insert("end", "[System] Race Engineer initialized...\n", "time")
+        self.txt_coach.config(state="disabled")
+
+
+    # Real-time UI update and GameStatus monitoring
+    def update_coach_feedback(self, text: str, layer: str = "slow"):
+        def _append_chat():
+            if not hasattr(self, 'txt_coach') or not self.txt_coach:
+                return
+
+            self.txt_coach.config(state="normal")
+            current_time = time.strftime("%H:%M:%S")
+
+            if layer == "fast":
+                prefix = f"[{current_time}] [FAST] "
+                tag = "fast"
+            elif layer == "summary":
+                prefix = f"[{current_time}] [SUMMARY] "
+                tag = "summary"
+            else:
+                prefix = f"[{current_time}] [AI COACH]"
+                tag = "slow"
+
+            self.txt_coach.insert("end", prefix, "time")
+            self.txt_coach.insert("end", f"{text}\n", tag)
+            self.txt_coach.see("end")
+            self.txt_coach.config(state="disabled")
+
+        self.root.after(0, _append_chat)
 
     def _update(self):
         try:
             if USING_REAL_CACHE:
-                data = cache.get_telemetry()
                 status = cache.get_status()
-            else:
-                data = get_fake_telemetry()
-                status = None
+                data = cache.get_telemetry()
 
-            self._check_connection_status(status)
+                # Detect race finished
+                if status == GameStatus.FINISHED:
+                    print("[Dashboard] GameStatus.FINISHED detected. Switching to Summary Page.")
+                    
+                    # Safely trigger the external processing logic
+                    if self.on_game_finished_callback:
+                        self.on_game_finished_callback()
 
-            if data:
-                self._refresh_ui(data, status)
+                    if self.dashboard_frame:
+                        self.dashboard_frame.pack_forget()
+                    self._build_summary_page()
+                    return
+
+                # Detect error, switch to error page
+                if status == GameStatus.ERROR:
+                    print("[Dashboard] GameStatus.ERROR detected. Switching to Error Page.")
+                    if self.dashboard_frame:
+                        self.dashboard_frame.pack_forget()
+                    self._show_error_page("Connection Lost: TORCS process ended or stopped sending data.")
+                    return
+
+                if data is not None:
+                    self._refresh_ui(data, status)
         except Exception as e:
-            print(f"dashboard update error: {e}")  
+            print(f"[Dashboard Error] Update error: {e}")
 
         self.root.after(self.REFRESH_MS, self._update)
 
-    def _check_connection_status(self, status):
-        if not USING_REAL_CACHE or status is None or self._shown_connection_popup:
-            return
-
-        if status == GameStatus.RACING:
-            self._shown_connection_popup = True
-            messagebox.showinfo("Connected", "Connected to TORCS successfully - telemetry is live, go drive!")
-        elif status == GameStatus.ERROR:
-            self._shown_connection_popup = True
-            messagebox.showerror(
-                "Connection Failed",
-                "Couldn't connect to TORCS.\n\n"
-                "Make sure TORCS is running with the SCR patch enabled, then close this and try again."
-            )
-
-    def _update_coach_panel(self):
-        try:
-            payload = json.loads(COACHING_FILE.read_text(encoding="utf-8"))
-            feedback = payload.get("feedback")
-            severity = payload.get("severity")
-            if feedback and feedback != self._last_coach_text:
-                self._last_coach_text = feedback
-                colour = {"high": RED, "medium": ORANGE, "low": YELLOW}.get(severity, WHITE)
-                self.lbl_coach.config(text=f'"{feedback}"', fg=colour)
-        except (FileNotFoundError, json.JSONDecodeError):
-            pass
-
-        self.root.after(self.COACH_REFRESH_MS, self._update_coach_panel)
-
     def _refresh_ui(self, data, status):
-        speed = data.get("speed_kmh", 0)
+        speed = data.get("speed_kmh", 0) / 3.6
         gear = data.get("gear", 1)
         rpm = data.get("rpm", 0)
         throttle = data.get("throttle", 0)
         brake = data.get("brake", 0)
         fuel = data.get("fuel", 0)
         lap_time = data.get("lap_time", 0)
-        lap_dist = data.get("lap_distance", 0)
         race_pos = data.get("race_pos", "--")
         track_pos = data.get("track_pos", 0.0)
         angle = data.get("angle", 0.0)
         wheel_spin = data.get("wheel_spin", 0.0)
 
         self.lbl_speed.config(text=str(int(max(0, speed))))
-        self.gear_box.config(text=str(max(0, gear)) if gear > 0 else "R")
+        self.gear_box.config(text=str(gear) if gear > 0 else ("N" if gear == 0 else "R"))
 
-        # colour code speed so you know when going too fast
         if speed > 200:
             self.lbl_speed.config(fg=RED)
         elif speed > 120:
@@ -399,7 +825,7 @@ class TelemetryDashboard:
             self.lbl_off_track.config(text="OFF TRACK", fg=RED)
         else:
             self.lbl_off_track.config(text="ON TRACK", fg=GREEN)
-            
+
         if lap_time < self._last_lap_time_seen - 5:
             self.prev_lap = self._last_lap_time_seen
             if self.best_lap is None or self._last_lap_time_seen < self.best_lap:
@@ -419,13 +845,6 @@ class TelemetryDashboard:
 
     def run(self):
         self.root.mainloop()
-
-    def close(self):
-        try:
-            self.root.quit()
-            self.root.destroy()
-        except tk.TclError:
-            pass  
 
 
 if __name__ == "__main__":

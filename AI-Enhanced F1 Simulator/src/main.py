@@ -1,135 +1,198 @@
+import os
+import platform
 import sys
 import threading
-import time
 import queue
 from pathlib import Path
+
+if platform.system() == "Darwin":
+    os.environ["OBJC_DISABLE_INITIALIZE_FORK_SAFETY"] = "YES"
 
 SRC_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SRC_DIR.parent
 sys.path.insert(0, str(SRC_DIR))
 
-from data_pipeline.input import InputHandler
-from data_pipeline.client import Client
-from data_pipeline.logger import CSVLogger
-from data_pipeline.cache import cache
-from granite.rag import load_knowledge_base
-from audio_manager.audio_manager import AudioManager
-from analysis.live_coach import LiveCoach
-from granite.ai_core import ai_queue_consumer_loop 
+from ui.dashboard import TelemetryDashboard
 
-def main():
-    print("\n" + "="*50)
-    print("[Main] Initiating early workspace warm-up...")
-    audio_manager = AudioManager()
-    llm_connected = True
+shared_event_queue = queue.Queue()
+ai_stop_event = threading.Event()
+audio_manager = None
+client = None
+dash = None
+ai_consumer_thread = None
+coach_thread = None
 
-    # AI Core and RAG Knowledge Base Initialization
+def run_initialization():
+    """Background initialization for AI and RAG after clicking START SYSTEM"""
+    global audio_manager
     print("\n" + "="*50)
-    print("[Main] Initializing AI Components & Knowledge Base...")
+    print("[Main] User clicked Start. Beginning AI Core & RAG Initialization...")
     
+    from audio_manager.audio_manager import AudioManager
+    from granite.rag import load_knowledge_base
+    from granite.granite_client import init_granite_model, get_ai_link_status
+
+    if audio_manager is None:
+        audio_manager = AudioManager()
+
     llm_connected = False
     try:
-        from granite.granite_client import init_granite_model, get_ai_link_status
         init_granite_model()
         load_knowledge_base()
         
         ai_status = get_ai_link_status()
         llm_connected = ai_status.get("llm_connected", True)
-        
-        if not llm_connected:
-            # Catch Granite connection failure (e.g., 403 quota exceeded) without interrupting the system.
-            print(f"[AI System Warning] {ai_status.get('message')}")
-        else:
-            print(f"[AI System Info] {ai_status.get('message')}")
+        msg = ai_status.get("message", "")
+
+        return True, llm_connected, msg
 
     except Exception as e:
-        print(f"[Main CRITICAL] AI Architecture Initialization failed: {e}")
-        audio_manager.shutdown()
-        sys.exit(1)
-        
-    print("="*50 + "\n")
-    
+        print(f"[Main CRITICAL] AI Initialization failed: {e}")
+        return False, False, str(e)
+
+
+def start_race_session(llm_connected, style="supportive"):
+    global client, audio_manager, dash, ai_consumer_thread, coach_thread
+
+    from data_pipeline.input import InputHandler
+    from data_pipeline.client import Client
+    from data_pipeline.logger import CSVLogger
+    from data_pipeline.cache import cache
+    from analysis.live_coach import LiveCoach
+    from granite.ai_core import ai_queue_consumer_loop 
+
+    print("\n" + "="*50)
+    print("[Main] New Race clicked! Creating TORCS Client & Data Pipeline...")
+
+    # Send global stop signal and cut off current audio immediately
+    ai_stop_event.set()
+    if audio_manager:
+        if hasattr(audio_manager, "stop_all"):
+            audio_manager.stop_all()
+
+    # Clean up old AI Consumer Thread
+    if ai_consumer_thread and ai_consumer_thread.is_alive():
+        print("[Main Warning] Stopping old AI Consumer thread...")
+        ai_consumer_thread.join(timeout=2.0)
+
+    # Clean up old Coach Thread
+    if coach_thread and coach_thread.is_alive():
+        print("[Main Warning] Stopping old Coach thread...")
+        coach_thread.join(timeout=2.0)
+
+    # Reset stop_event after old threads have exited
+    ai_stop_event.clear()
+
+    # Clear remaining items in shared_event_queue
+    while not shared_event_queue.empty():
+        try:
+            shared_event_queue.get_nowait()
+            shared_event_queue.task_done()
+        except queue.Empty:
+            break
+
+    if client:
+        try:
+            client.stop()
+        except Exception:
+            pass
+        client = None
 
     # Start the data streaming pipeline
     handler = InputHandler()
     logger = CSVLogger()
     client = Client(handler, logger, cache)
-    print("[Main] Starting Data Pipeline connection thread...")
-    client_thread = threading.Thread(target=client.start, daemon=True)
-    client_thread.start()
-    time.sleep(0.5)
+    threading.Thread(target=client.start, daemon=True).start()
 
-    # Create the in-memory core IPC communication pipeline
-    shared_event_queue = queue.Queue()
-    ai_stop_event = threading.Event()
+    def on_coach_feedback(text, layer="slow"):
+        if dash:
+            dash.update_coach_feedback(text, layer=layer)
 
-    # Launch the AI background consumer thread
-    print("[Main] Launching AI Queue Consumer Thread...")
-    ai_thread = threading.Thread(
+    # Start new AI Consumer thread
+    ai_consumer_thread = threading.Thread(
         target=ai_queue_consumer_loop, 
-        args=(shared_event_queue, audio_manager, ai_stop_event, llm_connected), 
+        args=(shared_event_queue, audio_manager, ai_stop_event, llm_connected, on_coach_feedback, style), 
         daemon=True
     )
-    ai_thread.start()
+    ai_consumer_thread.start()
 
-    # Instantiate LiveCoach and hand over control of the analysis process
+    # Start new Coach Thread
+    coach = LiveCoach(
+        manager=audio_manager, 
+        event_output_queue=shared_event_queue, 
+        use_granite=llm_connected,
+        cache=cache
+    )
+    
+    coach_thread = threading.Thread(
+        target=coach.start_coaching_loop,
+        kwargs={"wait_timeout": 120.0, "idle_timeout_s": 10.0, "stop_event": ai_stop_event},
+        daemon=True
+    )
+    coach_thread.start()
+
+def handle_game_finished():
+    """Called when the Dashboard detects that the TORCS race has ended"""
+    print("[Main] TORCS finished. Cleaning up live coaching & generating post-race summary...")
+    
+    # Cut off any unfinished audio playback from the race immediately
+    if audio_manager and hasattr(audio_manager, "stop_all"):
+        audio_manager.stop_all()
+
+    # Clear remaining live audio messages in the queue to prevent old audio from playing
+    while not shared_event_queue.empty():
+        try:
+            shared_event_queue.get_nowait()
+            shared_event_queue.task_done()
+        except queue.Empty:
+            break
+
+    # Send a poison pill (None) to let the AI Thread start generating the lap summary
+    shared_event_queue.put(None)
+
+def main():
+    global dash
+    print("[Main] Launching Dashboard GUI directly...")
+    
+    dash = TelemetryDashboard(
+        init_callback=run_initialization,
+        start_race_callback=start_race_session,
+        on_game_finished_callback=handle_game_finished
+    )
+
     try:
-        coach = LiveCoach(
-            manager=audio_manager, 
-            event_output_queue=shared_event_queue, 
-            use_granite=llm_connected,
-            cache=cache
-        )
-        
-        print("[Main] Handing over to LiveCoach for streaming and error detection...")
-        # Blocking execution: enter the main file tracking and error detection loop.
-        coach.start_coaching_loop(wait_timeout=120.0, idle_timeout_s=10.0)
-        
+        dash.run()
     except KeyboardInterrupt:
-        print("\n[Main] Keyboard interrupt. Lost connection to TORCS.")
-    except Exception as e:
-        print(f"[Main] Unexpected error in orchestration loop: {e}")
+        print("\n[Main] Keyboard interrupt detected.")
     finally:
-
-        # Wait for the AI thread to finish any remaining tasks and the final summary.
-        if 'ai_thread' in locals() and ai_thread.is_alive():
-            print("\n[Main] Awaiting AI Thread to finish macro summary report (generating JSON)...")
-            # Allow enough time for the LLM to generate the report and write it to disk.
-            shared_event_queue.put(None)
-            ai_thread.join(timeout=30)
-
         print("\n" + "="*50)
-        print("[Main] Initiating comprehensive system shutdown...")
-
-        # Signal remaining background threads to force-stop after the Summary is successfully written.
-        print("[Main] Signaling background threads to halt...")
+        print("[Main] Shutting down system...")
+        
+        # Send stop signal to background Consumer / Coach threads
         ai_stop_event.set()
 
-        print("[Main] Flushing shared event queue...")
-        while not shared_event_queue.empty():
+        # Stop TORCS Client
+        if client:
             try:
-                shared_event_queue.get_nowait()
-                shared_event_queue.task_done()
-            except queue.Empty:
-                break
+                client.stop()
+            except Exception as e:
+                print(f"[Main Warning] Error stopping client: {e}")
 
-        # Stop data streaming pipeline and network connections
-        print("[Main] Stopping data pipeline client and connections...")
-        try:
-            client.stop()
-        except Exception as e:
-            print(f"[Main Warning] Error stopping client: {e}")
+        # Stop audio manager
+        if audio_manager:
+            try:
+                audio_manager.shutdown()
+            except Exception as e:
+                print(f"[Main Warning] Error shutting down audio manager: {e}")
 
-        # Release audio manager resources
-        print("[Main] Releasing AI Audio Manager resources...")
-        try:
-            audio_manager.shutdown()
-        except Exception as e:
-            print(f"[Main Warning] Error shutting down audio manager: {e}")
+        # Ensure the GUI window is fully destroyed
+        if dash and hasattr(dash, "root") and dash.root:
+            try:
+                dash.root.destroy()
+            except Exception:
+                pass
 
-        print("[Main] All sub-systems halted successfully.")
-        print("="*50 + "\n")
-        sys.exit(0)
+        print("[Main] System halted cleanly.")
 
 if __name__ == '__main__':
     main()
