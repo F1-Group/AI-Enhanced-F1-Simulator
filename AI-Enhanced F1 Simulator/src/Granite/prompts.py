@@ -2,13 +2,6 @@ from .rag import retrieve
 
 # Track dictionary - F1 track knowledge base
 TRACK_KNOWLEDGE = {
-    "olethros_road_1": {
-        "name": "Olethros Road 1 (TORCS)",
-        "key_corners": "turn1, turn2, turn3, turn4, turn5, turn6, turn7, turn8, turn9 (9 corners auto-detected from telemetry)",
-        "characteristics": "Mixed road circuit with 9 corners. Combination of slow technical corners and medium speed sections. Lap time approximately 175 seconds at expert pace.",
-        "sector_notes": "S1: first 3 corners, S2: middle section corners 4-6, S3: final corners 7-9 to finish line",
-        "tyre_info": "Mixed circuit with varying corner speeds. Smooth throttle application critical on corner exits. Braking consistency key across all 9 corners."
-    },
     "generic": {
         "name": "Current Circuit",
         "key_corners": "analyse based on sector times",
@@ -42,7 +35,7 @@ def build_user_prompt(telemetry, coaching_request, track="generic", knowledge=""
     Args:
         telemetry: dict of telemetry data (aligned with team schema)
         coaching_request: coaching context generated from Team 2's error report
-        track: track name (olethros_road_1, generic)
+        track: track name (defaults to "generic" - no track-specific knowledge is hardcoded)
         knowledge: RAG knowledge string from rag.retrieve()
         errors: list of error dicts from error_detection.detect_errors()
     """
@@ -51,7 +44,12 @@ def build_user_prompt(telemetry, coaching_request, track="generic", knowledge=""
     track_info = TRACK_KNOWLEDGE.get(track.lower(), TRACK_KNOWLEDGE["generic"])
 
     # Format optional sections
-    knowledge_section = f"RELEVANT KNOWLEDGE FROM KNOWLEDGE BASE:\n{knowledge}\n" if knowledge else ""
+    knowledge_section = (
+        f"GENERAL BACKGROUND CONCEPT (not evidence about this specific lap — "
+        f"any corner, chicane, or number mentioned here is just an illustrative "
+        f"example from the knowledge base, not something that happened in this "
+        f"drive):\n{knowledge}\n"
+    ) if knowledge else ""
     errors_section = _format_errors(errors) if errors else ""
 
     return f"""
@@ -61,7 +59,9 @@ Track characteristics: {track_info['characteristics']}
 Sector notes: {track_info['sector_notes']}
 Tyre advice: {track_info['tyre_info']}
 
-TELEMETRY DATA:
+TELEMETRY DATA (a single instantaneous snapshot, no expert comparison — do not
+invent a target/adjustment number for any of these fields unless that same
+field also appears in the Evidence below):
 - Lap distance: {telemetry['lap_distance']}m
 - Speed: {telemetry['speed_kmh']} km/h
 - Track position (centerline offset): {telemetry['track_pos']}
@@ -79,5 +79,5 @@ TELEMETRY DATA:
 {knowledge_section}
 COACHING CONTEXT: {coaching_request}
 
-REPLY IN ONE SENTENCE ONLY. Maximum 20 words. Be direct and specific. No explanations.
+REPLY IN ONE SENTENCE ONLY. Maximum 20 words.
 """

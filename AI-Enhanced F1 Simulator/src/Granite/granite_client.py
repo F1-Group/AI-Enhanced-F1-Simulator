@@ -8,6 +8,13 @@ import ollama
 
 MODEL_NAME = "granite3-dense:2b"
 
+# ollama's module-level chat()/list() use a client with timeout=None (wait
+# forever). A per-call timeout ensures a stalled/loading local Ollama server
+# can't hang ask_race_engineer() indefinitely - failures surface quickly and
+# let the retry/fallback logic actually run.
+REQUEST_TIMEOUT_SECONDS = 10
+_client = ollama.Client(timeout=REQUEST_TIMEOUT_SECONDS)
+
 def init_granite_model():
     """Automatically check and start the Ollama service and Granite 2B model (supports Win / Mac / Linux)."""
     print(f"[Ollama] Initializing local Granite engine ({MODEL_NAME})...")
@@ -16,7 +23,7 @@ def init_granite_model():
     
     # Check if the Ollama background service is running
     try:
-        ollama.list()
+        _client.list()
     except Exception:
         print("[Ollama] Service not running. Attempting to start Ollama background process...")
         try:
@@ -57,7 +64,7 @@ def init_granite_model():
 
     # Pre-load the model into memory
     try:
-        ollama.chat(model=MODEL_NAME, messages=[{"role": "user", "content": "hi"}])
+        _client.chat(model=MODEL_NAME, messages=[{"role": "user", "content": "hi"}])
         print(f"[Ollama SUCCESS] Model '{MODEL_NAME}' loaded successfully into memory.")
     except Exception as e:
         print(f"[Ollama Warning] Model load failed. Did you download it with 'ollama pull {MODEL_NAME}'? Error: {e}")
@@ -68,7 +75,7 @@ def get_ai_link_status():
     """Health check interface to verify local Ollama API connection."""
     try:
         test_messages = [{"role": "user", "content": "ping"}]
-        ollama.chat(model=MODEL_NAME, messages=test_messages)
+        _client.chat(model=MODEL_NAME, messages=test_messages)
         return {"llm_connected": True, "message": f"Local Ollama Granite ({MODEL_NAME}) operational."}
     except Exception as e:
         error_msg = str(e)
@@ -95,31 +102,29 @@ def get_fallback_text(error_type: str) -> str:
     return FALLBACK_SCRIPTS.get(error_type, FALLBACK_DEFAULT)
 
 
-def ask_race_engineer(system_prompt, user_prompt, max_retries=2, wait_seconds=2, error_type=None):
+def ask_race_engineer(system_prompt, user_prompt, max_retries=1, wait_seconds=2):
     """
     Call local Ollama Granite and return coaching text as a string.
-    Falls back to a rule-based text if Ollama is unavailable.
+    Raises the last error once retries are exhausted, so the caller decides
+    how to handle unavailability (fallback text, tripping a circuit breaker, etc).
     """
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user",   "content": user_prompt}
     ]
 
+    last_error = None
     for attempt in range(1, max_retries + 1):
         try:
-            response = ollama.chat(
+            response = _client.chat(
                 model=MODEL_NAME,
                 messages=messages
             )
             return response['message']['content']
         except Exception as e:
-            error_text = str(e)
-            print(f"[Local Granite Error] Attempt {attempt}/{max_retries}: {error_text}")
+            last_error = e
+            print(f"[Local Granite Error] Attempt {attempt}/{max_retries}: {e}")
             if attempt < max_retries:
                 time.sleep(wait_seconds)
-            else:
-                break
 
-    fallback_text = get_fallback_text(error_type or "")
-    print(f"[Fallback] Using rule-based text: {fallback_text}")
-    return fallback_text
+    raise last_error

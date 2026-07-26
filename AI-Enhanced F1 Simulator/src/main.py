@@ -38,7 +38,7 @@ def run_initialization():
     llm_connected = False
     try:
         init_granite_model()
-        load_knowledge_base()
+        #load_knowledge_base()
         
         ai_status = get_ai_link_status()
         llm_connected = ai_status.get("llm_connected", True)

@@ -1,5 +1,6 @@
 import sys
 import json
+import time
 from pathlib import Path
 import queue
 
@@ -16,12 +17,43 @@ from granite.coaching_style import get_system_prompt
 from granite.rag import retrieve
 from granite.granite_client import get_fallback_text
 
+<<<<<<< HEAD
 _RUNTIME_LLM_OK = True
 
 def process_single_error(error, system_prompt, audio_manager, force_fallback=False, feedback_callback=None):
+=======
+# Circuit breaker for the LLM: a failed call trips it, and later calls skip
+# straight to fallback for _LLM_COOLDOWN_SECONDS instead of paying the full
+# retry/timeout cost again. After the cooldown, the next call is allowed to
+# probe the LLM again so a transient outage self-heals instead of forcing
+# fallback text for the rest of the session.
+_LLM_COOLDOWN_SECONDS = 10
+_llm_retry_at = 0.0
+
+_ERROR_REPLY_MARKERS = (
+    "Error contacting race engineer",
+    "Error: Max retries reached",
+    "I'm currently experiencing high demand",
+)
+
+
+def _llm_breaker_is_open():
+    """True while the breaker is tripped: LLM calls should be skipped."""
+    return time.time() < _llm_retry_at
+
+
+def _trip_llm_breaker():
+    global _llm_retry_at
+    _llm_retry_at = time.time() + _LLM_COOLDOWN_SECONDS
+
+
+def _reset_llm_breaker():
+    global _llm_retry_at
+    _llm_retry_at = 0.0
+
+def process_single_error(error, system_prompt, audio_manager, force_fallback=False):
+>>>>>>> 9ff5891 (Update granite)
     """Processes an isolated telemetry infraction."""
-    global _RUNTIME_LLM_OK
-    
     error_type = error.get("type") or error.get("tag") or "generic_error"
     coaching_request = f"{error.get('message', '')} {error.get('coaching_hint', '')}".strip()
 
@@ -41,7 +73,7 @@ def process_single_error(error, system_prompt, audio_manager, force_fallback=Fal
         return None
 
     # Only enable the fallback script for slow-layer review when disconnected.
-    if force_fallback or not _RUNTIME_LLM_OK:
+    if force_fallback or _llm_breaker_is_open():
         answer_text = get_fallback_text(error_type)
     else:
         # Execute memory-resident RAG retrieval
@@ -51,14 +83,15 @@ def process_single_error(error, system_prompt, audio_manager, force_fallback=Fal
         user_prompt = build_user_prompt(
             error.get("telemetry", {}),
             coaching_request,
-            track="olethros_road_1",
             knowledge=knowledge_context,
             errors=[]
         )
 
         try:
-            answer_text = ask_race_engineer(system_prompt, user_prompt, error_type=error_type)
+            answer_text = ask_race_engineer(system_prompt, user_prompt)
+            _reset_llm_breaker()
         except Exception:
+            _trip_llm_breaker()
             answer_text = get_fallback_text(error_type)
 
     # Execute Guardrails & Slow Layer Feedback
@@ -80,12 +113,10 @@ def process_single_error(error, system_prompt, audio_manager, force_fallback=Fal
 
 def generate_summary(all_results, system_prompt, force_fallback=False):
     """Compiles all isolated coaching insights into a macro lap review summary."""
-    global _RUNTIME_LLM_OK
-
     if not all_results:
         return None, True
 
-    if force_fallback or not _RUNTIME_LLM_OK:
+    if force_fallback or _llm_breaker_is_open():
         print("[AI Fast-Track Summary] Skipping LLM for Macro Summary due to empty quota.")
         return "Significant time lost in this sector. Focus on corner exits.", True
 
@@ -96,7 +127,7 @@ def generate_summary(all_results, system_prompt, force_fallback=False):
         )
 
     summary_prompt = f"""You are a professional race engineer giving a post-lap debrief.
-    Below is all coaching feedback from this lap on olethros_road_1.
+    Below is all coaching feedback from this lap.
 
     {chr(10).join(lines)}
 
@@ -110,18 +141,34 @@ def generate_summary(all_results, system_prompt, force_fallback=False):
     print("\n[AI] Compiling Macro Lap Summary Review")
 
     try:
-        summary_text = ask_race_engineer(system_prompt, summary_prompt, error_type="sector_time_loss")
+        summary_text = ask_race_engineer(system_prompt, summary_prompt)
+        _reset_llm_breaker()
         return summary_text, False
     except Exception as e:
         print(f"[AI Warning] Summary LLM failed: {e}")
+        _trip_llm_breaker()
         return "Significant time lost in this sector. Focus on corner exits.", True
 
 
+<<<<<<< HEAD
 def ai_queue_consumer_loop(event_queue, audio_manager, stop_event, is_llm_available=True, feedback_callback=None, style="supportive"):
     global _RUNTIME_LLM_OK
     _RUNTIME_LLM_OK = is_llm_available
     
     system_prompt = get_system_prompt(style)
+=======
+def ai_queue_consumer_loop(event_queue, audio_manager, stop_event, is_llm_available=True):
+    """
+    Asynchronously consumes error events from the queue. Receiving 'None' indicates
+    that LiveCoach has finished the lap with no new events, which triggers the final summary.
+    """
+    if is_llm_available:
+        _reset_llm_breaker()
+    else:
+        _trip_llm_breaker()
+
+    system_prompt = get_system_prompt("aggressive") # Coaching style (Supportive, aggressive, technical)
+>>>>>>> 9ff5891 (Update granite)
     all_results = []
     
     print("[AI Thread] Async Consumer active. Listening to shared_event_queue...")
@@ -138,6 +185,7 @@ def ai_queue_consumer_loop(event_queue, audio_manager, stop_event, is_llm_availa
             break
             
         try:
+<<<<<<< HEAD
             result = process_single_error(
                 event, 
                 system_prompt,
@@ -145,6 +193,9 @@ def ai_queue_consumer_loop(event_queue, audio_manager, stop_event, is_llm_availa
                 force_fallback=(not _RUNTIME_LLM_OK),
                 feedback_callback=feedback_callback
             )
+=======
+            result = process_single_error(event, system_prompt, audio_manager)
+>>>>>>> 9ff5891 (Update granite)
             if result:
                 merged = dict(result)
                 merged["error_type"] = event.get("type", "generic_error")
@@ -187,8 +238,12 @@ def ai_queue_consumer_loop(event_queue, audio_manager, stop_event, is_llm_availa
         print(f"[AI Error] Failed to write coaching_summary: {e}")
 
     try:
+<<<<<<< HEAD
         print("[AI Thread] Generating final post-race summary (Silent mode)...")
         summary_text, _ = generate_summary(all_results, system_prompt, force_fallback=(not _RUNTIME_LLM_OK))
+=======
+        summary_text, _ = generate_summary(all_results, system_prompt)
+>>>>>>> 9ff5891 (Update granite)
         if summary_text:
             summary_result = {
                 "type": "lap_summary", 

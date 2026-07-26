@@ -29,13 +29,18 @@ def load_knowledge_base():
         for filename in files:
             if filename.endswith(".txt"):
                 filepath = os.path.join(root, filename)
+<<<<<<< HEAD
                 with open(filepath, 'r', encoding='utf-8') as f:
+=======
+                rel_path = os.path.relpath(filepath, knowledge_dir)
+                with open(filepath, 'r') as f:
+>>>>>>> 9ff5891 (Update granite)
                     content = f.read()
-                
+
                 chunks = [c.strip() for c in content.split('\n\n') if c.strip()]
-                
+
                 for i, chunk in enumerate(chunks):
-                    doc_id = f"{filename}_{i}"
+                    doc_id = f"{rel_path}_{i}"
                     collection.add(
                         documents=[chunk],
                         ids=[doc_id]
