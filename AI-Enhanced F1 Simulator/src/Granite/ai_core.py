@@ -17,11 +17,6 @@ from granite.coaching_style import get_system_prompt
 from granite.rag import retrieve
 from granite.granite_client import get_fallback_text
 
-<<<<<<< HEAD
-_RUNTIME_LLM_OK = True
-
-def process_single_error(error, system_prompt, audio_manager, force_fallback=False, feedback_callback=None):
-=======
 # Circuit breaker for the LLM: a failed call trips it, and later calls skip
 # straight to fallback for _LLM_COOLDOWN_SECONDS instead of paying the full
 # retry/timeout cost again. After the cooldown, the next call is allowed to
@@ -51,8 +46,7 @@ def _reset_llm_breaker():
     global _llm_retry_at
     _llm_retry_at = 0.0
 
-def process_single_error(error, system_prompt, audio_manager, force_fallback=False):
->>>>>>> 9ff5891 (Update granite)
+def process_single_error(error, system_prompt, audio_manager, force_fallback=False, feedback_callback=None):
     """Processes an isolated telemetry infraction."""
     error_type = error.get("type") or error.get("tag") or "generic_error"
     coaching_request = f"{error.get('message', '')} {error.get('coaching_hint', '')}".strip()
@@ -150,14 +144,7 @@ def generate_summary(all_results, system_prompt, force_fallback=False):
         return "Significant time lost in this sector. Focus on corner exits.", True
 
 
-<<<<<<< HEAD
 def ai_queue_consumer_loop(event_queue, audio_manager, stop_event, is_llm_available=True, feedback_callback=None, style="supportive"):
-    global _RUNTIME_LLM_OK
-    _RUNTIME_LLM_OK = is_llm_available
-    
-    system_prompt = get_system_prompt(style)
-=======
-def ai_queue_consumer_loop(event_queue, audio_manager, stop_event, is_llm_available=True):
     """
     Asynchronously consumes error events from the queue. Receiving 'None' indicates
     that LiveCoach has finished the lap with no new events, which triggers the final summary.
@@ -167,8 +154,7 @@ def ai_queue_consumer_loop(event_queue, audio_manager, stop_event, is_llm_availa
     else:
         _trip_llm_breaker()
 
-    system_prompt = get_system_prompt("aggressive") # Coaching style (Supportive, aggressive, technical)
->>>>>>> 9ff5891 (Update granite)
+    system_prompt = get_system_prompt(style) # Coaching style (Supportive, aggressive, technical)
     all_results = []
     
     print("[AI Thread] Async Consumer active. Listening to shared_event_queue...")
@@ -185,17 +171,7 @@ def ai_queue_consumer_loop(event_queue, audio_manager, stop_event, is_llm_availa
             break
             
         try:
-<<<<<<< HEAD
-            result = process_single_error(
-                event, 
-                system_prompt,
-                audio_manager,
-                force_fallback=(not _RUNTIME_LLM_OK),
-                feedback_callback=feedback_callback
-            )
-=======
-            result = process_single_error(event, system_prompt, audio_manager)
->>>>>>> 9ff5891 (Update granite)
+            result = process_single_error(event, system_prompt, audio_manager, feedback_callback=feedback_callback)
             if result:
                 merged = dict(result)
                 merged["error_type"] = event.get("type", "generic_error")
@@ -238,12 +214,7 @@ def ai_queue_consumer_loop(event_queue, audio_manager, stop_event, is_llm_availa
         print(f"[AI Error] Failed to write coaching_summary: {e}")
 
     try:
-<<<<<<< HEAD
-        print("[AI Thread] Generating final post-race summary (Silent mode)...")
-        summary_text, _ = generate_summary(all_results, system_prompt, force_fallback=(not _RUNTIME_LLM_OK))
-=======
         summary_text, _ = generate_summary(all_results, system_prompt)
->>>>>>> 9ff5891 (Update granite)
         if summary_text:
             summary_result = {
                 "type": "lap_summary", 

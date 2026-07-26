@@ -29,12 +29,8 @@ def load_knowledge_base():
         for filename in files:
             if filename.endswith(".txt"):
                 filepath = os.path.join(root, filename)
-<<<<<<< HEAD
-                with open(filepath, 'r', encoding='utf-8') as f:
-=======
                 rel_path = os.path.relpath(filepath, knowledge_dir)
-                with open(filepath, 'r') as f:
->>>>>>> 9ff5891 (Update granite)
+                with open(filepath, 'r', encoding='utf-8') as f:
                     content = f.read()
 
                 chunks = [c.strip() for c in content.split('\n\n') if c.strip()]
