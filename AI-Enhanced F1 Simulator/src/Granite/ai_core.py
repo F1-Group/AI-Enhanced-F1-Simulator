@@ -25,13 +25,6 @@ from granite.granite_client import get_fallback_text
 _LLM_COOLDOWN_SECONDS = 10
 _llm_retry_at = 0.0
 
-_ERROR_REPLY_MARKERS = (
-    "Error contacting race engineer",
-    "Error: Max retries reached",
-    "I'm currently experiencing high demand",
-)
-
-
 def _llm_breaker_is_open():
     """True while the breaker is tripped: LLM calls should be skipped."""
     return time.time() < _llm_retry_at
