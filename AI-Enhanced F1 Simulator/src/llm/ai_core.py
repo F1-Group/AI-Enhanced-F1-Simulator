@@ -70,8 +70,7 @@ def process_single_error(error, system_prompt, audio_manager, force_fallback=Fal
         user_prompt = build_user_prompt(
             error.get("telemetry", {}),
             coaching_request,
-            knowledge=knowledge_context,
-            errors=[]
+            knowledge=knowledge_context
         )
 
         try:

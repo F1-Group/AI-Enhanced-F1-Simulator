@@ -26,7 +26,7 @@ COMPARING LAPS USING TRACK POSITION
 
 The ATLAS system allows two drivers' data to be overlaid on a single display. Each car's data is identified by a different colour. Engineers use this overlay to compare braking points, throttle application, steering inputs, and corner exit speeds at the same track positions, identifying where one driver gains time over the other.
 
-By analysing where a driver is consistently slower than the reference lap across multiple laps, engineers and race engineers can identify recurring problem areas — for example, consistently losing time through a specific chicane — and provide targeted coaching advice to address that specific section of the track.
+By analysing where a driver is consistently slower than the reference lap across multiple laps, engineers and race engineers can identify recurring problem areas — for example, consistently losing time through a specific section of track — and provide targeted coaching advice to address that specific section of the track.
 
 TELEMETRY LATENCY AND DATA QUALITY
 

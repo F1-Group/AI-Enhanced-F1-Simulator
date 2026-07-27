@@ -22,7 +22,7 @@ MINI SECTORS AND CORNER-BY-CORNER ANALYSIS
 
 Within each sector, the track can be further broken down into mini sectors or individual corner performance zones. Engineers can identify time loss down to individual corners, braking zones, and corner exit points.
 
-For coaching purposes, identifying the specific corner where time is consistently lost is more actionable than knowing only which sector is slow. For example, a driver losing 0.3 seconds in Sector 2 may be losing all of it in a single chicane, which can be addressed with a specific braking point adjustment.
+For coaching purposes, identifying the specific corner where time is consistently lost is more actionable than knowing only which sector is slow. For example, a driver losing 0.3 seconds in Sector 2 may be losing all of it in a single corner, which can be addressed with a specific braking point adjustment.
 
 LAP DISTANCE AND BRAKING POINT REFERENCE
 
