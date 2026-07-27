@@ -80,6 +80,17 @@ _APOLOGY_LEAD = re.compile(
 def _strip_apology(text: str) -> str:
     return _APOLOGY_LEAD.sub("", text, count=1).strip().strip("\"'")
 
+
+# The model sometimes invents a specific turn number (e.g. "Turn 1") even for
+# sector-level errors where no turn was ever identified. Rather than relying
+# on the prompt alone, normalize any "Turn N" wording down to "corner" so the
+# feedback text never claims more precision than the error data actually has.
+_TURN_NUMBER = re.compile(r"\b(the\s+)?turn\s+\d+\b", re.IGNORECASE)
+
+
+def _replace_turn_with_corner(text: str) -> str:
+    return _TURN_NUMBER.sub("the corner", text)
+
 FALLBACK_RESPONSES = {
     "default": "Focus on braking points and consistent throttle application.",
     "late_braking": "Move your braking point earlier and trail brake into the apex.",
@@ -90,7 +101,7 @@ FALLBACK_RESPONSES = {
 }
 
 def validate_output(response: str, error_type: str = "default"):
-    response = _strip_apology(response)
+    response = _replace_turn_with_corner(_strip_apology(response))
     words = response.split()
     word_count = len(words)
 
