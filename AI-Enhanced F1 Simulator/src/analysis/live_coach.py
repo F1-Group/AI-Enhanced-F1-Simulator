@@ -377,6 +377,7 @@ class LiveCoach:
             while True:
                 if stop_event and stop_event.is_set():
                     print("[Coach] Stop event detected. Exiting telemetry loop.")
+                    self._is_draining = True
                     return
 
                 if self.cache:

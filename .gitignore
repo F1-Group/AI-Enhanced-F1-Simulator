@@ -158,6 +158,16 @@ ENV/
 env.bak/
 venv.bak/
 
+# venv accidentally created at repo root (python -m venv . instead of .venv)
+/bin/
+/include/
+/pyvenv.cfg
+/share/
+AI-Enhanced F1 Simulator/bin/
+AI-Enhanced F1 Simulator/include/
+AI-Enhanced F1 Simulator/pyvenv.cfg
+AI-Enhanced F1 Simulator/share/
+
 # Spyder project settings
 .spyderproject
 .spyproject

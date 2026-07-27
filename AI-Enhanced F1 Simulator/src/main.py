@@ -53,6 +53,7 @@ def run_initialization():
 
 def start_race_session(llm_connected, style="supportive"):
     global client, audio_manager, dash, ai_consumer_thread, coach_thread
+    global shared_event_queue, ai_stop_event
 
     from data_pipeline.input import InputHandler
     from data_pipeline.client import Client
@@ -64,8 +65,13 @@ def start_race_session(llm_connected, style="supportive"):
     print("\n" + "="*50)
     print("[Main] New Race clicked! Creating TORCS Client & Data Pipeline...")
 
-    # Send global stop signal and cut off current audio immediately
-    ai_stop_event.set()
+    # Signal the OLD session's threads to stop, via the OLD stop_event object
+    # (kept alive by this local reference even after the global is swapped
+    # below). ai_queue_consumer_loop's ask_race_engineer() call has no HTTP
+    # timeout and can block for tens of seconds, so the old AI consumer
+    # thread may still be mid-call when the 2s join below gives up on it.
+    old_stop_event = ai_stop_event
+    old_stop_event.set()
     if audio_manager:
         if hasattr(audio_manager, "stop_all"):
             audio_manager.stop_all()
@@ -80,16 +86,17 @@ def start_race_session(llm_connected, style="supportive"):
         print("[Main Warning] Stopping old Coach thread...")
         coach_thread.join(timeout=2.0)
 
-    # Reset stop_event after old threads have exited
-    ai_stop_event.clear()
-
-    # Clear remaining items in shared_event_queue
-    while not shared_event_queue.empty():
-        try:
-            shared_event_queue.get_nowait()
-            shared_event_queue.task_done()
-        except queue.Empty:
-            break
+    # Fresh stop_event + queue for this session, instead of clearing/reusing
+    # the old ones. Reusing a single global Event was a race: if an old
+    # thread was still blocked past the 2s join above, clearing the shared
+    # flag here would un-signal its stop request behind its back, and it
+    # would keep polling shared_event_queue and speaking through the shared
+    # audio_manager indefinitely. A brand new Event/Queue per session means
+    # any straggling old thread keeps seeing *its own* stop_event as set
+    # (never touched again by this or future sessions) and can never publish
+    # into - or be fed by - the new session's queue.
+    ai_stop_event = threading.Event()
+    shared_event_queue = queue.Queue()
 
     if client:
         try:
