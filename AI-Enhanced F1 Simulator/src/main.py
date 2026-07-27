@@ -29,8 +29,8 @@ def run_initialization():
     print("[Main] User clicked Start. Beginning AI Core & RAG Initialization...")
     
     from audio_manager.audio_manager import AudioManager
-    from granite.rag import load_knowledge_base
-    from granite.granite_client import init_granite_model, get_ai_link_status
+    from llm.rag import load_knowledge_base
+    from llm.llm_client import init_granite_model, get_ai_link_status
 
     if audio_manager is None:
         audio_manager = AudioManager()
@@ -59,7 +59,7 @@ def start_race_session(llm_connected, style="supportive"):
     from data_pipeline.logger import CSVLogger
     from data_pipeline.cache import cache
     from analysis.live_coach import LiveCoach
-    from granite.ai_core import ai_queue_consumer_loop 
+    from llm.ai_core import ai_queue_consumer_loop
 
     print("\n" + "="*50)
     print("[Main] New Race clicked! Creating TORCS Client & Data Pipeline...")

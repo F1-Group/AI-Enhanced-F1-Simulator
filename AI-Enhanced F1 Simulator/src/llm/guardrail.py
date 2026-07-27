@@ -49,7 +49,7 @@ def validate_input(coaching_request: str):
 
 # ─── OUTPUT GUARDRAIL ──────────────────────────────────────────────────────────
 
-MAX_WORDS = 20
+MAX_WORDS = 30
 
 INVALID_PHRASES = [
     "i don't know",
