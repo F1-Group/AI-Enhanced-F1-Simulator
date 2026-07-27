@@ -1,176 +1,198 @@
+import os
+import platform
 import sys
 import threading
-import time
-import subprocess
+import queue
 from pathlib import Path
+
+if platform.system() == "Darwin":
+    os.environ["OBJC_DISABLE_INITIALIZE_FORK_SAFETY"] = "YES"
 
 SRC_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SRC_DIR.parent
 sys.path.insert(0, str(SRC_DIR))
-ERROR_REPORT_DIR = PROJECT_ROOT / "data" / "error_report"
 
-from data_pipeline.input import InputHandler
-from data_pipeline.client import Client
-from data_pipeline.logger import CSVLogger
-from data_pipeline.cache import cache, GameStatus
-from granite.rag import load_knowledge_base
-from audio_manager.audio_manager import AudioManager
-from granite.ai_core import process_all_errors_pipeline  
+from ui.dashboard import TelemetryDashboard
 
+shared_event_queue = queue.Queue()
+ai_stop_event = threading.Event()
+audio_manager = None
+client = None
+dash = None
+ai_consumer_thread = None
+coach_thread = None
 
-# BACKGROUND FILE WATCHER THREAD
-def ai_file_watcher_loop(audio_manager, stop_event, llm_connected):
-    """
-    Background worker thread for Team 3:
-    Monitors Team 2's output directory and instantly fires the AI pipeline 
-    the second a NEW JSON report file lands, ignoring all past historical files.
-    """
-    print(f"[Main] File watcher thread active (LLM Connected: {llm_connected}). Monitoring Team 2 JSON outputs...")
-    
-    # On startup, immediately mark all pre-existing files as "already processed"
-    processed_files = set()
-    if ERROR_REPORT_DIR.exists():
-        processed_files = {f.name for f in ERROR_REPORT_DIR.glob("error_report_*.json")}
-        if processed_files:
-            print(f"[Main] Safely ignored {len(processed_files)} historical reports found in directory.")
-
-    # Ensure target log directories exist
-    ERROR_REPORT_DIR.mkdir(parents=True, exist_ok=True)
-
-    # Run the loop while checking your stop_event
-    while not stop_event.is_set():
-        try:
-            # Query all current JSON reports created by Team 2
-            current_files = {f.name for f in ERROR_REPORT_DIR.glob("error_report_*.json")}
-            
-            # Find files that are ACTUALLY new (present in directory but not in our processed set)
-            new_files = current_files - processed_files
-            
-            if new_files:
-                # Sort them to process the absolute latest one first
-                latest_new_file_name = sorted(list(new_files))[-1]
-                latest_file_path = ERROR_REPORT_DIR / latest_new_file_name
-                
-                print(f"\n[Main] Detected REAL NEW Team 2 report: {latest_new_file_name}")
-                print(f"[Main] Triggering Core AI Pipeline...")
-
-                process_all_errors_pipeline(
-                    audio_manager, 
-                    error_report_path=latest_file_path, 
-                    is_llm_available=llm_connected
-                )
-                
-                # Update our set so we never process this file (or any older files) again
-                processed_files.update(current_files)
-                    
-        except Exception as e:
-            print(f"[Main] Exception caught in file monitor loop: {e}")
-            
-        time.sleep(0.5)  # Scan every 500ms to conserve CPU cycles
-
-
-def main():
+def run_initialization():
+    """Background initialization for AI and RAG after clicking START SYSTEM"""
+    global audio_manager
     print("\n" + "="*50)
-    print("[Main] Initiating early workspace warm-up...")
-    audio_manager = AudioManager()
+    print("[Main] User clicked Start. Beginning AI Core & RAG Initialization...")
+    
+    from audio_manager.audio_manager import AudioManager
+    from granite.rag import load_knowledge_base
+    from granite.granite_client import init_granite_model, get_ai_link_status
 
-    llm_connected = True
+    if audio_manager is None:
+        audio_manager = AudioManager()
 
-    # Initiating early workspace
+    llm_connected = False
     try:
-        from granite.granite_client import init_granite_model, get_ai_link_status
-
         init_granite_model()
-        
-        # Load heavy vector embeddings right now so we experience zero lag inside the live loop
         load_knowledge_base()
-        print("[Main] RAG Knowledge Base primed and ready in memory!")
         
-        # Verify IBM Watsonx API connectivity status before UI handoff
-        print("[Main] Testing live AI server link state...")
         ai_status = get_ai_link_status()
-        
         llm_connected = ai_status.get("llm_connected", True)
-        
-        if llm_connected:
-            print(f"[Main] {ai_status['message']} Ready for UI state handoff.")
-        else:
-            print(f"[Main WARNING] {ai_status['message']}")
-            print("[Main WARNING] Continuing execution under local Rule-Based Fallback protocol.")
-            # audio_manager.shutdown()
-            # sys.exit(1)
-    except Exception as e:
-        print(f"[Main CRITICAL] Team 3 Knowledge Base failed initialization, aborting: {e}")
-        audio_manager.shutdown()
-        sys.exit(1)
-    print("="*50 + "\n")
+        msg = ai_status.get("message", "")
 
-    # Data pipeline
+        return True, llm_connected, msg
+
+    except Exception as e:
+        print(f"[Main CRITICAL] AI Initialization failed: {e}")
+        return False, False, str(e)
+
+
+def start_race_session(llm_connected, style="supportive"):
+    global client, audio_manager, dash, ai_consumer_thread, coach_thread
+
+    from data_pipeline.input import InputHandler
+    from data_pipeline.client import Client
+    from data_pipeline.logger import CSVLogger
+    from data_pipeline.cache import cache
+    from analysis.live_coach import LiveCoach
+    from granite.ai_core import ai_queue_consumer_loop 
+
+    print("\n" + "="*50)
+    print("[Main] New Race clicked! Creating TORCS Client & Data Pipeline...")
+
+    # Send global stop signal and cut off current audio immediately
+    ai_stop_event.set()
+    if audio_manager:
+        if hasattr(audio_manager, "stop_all"):
+            audio_manager.stop_all()
+
+    # Clean up old AI Consumer Thread
+    if ai_consumer_thread and ai_consumer_thread.is_alive():
+        print("[Main Warning] Stopping old AI Consumer thread...")
+        ai_consumer_thread.join(timeout=2.0)
+
+    # Clean up old Coach Thread
+    if coach_thread and coach_thread.is_alive():
+        print("[Main Warning] Stopping old Coach thread...")
+        coach_thread.join(timeout=2.0)
+
+    # Reset stop_event after old threads have exited
+    ai_stop_event.clear()
+
+    # Clear remaining items in shared_event_queue
+    while not shared_event_queue.empty():
+        try:
+            shared_event_queue.get_nowait()
+            shared_event_queue.task_done()
+        except queue.Empty:
+            break
+
+    if client:
+        try:
+            client.stop()
+        except Exception:
+            pass
+        client = None
+
+    # Start the data streaming pipeline
     handler = InputHandler()
     logger = CSVLogger()
     client = Client(handler, logger, cache)
+    threading.Thread(target=client.start, daemon=True).start()
 
-    print("[Main] Starting Data Pipeline connection thread...")
-    client_thread = threading.Thread(target=client.start, daemon=True)
-    client_thread.start()
+    def on_coach_feedback(text, layer="slow"):
+        if dash:
+            dash.update_coach_feedback(text, layer=layer)
 
-    time.sleep(0.5)  # Allow data stream a split second to stabilize
-
-    ai_stop_event = threading.Event()
-    ai_thread = threading.Thread(
-        target=ai_file_watcher_loop, 
-        args=(audio_manager, ai_stop_event, llm_connected), 
+    # Start new AI Consumer thread
+    ai_consumer_thread = threading.Thread(
+        target=ai_queue_consumer_loop, 
+        args=(shared_event_queue, audio_manager, ai_stop_event, llm_connected, on_coach_feedback, style), 
         daemon=True
     )
-    ai_thread.start()
+    ai_consumer_thread.start()
 
-    # Analyais Data
-    print("[Main] Automatically launching Live Coach subprocess...")
-    coach_process = subprocess.Popen(
-        [sys.executable, "-m", "analysis.live_coach"],
-        stdout=None,
-        stderr=None,
-        cwd=str(SRC_DIR)
+    # Start new Coach Thread
+    coach = LiveCoach(
+        manager=audio_manager, 
+        event_output_queue=shared_event_queue, 
+        use_granite=llm_connected,
+        cache=cache
+    )
+    
+    coach_thread = threading.Thread(
+        target=coach.start_coaching_loop,
+        kwargs={"wait_timeout": 120.0, "idle_timeout_s": 10.0, "stop_event": ai_stop_event},
+        daemon=True
+    )
+    coach_thread.start()
+
+def handle_game_finished():
+    """Called when the Dashboard detects that the TORCS race has ended"""
+    print("[Main] TORCS finished. Cleaning up live coaching & generating post-race summary...")
+    
+    # Cut off any unfinished audio playback from the race immediately
+    if audio_manager and hasattr(audio_manager, "stop_all"):
+        audio_manager.stop_all()
+
+    # Clear remaining live audio messages in the queue to prevent old audio from playing
+    while not shared_event_queue.empty():
+        try:
+            shared_event_queue.get_nowait()
+            shared_event_queue.task_done()
+        except queue.Empty:
+            break
+
+    # Send a poison pill (None) to let the AI Thread start generating the lap summary
+    shared_event_queue.put(None)
+
+def main():
+    global dash
+    print("[Main] Launching Dashboard GUI directly...")
+    
+    dash = TelemetryDashboard(
+        init_callback=run_initialization,
+        start_race_callback=start_race_session,
+        on_game_finished_callback=handle_game_finished
     )
 
-    # Main thread
     try:
-        while cache.get_status() not in (GameStatus.ERROR, GameStatus.FINISHED):
-            time.sleep(0.1)
-        current_status = cache.get_status()
-        if current_status == GameStatus.FINISHED:
-            print("[Main] Game finished. Waiting for post-game AI analysis to complete...")
-            ai_timeout = 120.0 
-            start_wait = time.time()
-            while True:
-                if time.time() - start_wait > ai_timeout:
-                    print("[Main] Warning: Post-game AI analysis timed out. Proceeding to shutdown.")
-                    break
-                time.sleep(0.2)
+        dash.run()
     except KeyboardInterrupt:
-        print("\n[Main] Keyboard interrupt. Lost connection to TORCS.")
-    except Exception as e:
-        print(f"[Main] Unexpected error in orchestration loop: {e}")
+        print("\n[Main] Keyboard interrupt detected.")
     finally:
-        print("[Main] Stopping data pipeline client and connections...")
-        client.stop()
-
-        print("[Main] Signaling AI File Watcher thread to stop...")
+        print("\n" + "="*50)
+        print("[Main] Shutting down system...")
+        
+        # Send stop signal to background Consumer / Coach threads
         ai_stop_event.set()
 
-        print("[Main] Terminating Live Coach subprocess...")
-        coach_process.terminate()
-        try:
-            coach_process.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            coach_process.kill()
-            
-        print("[Main] Releasing AI Audio Manager resources...")
-        audio_manager.shutdown()
+        # Stop TORCS Client
+        if client:
+            try:
+                client.stop()
+            except Exception as e:
+                print(f"[Main Warning] Error stopping client: {e}")
 
-        print("[Main] System exited cleanly.")
-        sys.exit(0)
+        # Stop audio manager
+        if audio_manager:
+            try:
+                audio_manager.shutdown()
+            except Exception as e:
+                print(f"[Main Warning] Error shutting down audio manager: {e}")
 
+        # Ensure the GUI window is fully destroyed
+        if dash and hasattr(dash, "root") and dash.root:
+            try:
+                dash.root.destroy()
+            except Exception:
+                pass
+
+        print("[Main] System halted cleanly.")
 
 if __name__ == '__main__':
     main()

@@ -53,8 +53,20 @@ MAX_ALIGN_GAP_M = 20.0          # grid points with worse alignment are ignored
 
 
 def detect_corners(baseline):
-    """Number the track's corners (T1, T2, ...) from the expert steer trace."""
+    """Number the track's corners (turn1, turn2, ...) from the expert steer trace."""
+    if baseline.empty or "steer" not in baseline:
+        return []
+
     steer = np.abs(baseline["steer"].to_numpy())
+    
+    # If the steer array contains any NaN values or is completely empty, 
+    # fill it with safe default values first.
+    if np.isnan(steer).all() or len(steer) == 0:
+        return []
+
+    # If the steer array contains any NaN values, replace them with 0 first.
+    steer = np.nan_to_num(steer, nan=0.0)
+
     # Light smoothing so single noisy samples don't split a corner in two.
     steer = pd.Series(steer).rolling(5, center=True, min_periods=1).mean().to_numpy()
     dist = baseline["lap_distance"].to_numpy()
@@ -82,7 +94,7 @@ def detect_corners(baseline):
     for n, (s, e) in enumerate(seg for seg in merged if seg[1] - seg[0] >= CORNER_MIN_LENGTH_M):
         zone = (baseline["lap_distance"] >= s) & (baseline["lap_distance"] <= e)
         apex = float(baseline.loc[zone, "lap_distance"][baseline.loc[zone, "speed_kmh"].idxmin()])
-        corners.append({"name": f"T{n + 1}", "start_m": float(s), "end_m": float(e), "apex_m": apex})
+        corners.append({"name": f"turn{n + 1}", "start_m": float(s), "end_m": float(e), "apex_m": apex})
     return corners
 
 
@@ -137,13 +149,27 @@ def _make_error(tag, corner, error_type, severity, confidence, metrics, message,
 
 
 def detect_corner_errors(deltas, corners):
+    if deltas.empty:
+        return []
+
     errors = []
+
+    # Get the player's current travel distance.
+    current_dist = float(deltas["lap_distance"].iloc[-1])
+    
     for corner in corners:
         name = corner["name"]
+
+        # Skip old corners from earlier in the lap during real-time analysis.
+        if current_dist > (corner["end_m"] + 200.0):
+            continue
+
         entry = _zone(deltas, corner["start_m"] - ENTRY_ZONE_M, corner["apex_m"])
         mid = _zone(deltas, corner["start_m"], corner["end_m"])
         exit_ = _zone(deltas, corner["end_m"], corner["end_m"] + EXIT_ZONE_M)
-        if entry.empty or mid.empty or exit_.empty:
+
+        # Real-time snapshots require at least 2 valid data points to calculate metrics.
+        if len(entry) < 2 or len(mid) < 2 or len(exit_) < 2:
             continue
 
         # Late braking. The brake search zone is wider than the entry zone so
@@ -152,7 +178,11 @@ def detect_corner_errors(deltas, corners):
         brake_zone = _zone(deltas, corner["start_m"] - BRAKE_SEARCH_ZONE_M, corner["apex_m"])
         expert_bp = _first_brake_point(brake_zone, "expert_brake")
         player_bp = _first_brake_point(brake_zone, "player_brake")
+
+        if entry["delta_speed_kmh"].dropna().empty:
+            continue
         entry_overspeed = float(entry["delta_speed_kmh"].max())
+        
         if expert_bp is not None and player_bp is not None:
             late_by = player_bp - expert_bp
             if late_by >= LATE_BRAKING_M and entry_overspeed >= ENTRY_OVERSPEED_KMH / 2:
@@ -190,6 +220,8 @@ def detect_corner_errors(deltas, corners):
             ))
 
         # Poor corner exit: player is clearly slower out of the corner.
+        if exit_["delta_speed_kmh"].dropna().empty or exit_["delta_throttle"].dropna().empty:
+            continue
         exit_deficit = float(-exit_["delta_speed_kmh"].mean())
         if exit_deficit >= EXIT_SPEED_DEFICIT_KMH:
             errors.append(_make_error(
@@ -207,6 +239,8 @@ def detect_corner_errors(deltas, corners):
             ))
 
         # Off the racing line: sustained lateral gap to the expert's line.
+        if mid["delta_track_pos"].dropna().empty:
+            continue
         line_gap = float(mid["delta_track_pos"].abs().mean())
         if line_gap >= OFFLINE_TRACK_POS:
             errors.append(_make_error(
@@ -219,6 +253,8 @@ def detect_corner_errors(deltas, corners):
             ))
 
         # Unstable throttle: much jerkier pedal work than the expert.
+        if len(mid["player_throttle"].dropna()) < 2 or len(mid["expert_throttle"].dropna()) < 2:
+            continue
         throttle_excess = float(mid["player_throttle"].std() - mid["expert_throttle"].std())
         if throttle_excess >= THROTTLE_STD_EXCESS:
             errors.append(_make_error(
@@ -239,8 +275,14 @@ def detect_sector_time_loss(deltas, track_length_m):
     boundaries = np.linspace(0.0, track_length_m, 4)
     for i in range(3):
         zone = _zone(deltas, boundaries[i], boundaries[i + 1])
-        if zone.empty:
+        # Ensure there are enough data points to calculate the time difference.
+        if len(zone) < 2:
             continue
+            
+        # Skip if delta_lap_time is NaN at the start or end point.
+        if pd.isna(zone["delta_lap_time"].iloc[0]) or pd.isna(zone["delta_lap_time"].iloc[-1]):
+            continue
+            
         loss = float(zone["delta_lap_time"].iloc[-1] - zone["delta_lap_time"].iloc[0])
         if loss >= SECTOR_TIME_LOSS_S:
             sector = f"Sector {i + 1}"

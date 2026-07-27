@@ -1,7 +1,65 @@
-import threading
-from pynput import keyboard
+import multiprocessing as mp
 
-class InputHandler():
+def _pynput_listener_process(event_queue):
+    # Runs as a separate background process to handle pynput keyboard listening.
+    # Completely isolates it from the main Tkinter thread to 
+    # avoid multithreading conflicts and crashes.
+    from pynput import keyboard
+
+    press_state = {
+        'up': False,
+        'down': False,
+        'left': False,
+        'right': False,
+        'shift_up': False,
+        'shift_down': False,
+    }
+
+    def on_press(key):
+        try:
+            if key == keyboard.Key.up:
+                press_state['up'] = True
+            elif key == keyboard.Key.down:
+                press_state['down'] = True
+            elif key == keyboard.Key.left:
+                press_state['left'] = True
+            elif key == keyboard.Key.right:
+                press_state['right'] = True
+            elif hasattr(key, 'char') and key.char is not None:
+                char = key.char.lower()
+                if char == 'a':
+                    press_state['shift_up'] = True
+                elif char == 'z':
+                    press_state['shift_down'] = True
+            event_queue.put(press_state.copy())
+        except Exception:
+            pass
+
+    def on_release(key):
+        try:
+            if key == keyboard.Key.up:
+                press_state['up'] = False
+            elif key == keyboard.Key.down:
+                press_state['down'] = False
+            elif key == keyboard.Key.left:
+                press_state['left'] = False
+            elif key == keyboard.Key.right:
+                press_state['right'] = False
+            elif hasattr(key, 'char') and key.char is not None:
+                char = key.char.lower()
+                if char == 'a':
+                    press_state['shift_up'] = False
+                elif char == 'z':
+                    press_state['shift_down'] = False
+            event_queue.put(press_state.copy())
+        except Exception:
+            pass
+
+    with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
+        listener.join()
+
+
+class InputHandler:
 
     GEAR_MAX = 6
     GEAR_MIN = -1
@@ -11,17 +69,17 @@ class InputHandler():
             'accel': 0.0, # 0.0 ~ 1.0
             'brake': 0.0, # 0.0 ~ 1.0
             'steer': 0.0, # -1.0 ~ 1.0
-            'gear':  1, # -1 ~ 6
+            'gear':  1,   # -1 ~ 6
         }
-        self._thread = None
-        self._running = False
-        self._listener = None
 
         self.accel_pressed = False
         self.brake_pressed = False
         self.steer_left_pressed = False
         self.steer_right_pressed = False
 
+        self._running = False
+        self._process = None
+        self._queue = mp.Queue()
 
     def shift_up(self):
         if self.state['gear'] < self.GEAR_MAX:
@@ -31,50 +89,42 @@ class InputHandler():
         if self.state['gear'] > self.GEAR_MIN:
             self.state['gear'] -= 1
 
-    def _listen(self):
-        with keyboard.Listener(on_press=self._on_press, on_release=self._on_release) as listener:
-            self._listener = listener
-            listener.join()
-
     def start(self):
-        self._running = True
-        # Background thread that continuously listens for input and updates state
-        self._thread = threading.Thread(target=self._listen, daemon=True)
-        self._thread.start()
+        if not self._running:
+            self._running = True
+            self._process = mp.Process(
+                target=_pynput_listener_process, 
+                args=(self._queue,), 
+                daemon=True
+            )
+            self._process.start()
+            print("[InputHandler] Multiprocessing pynput listener started successfully.")
 
     def stop(self):
         self._running = False
-        if self._listener is not None:
-            self._listener.stop()
-        if self._thread is not None:
-            self._thread.join(timeout=1.0)
+        if self._process is not None and self._process.is_alive():
+            self._process.terminate()
+            print("[InputHandler] Multiprocessing pynput listener process stopped.")
 
-    def _on_press(self, key):
-        try:
-            if key == keyboard.Key.up:
-                self.accel_pressed = True
-            elif key == keyboard.Key.down:
-                self.brake_pressed = True
-            elif key == keyboard.Key.right:
-                self.steer_right_pressed = True
-            elif key == keyboard.Key.left:
-                self.steer_left_pressed = True
-            elif key.char.lower() == 'a':
-                self.shift_up()
-            elif key.char.lower() == 'z':
-                self.shift_down()
-        except AttributeError:
-            pass
+    def update(self):
+        while not self._queue.empty():
+            try:
+                msg = self._queue.get_nowait()
 
-    def _on_release(self, key):
-        try:
-            if key == keyboard.Key.up:
-                self.accel_pressed = False
-            elif key == keyboard.Key.down:
-                self.brake_pressed = False
-            elif key == keyboard.Key.left:
-                self.steer_left_pressed = False
-            elif key == keyboard.Key.right:
-                self.steer_right_pressed = False
-        except AttributeError:
-            pass
+                self.accel_pressed = msg['up']
+                self.brake_pressed = msg['down']
+                self.steer_left_pressed = msg['left']
+                self.steer_right_pressed = msg['right']
+
+                if msg['shift_up']:
+                    self.shift_up()
+                if msg['shift_down']:
+                    self.shift_down()
+
+            except Exception:
+                break
+
+        return self.state
+
+    def get_action(self):
+        return self.update()

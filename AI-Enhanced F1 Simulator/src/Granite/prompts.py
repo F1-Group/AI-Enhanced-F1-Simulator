@@ -2,34 +2,6 @@ from .rag import retrieve
 
 # Track dictionary - F1 track knowledge base
 TRACK_KNOWLEDGE = {
-    "monza": {
-        "name": "Autodromo Nazionale Monza",
-        "key_corners": "Variante del Rettifilo (T1), Curva Grande, Variante della Roggia, Lesmos (T5-T6), Variante Ascari, Parabolica (T11)",
-        "characteristics": "Low downforce, high speed circuit. Long straights favour top speed. Heavy braking zones at T1 and Variante Ascari.",
-        "sector_notes": "S1: chicane braking, S2: Lesmos and Ascari, S3: Parabolica exit onto main straight",
-        "tyre_info": "Low tyre wear circuit. Softs can run long. Fuel saving possible on straights."
-    },
-    "silverstone": {
-        "name": "Silverstone Circuit",
-        "key_corners": "Abbey, Farm, Village, The Loop, Arpex, Wellington, Brooklands, Luffield, Woodcote, Copse, Maggotts, Becketts, Chapel, Stowe, Vale, Club",
-        "characteristics": "High speed, high downforce circuit. Maggotts-Becketts complex is key. Wind plays major role.",
-        "sector_notes": "S1: Copse and Maggotts-Becketts, S2: Stowe and Vale, S3: Club to finish",
-        "tyre_info": "High lateral load causes tyre wear on rear. Manage rear degradation through Becketts."
-    },
-    "spa": {
-        "name": "Circuit de Spa-Francorchamps",
-        "key_corners": "La Source (T1), Eau Rouge, Raidillon, Kemmel Straight, Les Combes, Pouhon, Blanchimont, Bus Stop",
-        "characteristics": "Mixed circuit with high speed and technical sections. Eau Rouge-Raidillon is iconic. Weather can change rapidly.",
-        "sector_notes": "S1: La Source and Eau Rouge, S2: Kemmel and Les Combes, S3: Pouhon to Bus Stop",
-        "tyre_info": "High energy circuit. Blanchimont flat requires confidence. Tyre warm-up critical in cold conditions."
-    },
-    "olethros_road_1": {
-        "name": "Olethros Road 1 (TORCS)",
-        "key_corners": "T1, T2, T3, T4, T5, T6, T7, T8, T9 (9 corners auto-detected from telemetry)",
-        "characteristics": "Mixed road circuit with 9 corners. Combination of slow technical corners and medium speed sections. Lap time approximately 175 seconds at expert pace.",
-        "sector_notes": "S1: first 3 corners, S2: middle section corners 4-6, S3: final corners 7-9 to finish line",
-        "tyre_info": "Mixed circuit with varying corner speeds. Smooth throttle application critical on corner exits. Braking consistency key across all 9 corners."
-    },
     "generic": {
         "name": "Current Circuit",
         "key_corners": "analyse based on sector times",
@@ -63,7 +35,7 @@ def build_user_prompt(telemetry, coaching_request, track="generic", knowledge=""
     Args:
         telemetry: dict of telemetry data (aligned with team schema)
         coaching_request: coaching context generated from Team 2's error report
-        track: track name (monza, silverstone, spa, olethros_road_1, generic)
+        track: track name (defaults to "generic" - no track-specific knowledge is hardcoded)
         knowledge: RAG knowledge string from rag.retrieve()
         errors: list of error dicts from error_detection.detect_errors()
     """
@@ -72,7 +44,12 @@ def build_user_prompt(telemetry, coaching_request, track="generic", knowledge=""
     track_info = TRACK_KNOWLEDGE.get(track.lower(), TRACK_KNOWLEDGE["generic"])
 
     # Format optional sections
-    knowledge_section = f"RELEVANT KNOWLEDGE FROM KNOWLEDGE BASE:\n{knowledge}\n" if knowledge else ""
+    knowledge_section = (
+        f"GENERAL BACKGROUND CONCEPT (not evidence about this specific lap — "
+        f"any corner, chicane, or number mentioned here is just an illustrative "
+        f"example from the knowledge base, not something that happened in this "
+        f"drive):\n{knowledge}\n"
+    ) if knowledge else ""
     errors_section = _format_errors(errors) if errors else ""
 
     return f"""
@@ -82,7 +59,9 @@ Track characteristics: {track_info['characteristics']}
 Sector notes: {track_info['sector_notes']}
 Tyre advice: {track_info['tyre_info']}
 
-TELEMETRY DATA:
+TELEMETRY DATA (a single instantaneous snapshot, no expert comparison — do not
+invent a target/adjustment number for any of these fields unless that same
+field also appears in the Evidence below):
 - Lap distance: {telemetry['lap_distance']}m
 - Speed: {telemetry['speed_kmh']} km/h
 - Track position (centerline offset): {telemetry['track_pos']}
@@ -100,5 +79,5 @@ TELEMETRY DATA:
 {knowledge_section}
 COACHING CONTEXT: {coaching_request}
 
-REPLY IN ONE SENTENCE ONLY. Maximum 20 words. Be direct and specific. No explanations.
+REPLY IN ONE SENTENCE ONLY. Maximum 20 words.
 """

@@ -16,7 +16,10 @@ class DataCache:
 
     def update_telemetry(self, cleaned_data: dict):
         with self._lock:
-            self._data = cleaned_data.copy()
+            if cleaned_data is None:
+                self._data = None
+            else:
+                self._data = cleaned_data.copy()
 
     def get_telemetry(self):
         with self._lock:

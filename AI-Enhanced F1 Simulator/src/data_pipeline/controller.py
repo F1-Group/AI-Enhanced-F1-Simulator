@@ -22,8 +22,8 @@ class Controller():
     ACCEL_FALL_RATE = 10.0
     BRAKE_RISE_RATE = 10.0
     BRAKE_FALL_RATE = 10.0
-    LOW_SPEED  = 10.0 # m/s (36 km/h)
-    HIGH_SPEED = 70.0 # m/s (250 km/h)
+    LOW_SPEED  = 36.0 # km/h
+    HIGH_SPEED = 250.0 # km/h
     STEER_RISE_HIGH = 0.2
     STEER_RISE_LOW = 3.0
 
@@ -75,7 +75,5 @@ class Controller():
             self.handler.state['steer'] = min(target, self.handler.state['steer'] + rate * delta)
         elif self.handler.state['steer'] > target:
             self.handler.state['steer'] = max(target, self.handler.state['steer'] - rate * delta)
-
-
 
     
