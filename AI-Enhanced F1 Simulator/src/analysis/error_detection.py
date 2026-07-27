@@ -164,7 +164,7 @@ def detect_corner_errors(deltas, corners):
         if current_dist > (corner["end_m"] + 200.0):
             continue
 
-        entry = _zone(deltas, corner["start_m"] - ENTRY_ZONE_M, corner["apex_m"])
+        entry = _zone(deltas, max(corner["start_m"] - ENTRY_ZONE_M, 0.0), corner["apex_m"])
         mid = _zone(deltas, corner["start_m"], corner["end_m"])
         exit_ = _zone(deltas, corner["end_m"], corner["end_m"] + EXIT_ZONE_M)
 
@@ -175,7 +175,7 @@ def detect_corner_errors(deltas, corners):
         # Late braking. The brake search zone is wider than the entry zone so
         # a player who brakes *earlier* than the expert is never misread as
         # not braking at all (that is good driving, not an error).
-        brake_zone = _zone(deltas, corner["start_m"] - BRAKE_SEARCH_ZONE_M, corner["apex_m"])
+        brake_zone = _zone(deltas, max(corner["start_m"] - BRAKE_SEARCH_ZONE_M, 0.0), corner["apex_m"])
         expert_bp = _first_brake_point(brake_zone, "expert_brake")
         player_bp = _first_brake_point(brake_zone, "player_brake")
 
