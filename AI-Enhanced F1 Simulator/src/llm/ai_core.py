@@ -10,12 +10,12 @@ PROJECT_ROOT = SRC_DIR.parent
 
 sys.path.insert(0, str(SRC_DIR))
 
-from granite.prompts import build_user_prompt
-from granite.granite_client import ask_race_engineer
-from granite.guardrail import apply_guardrail
-from granite.coaching_style import get_system_prompt
-from granite.rag import retrieve
-from granite.granite_client import get_fallback_text
+from llm.prompts import build_user_prompt
+from llm.llm_client import ask_race_engineer
+from llm.guardrail import apply_guardrail
+from llm.coaching_style import get_system_prompt
+from llm.rag import retrieve
+from llm.llm_client import get_fallback_text
 
 # Circuit breaker for the LLM: a failed call trips it, and later calls skip
 # straight to fallback for _LLM_COOLDOWN_SECONDS instead of paying the full
