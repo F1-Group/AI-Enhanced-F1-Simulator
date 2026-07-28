@@ -99,7 +99,6 @@ class Client:
                 last_successful_packet_time = now
 
                 raw_data = raw_data.decode('utf-8')
-                print(raw_data)
 
                 if "***shutdown***" in raw_data or "***restart***" in raw_data:
                     print("[Client] Race ended by TORCS signal.")
