@@ -1,5 +1,10 @@
+import sys
 import time
+from pathlib import Path
+
 import pytest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "src" / "llm"))
 
 import llm_client
 
@@ -46,7 +51,7 @@ def fake_client(monkeypatch):
     return _install
 
 
-def test_granite_client_uses_a_bounded_timeout():
+def test_llm_client_uses_a_bounded_timeout():
     # A None timeout would let ollama's client hang forever if the local
     # server stalls - it must be a positive, finite number of seconds.
     assert llm_client.REQUEST_TIMEOUT_SECONDS is not None
