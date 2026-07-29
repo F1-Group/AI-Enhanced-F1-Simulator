@@ -392,6 +392,10 @@ class TelemetryDashboard:
 
         self.root.after(100, self._check_torcs_connection)
 
+    def _on_click_back_from_dashboard(self):
+        if self.dashboard_frame:
+            self.dashboard_frame.pack_forget()
+        self._build_new_race_page()
 
     # Connecting Page
     def _build_connecting_page(self):
@@ -587,6 +591,15 @@ class TelemetryDashboard:
         tk.Label(title_frame, text="Live Telemetry Dashboard", fg=BLUE, bg=BG, font=("Courier", 18, "bold")).pack(side="left")
         self.lbl_session = tk.Label(title_frame, text="Olethros Road 1", fg=GREY, bg=BG, font=("Courier", 11))
         self.lbl_session.pack(side="left", padx=20)
+
+        # back button so we don't have to close the whole app to go back to menu
+        btn_back = tk.Button(
+            title_frame, text="< BACK", fg="black", bg=WHITE,
+            activebackground=GREY, activeforeground="black",
+            font=("Courier", 10, "bold"), bd=1,
+            command=self._on_click_back_from_dashboard
+        )
+        btn_back.pack(side="right", padx=10)
 
         tk.Frame(self.dashboard_frame, bg=BORDER, height=1).pack(fill="x", padx=10)
 
