@@ -685,6 +685,14 @@ class TelemetryDashboard:
         self.lbl_off_track = tk.Label(p, text="ON TRACK", fg=GREEN, bg=PANEL_BG, font=("Courier", 14, "bold"))
         self.lbl_off_track.pack(anchor="w", pady=(6, 0))
 
+        tk.Frame(p, bg=BORDER, height=1).pack(fill="x", pady=8)
+        tk.Label(p, text="Lap Distance / Sector", fg=GREY, bg=PANEL_BG, font=("Courier", 9)).pack(anchor="w")
+        self.lbl_lap_dist = tk.Label(p, text="0 m", fg=WHITE, bg=PANEL_BG, font=("Courier", 16, "bold"))
+        self.lbl_lap_dist.pack(anchor="w", pady=(2, 0))
+        
+        self.lbl_sector = tk.Label(p, text="Sector 1", fg=YELLOW, bg=PANEL_BG, font=("Courier", 14, "bold"))
+        self.lbl_sector.pack(anchor="w")
+
     def _build_bottom_row(self):
         bottom = tk.Frame(self.dashboard_frame, bg=BG)
         bottom.pack(fill="x", padx=10, pady=6)
@@ -792,6 +800,7 @@ class TelemetryDashboard:
         track_pos = data.get("track_pos", 0.0)
         angle = data.get("angle", 0.0)
         wheel_spin = data.get("wheel_spin", 0.0)
+        lap_dist = data.get("lap_distance", data.get("distFromStart", 0.0))
 
         self.lbl_speed.config(text=str(int(max(0, speed))))
         self.gear_box.config(text=str(gear) if gear > 0 else ("N" if gear == 0 else "R"))
@@ -820,6 +829,20 @@ class TelemetryDashboard:
         spin_colour = RED if wheel_spin > 100 else (YELLOW if wheel_spin > 70 else GREEN)
         self.wheel_spin_bar.set_value(wheel_spin_fraction, colour=spin_colour)
         self.lbl_wheel_spin.config(text=f"{wheel_spin:.0f} rad/s")
+
+        sector_len = TRACK_LENGTH_M / 3.0
+        if lap_dist < sector_len:
+            sector_name = "Sector 1"
+            sector_color = YELLOW
+        elif lap_dist < sector_len * 2:
+            sector_name = "Sector 2"
+            sector_color = BLUE
+        else:
+            sector_name = "Sector 3"
+            sector_color = PURPLE
+
+        self.lbl_lap_dist.config(text=f"{lap_dist:.1f} m")
+        self.lbl_sector.config(text=sector_name, fg=sector_color)
 
         if abs(track_pos) > 1.0:
             self.lbl_off_track.config(text="OFF TRACK", fg=RED)
