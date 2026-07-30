@@ -103,11 +103,19 @@ This section guides you through installing the **TORCS (The Open Racing Car Simu
 ### 2.1 TORCS Installation & Setup
 TORCS is supported natively on Windows and Linux, while macOS requires **Wine** emulation.
 
-#### A. Windows / Linux Installation
+#### A. Windows Installation
 1. Download and unzip `torcs.zip` from the [Link](https://drive.google.com/file/d/1edIgHxBrDELr5LQM50B-2MpmcIX0DVQt/view?usp=sharing).
 2. Verify `torcs\wtorcs.exe` is executable.
 
-#### B. macOS Installation (via Wine)
+#### B. Linux (Ubuntu / Debian) Installation
+1. Install TORCS via the system package manager:
+   ```bash
+   sudo apt-get update
+   sudo apt-get install torcs
+   ```
+2. Verify installation by running `torcs` in your terminal.
+
+#### C. macOS Installation (via Wine)
 Running TORCS on macOS requires running the Windows binary under **Wine**.
 1. Download and unzip `torcs.zip` from the [Link](https://drive.google.com/file/d/1edIgHxBrDELr5LQM50B-2MpmcIX0DVQt/view?usp=sharing) to your preferred directory (e.g., `$HOME/torcs` or `/Applications/torcs`)..
 2. Install Wine via Homebrew or [Wine Download](https://www.winehq.org/):
