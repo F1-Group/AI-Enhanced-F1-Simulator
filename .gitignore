@@ -230,10 +230,6 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# ==========================================
-# Operating System Specific Files
-# ==========================================
-
 # macOS (OS X)
 .DS_Store
 .AppleDouble
