@@ -16,10 +16,16 @@ Usage:
     .venv/bin/python -m analysis.live_coach --no-granite   # skip the LLM call
 """
 import queue
+import sys
 import threading
 import time
 from pathlib import Path
 import pandas as pd
+
+_LATENCY_DIR = Path(__file__).resolve().parent.parent.parent / "tests" / "integration"
+if str(_LATENCY_DIR) not in sys.path:
+    sys.path.insert(0, str(_LATENCY_DIR))
+from latency_logger import log_event
 
 from .fast_layer import FastLayer
 from .alignment import build_baseline, distance_grid
@@ -194,19 +200,17 @@ class LiveCoach:
         first call also loads the RAG models). Returns True when everything
         drained, False if we gave up.
         """
-
-        # Set the draining flag immediately at the start of race cleanup to 
-        # reject all subsequent coaching broadcasts
-        self._is_draining = True
-    
         deadline = time.time() + timeout
         queues = (self._snapshots, self._laps)
         completed = False
         try:
             while any(work.unfinished_tasks for work in queues):
                 if time.time() >= deadline:
+                    # Only NOW do we give up and reject any further coaching
+                    # broadcasts - not before we've had a real chance to drain
+                    # the queue (which includes the very last lap).
+                    self._is_draining = True
                     return False
-                time.sleep(0.2)
             completed = True
             return True
         finally:
@@ -328,6 +332,7 @@ class LiveCoach:
                 event["interrupt"] = False
 
             event.pop("_location_key", None)
+            log_event("published", key=f"{event['session_id']}:{event['tag']}:{event['lap_number']}", detail=event.get("type"))
             self.event_output_queue.put(event)
 
         return errors_to_process
@@ -346,7 +351,7 @@ class LiveCoach:
         if len(lap["lap_distance"].unique()) < 10:
             return
 
-        report, _ = analyse_lap(lap, self.expert_laps, lap_number=self.lap_number + 1)
+        report, _ = analyse_lap(lap, self.expert_laps, lap_number=self.lap_number + 1, is_realtime=True)
         self._publish_new_errors(report, self.lap_number + 1, is_realtime=True)
 
 

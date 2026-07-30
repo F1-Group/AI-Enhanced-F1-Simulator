@@ -1,10 +1,18 @@
+import json
 import platform
 import queue
 import shutil
 import subprocess
+import sys
 import threading
 import time
 from pathlib import Path
+
+_LATENCY_DIR = Path(__file__).resolve().parent.parent.parent / "tests" / "integration"
+if str(_LATENCY_DIR) not in sys.path:
+    sys.path.insert(0, str(_LATENCY_DIR))
+
+from latency_logger import log_event
 
 try:
     import pygame
@@ -34,6 +42,7 @@ PRIORITY_ORDER = {
     "low": 3,
     "slow": 4,
 }
+PRIORITY_LABELS = {v: k for k, v in PRIORITY_ORDER.items()}
 
 
 class AudioManager:
@@ -91,6 +100,14 @@ class AudioManager:
         self._lock = threading.Lock()
         self._running = True
 
+        # Handle to whatever speech subprocess/engine is CURRENTLY playing,
+        # so stop_all() (called from _enqueue()'s interrupt path, on a
+        # different thread than _audio_loop) can actually kill it. Without
+        # this, interrupt=True only cleared items still WAITING in queue -
+        # an already-playing utterance had no way to be preempted at all.
+        self._current_speech_proc = None
+        self._speech_proc_lock = threading.Lock()
+
         self._worker = threading.Thread(target=self._audio_loop, daemon=True)
         self._worker.start()
 
@@ -119,38 +136,93 @@ class AudioManager:
     def _resolve_priority(self, priority):
         return PRIORITY_ORDER.get(priority, PRIORITY_ORDER["normal"])
 
-    def _clear_queue(self):
+    def _clear_queue(self, reason=None, caused_by=None):
+        """Drain the queue. When `reason` is given (e.g. "interrupt"), also
+        log exactly what got purged and whether each item was still within
+        its 2.5s staleness budget at the moment it was killed - "still_valid"
+        items are audio that would otherwise have played fine, wiped only
+        because an interrupt event arrived. That's the concrete signal for
+        "did off_track's interrupt=True wrongly delete other valid queued
+        content", instead of having to listen for a dropped line by ear."""
+        purged = []
         while not self._audio_queue.empty():
             try:
-                self._audio_queue.get_nowait()
+                item = self._audio_queue.get_nowait()
                 self._audio_queue.task_done()
+                purged.append(item)
             except queue.Empty:
                 break
 
+        if reason:
+            now = time.monotonic()
+            purged_info = []
+            for (_, _, mode, _payload, description, created_time, log_key) in purged:
+                age = now - created_time
+                purged_info.append({
+                    "description": description,
+                    "mode": mode,
+                    "age_s": round(age, 3),
+                    "still_valid": age <= 2.5,
+                    "log_key": str(log_key),
+                })
+            for info in purged_info:
+                tag = "STILL_VALID (wrongly killed)" if info["still_valid"] else "already_stale"
+                print(f"[Audio Queue] {reason} purge: \"{info['description']}\" "
+                      f"age={info['age_s']:.2f}s -> {tag}")
+            # Log even when nothing was purged (queue was already empty) -
+            # that's a meaningful data point too: it means this interrupt
+            # never got a chance to test collateral damage, as distinct from
+            # an interrupt never having fired at all.
+            log_event(f"audio_{reason}_purge", key=caused_by if caused_by is not None else now,
+                      detail=json.dumps({"purged_count": len(purged_info), "purged": purged_info}))
+        return purged
+
     # Introduce a global timestamp and expiration mechanism during Enqueue or Play.
-    def _enqueue(self, payload, description, priority="normal", interrupt=False, mode="sound"):
-        # Forcefully bind a creation timestamp when creating the event.
+    def _enqueue(self, payload, description, priority="normal", interrupt=False, mode="sound", latency_key=None):
+        # Forcefully bind a creation timestamp when creating the event - still
+        # used for the queue-staleness check below, independent of the
+        # latency-log key.
         created_time = time.monotonic()
-        
+        # Log under the caller's correlation key (e.g. ai_core's
+        # session_id:tag:lap_number) when given, so this stage joins up with
+        # the published/received/guardrail_done stages upstream. Callers that
+        # don't have one (play()/play_error()/play_sound()) keep the old
+        # created_time-keyed behaviour.
+        log_key = latency_key if latency_key is not None else created_time
+        log_event("queued_for_voice", key=log_key, detail=description)
+        log_event("audio_enqueued", key=log_key, detail=json.dumps({
+            "description": description,
+            "priority": priority,
+            "interrupt": interrupt,
+            "mode": mode,
+            "queue_len_before": self._audio_queue.qsize(),
+        }))
+
         if interrupt:
             self.stop_all()
-            self._clear_queue()
+            self._clear_queue(reason="interrupt", caused_by=log_key)
 
         with self._lock:
             self._counter += 1
             # Package created_time into the data structure.
-            item = (self._resolve_priority(priority), self._counter, mode, payload, description, created_time)
+            item = (self._resolve_priority(priority), self._counter, mode, payload, description, created_time, log_key)
             self._audio_queue.put(item)
         return True
 
-    def _enqueue_speech(self, text, description, priority="normal", interrupt=False):
+    def _enqueue_speech(self, text, description, priority="normal", interrupt=False, latency_key=None):
         clean_text = " ".join(str(text).split())
         if not clean_text:
             return False
-        return self._enqueue(clean_text, description, priority=priority, interrupt=interrupt, mode="speech")
+        return self._enqueue(clean_text, description, priority=priority, interrupt=interrupt, mode="speech", latency_key=latency_key)
 
-    def play_text(self, text, priority="normal", interrupt=False, cooldown_key=None):
-        """Queue generated coaching text without creating a temporary file."""
+    def play_text(self, text, priority="normal", interrupt=False, cooldown_key=None, latency_key=None):
+        """Queue generated coaching text without creating a temporary file.
+
+        latency_key: optional correlation key (e.g. "session_id:tag:lap_number")
+        used to log the queued_for_voice/voice_start stages so they join up
+        with the published/received/guardrail_done stages logged upstream by
+        live_coach.py/ai_core.py under the same key.
+        """
         clean_text = " ".join(str(text).split())
         if not clean_text:
             return False
@@ -165,37 +237,65 @@ class AudioManager:
             "AI Coaching Speech",
             priority=priority,
             interrupt=interrupt,
+            latency_key=latency_key,
         )
 
     def _speak_text(self, text):
         if self.os_type == "Darwin" and self._say_command:
+            proc = None
             try:
                 proc = subprocess.Popen(
                     [self._say_command, "-v", self.active_voice_id, text],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL
                 )
-                proc.wait()
+                with self._speech_proc_lock:
+                    self._current_speech_proc = proc
+                try:
+                    # SPEECH_TIMEOUT_SECONDS as a hard ceiling even with no
+                    # interrupt at all - previously defined but never
+                    # actually applied, so a hung/oversized utterance could
+                    # block the channel indefinitely.
+                    proc.wait(timeout=SPEECH_TIMEOUT_SECONDS)
+                except subprocess.TimeoutExpired:
+                    print(f"[Audio Warning] TTS exceeded {SPEECH_TIMEOUT_SECONDS}s; killing it.")
+                    proc.kill()
+                    proc.wait()
                 return True
             except Exception as error:
                 print(f"[Audio Error] macOS TTS failed: {error}")
                 return False
+            finally:
+                with self._speech_proc_lock:
+                    if self._current_speech_proc is proc:
+                        self._current_speech_proc = None
         elif self.os_type == "Windows" and self.tts_engine:
             try:
+                with self._speech_proc_lock:
+                    self._current_speech_proc = self.tts_engine
                 self.tts_engine.say(text)
                 self.tts_engine.runAndWait()
                 return True
             except Exception as error:
                 print(f"Windows TTS execution failed: {error}")
                 return False
-        
+            finally:
+                with self._speech_proc_lock:
+                    if self._current_speech_proc is self.tts_engine:
+                        self._current_speech_proc = None
+
         print(f"Speech fallback platform unavailable. Alert text: {text}")
         return False
 
     def _audio_loop(self):
         while self._running:
             try:
-                _, _, mode, payload, description, created_time = self._audio_queue.get(timeout=0.1)
+                priority_weight, _, mode, payload, description, created_time, log_key = self._audio_queue.get(timeout=0.1)
+                log_event("voice_start", key=log_key, detail=json.dumps({
+                    "description": description,
+                    "priority": PRIORITY_LABELS.get(priority_weight, "?"),
+                    "wait_s": round(time.monotonic() - created_time, 3),
+                }))
             except queue.Empty:
                 continue
 
@@ -205,8 +305,11 @@ class AudioManager:
                 break
 
             # Drop the event if it has been in the queue for more than 2.5 seconds.
-            if time.monotonic() - created_time > 2.5:
-                print(f"[Timeout Dropped] {description} is too old ({time.monotonic() - created_time:.2f}s old), skipping.")
+            age = time.monotonic() - created_time
+            if age > 2.5:
+                print(f"[Timeout Dropped] {description} is too old ({age:.2f}s old), skipping.")
+                log_event("audio_dropped_stale", key=log_key,
+                          detail=json.dumps({"description": description, "age_s": round(age, 3)}))
                 self._audio_queue.task_done()
                 continue
 
@@ -214,9 +317,14 @@ class AudioManager:
                 if mode == "speech":
                     log_desc = description if description in BUILTIN_ALERTS else "AI Coaching Speech"
                     print(f"Speaking audio: {log_desc}")
-                    
+
                     if self._running:
+                        speak_start = time.monotonic()
                         self._speak_text(payload)
+                        log_event("voice_done", key=log_key, detail=json.dumps({
+                            "description": description,
+                            "duration_s": round(time.monotonic() - speak_start, 3),
+                        }))
                 else:
                     if self._running and self._pygame_available:
                         channel = payload.play()
@@ -322,6 +430,31 @@ class AudioManager:
     def stop_all(self):
         if self._pygame_available:
             pygame.mixer.stop()
+
+        # Kill whatever is CURRENTLY speaking, not just what's still queued.
+        # Previously this only stopped pygame sounds - an interrupt=True
+        # enqueue cleared the waiting queue but had no way to touch an
+        # already-playing `say` subprocess, so a long utterance blocked any
+        # higher-priority alert that arrived mid-speech until it finished on
+        # its own (confirmed via analyze_audio_queue.py's in-flight-blocking
+        # check). _speak_text() runs on the audio worker thread; this method
+        # is called from whichever thread is enqueuing the interrupt, so the
+        # process handle is guarded by _speech_proc_lock.
+        with self._speech_proc_lock:
+            proc = self._current_speech_proc
+        if proc is None:
+            return
+        if self.os_type == "Darwin" and hasattr(proc, "poll"):
+            if proc.poll() is None:
+                try:
+                    proc.terminate()
+                except Exception as error:
+                    print(f"[Audio Warning] Could not terminate in-flight TTS: {error}")
+        elif self.os_type == "Windows" and proc is self.tts_engine:
+            try:
+                self.tts_engine.stop()
+            except Exception as error:
+                print(f"[Audio Warning] Could not stop in-flight TTS: {error}")
 
     def shutdown(self):
         """Terminate audio systems immediately and scrub remaining voice jobs."""

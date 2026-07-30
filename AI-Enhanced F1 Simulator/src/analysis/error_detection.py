@@ -148,20 +148,32 @@ def _make_error(tag, corner, error_type, severity, confidence, metrics, message,
     }
 
 
-def detect_corner_errors(deltas, corners):
+def detect_corner_errors(deltas, corners, is_realtime=False):
     if deltas.empty:
         return []
 
     errors = []
 
-    # Get the player's current travel distance.
-    current_dist = float(deltas["lap_distance"].iloc[-1])
-    
+    # `deltas["lap_distance"]` is always the full 0..track_length grid (it
+    # comes from the baseline, not from the player), so `.iloc[-1]` is a
+    # constant near track_length in every call - real-time or full-lap. The
+    # player's actual current position is the last grid point they've truly
+    # reached, i.e. the last row with a small alignment gap; future/unreached
+    # points are flagged with align_gap_m == 999 by align_nearest().
+    current_dist = None
+    if is_realtime:
+        reached = deltas[deltas["align_gap_m"] <= MAX_ALIGN_GAP_M]
+        if len(reached):
+            current_dist = float(reached["lap_distance"].max())
+
     for corner in corners:
         name = corner["name"]
 
-        # Skip old corners from earlier in the lap during real-time analysis.
-        if current_dist > (corner["end_m"] + 200.0):
+        # Skip old corners from earlier in the lap - only meaningful during
+        # real-time streaming (see current_dist above). A completed lap has
+        # no "current position" to skip relative to, so this never applies
+        # to full-lap analysis (run_analysis.py, on-lap-finish reports).
+        if is_realtime and current_dist is not None and current_dist > (corner["end_m"] + 200.0):
             continue
 
         entry = _zone(deltas, max(corner["start_m"] - ENTRY_ZONE_M, 0.0), corner["apex_m"])
@@ -302,8 +314,8 @@ def detect_sector_time_loss(deltas, track_length_m):
     return errors
 
 
-def detect_errors(deltas, corners, track_length_m):
+def detect_errors(deltas, corners, track_length_m, is_realtime=False):
     """Run all detectors and return errors sorted by severity, worst first."""
-    errors = detect_corner_errors(deltas, corners) + detect_sector_time_loss(deltas, track_length_m)
+    errors = detect_corner_errors(deltas, corners, is_realtime=is_realtime) + detect_sector_time_loss(deltas, track_length_m)
     rank = {"high": 0, "medium": 1, "low": 2}
     return sorted(errors, key=lambda e: (rank[e["severity"]], -e["confidence"]))

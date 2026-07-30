@@ -109,7 +109,7 @@ def _is_standing_start(lap):
     return float(lap["speed_kmh"].head(25).median()) < STANDING_START_KMH
 
 
-def analyse_lap(player_lap, expert_laps, lap_number=1, track="olethros_road_1"):
+def analyse_lap(player_lap, expert_laps, lap_number=1, track="olethros_road_1", is_realtime=False):
     """Full slow-layer pass for one player lap. Returns the error report dict."""
     track_length = max(lap["lap_distance"].max() for lap in expert_laps)
     grid = distance_grid(track_length)
@@ -126,7 +126,7 @@ def analyse_lap(player_lap, expert_laps, lap_number=1, track="olethros_road_1"):
     player_aligned = align_nearest(player_lap, grid)
     deltas = compute_deltas(player_aligned, baseline)
     corners = detect_corners(baseline)
-    errors = detect_errors(deltas, corners, track_length)
+    errors = detect_errors(deltas, corners, track_length, is_realtime=is_realtime)
 
     report = {
         "source": "team2_slow_layer",

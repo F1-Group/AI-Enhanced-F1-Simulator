@@ -10,6 +10,11 @@ PROJECT_ROOT = SRC_DIR.parent
 
 sys.path.insert(0, str(SRC_DIR))
 
+_LATENCY_DIR = Path(__file__).resolve().parent.parent.parent / "tests" / "integration"
+if str(_LATENCY_DIR) not in sys.path:
+    sys.path.insert(0, str(_LATENCY_DIR))
+
+from latency_logger import log_event
 from llm.prompts import build_user_prompt
 from llm.llm_client import ask_race_engineer
 from llm.guardrail import apply_guardrail
@@ -43,6 +48,12 @@ def process_single_error(error, system_prompt, audio_manager, force_fallback=Fal
     """Processes an isolated telemetry infraction."""
     error_type = error.get("type") or error.get("tag") or "generic_error"
     coaching_request = f"{error.get('message', '')} {error.get('coaching_hint', '')}".strip()
+    # Same key live_coach.py logs "published" under and this module logs
+    # "received"/"guardrail_done" under - passed to AudioManager so
+    # queued_for_voice/voice_start join the same chain instead of being keyed
+    # by an unrelated created_time, which is what let analyze_latency.py's
+    # END-TO-END (published -> voice_start) metric never find a match.
+    latency_key = f"{error.get('session_id')}:{error.get('tag')}:{error.get('lap_number')}"
 
     # Fast Layer Event Interception
     if error.get("priority") == "high" or error_type in ["brake_now", "off_track"]:
@@ -51,11 +62,19 @@ def process_single_error(error, system_prompt, audio_manager, force_fallback=Fal
         if feedback_callback:
             feedback_callback(fast_text, layer="fast")
 
-        audio_manager.play_text(
-            fast_text,
-            priority="high",
-            cooldown_key=f"fast_{error_type}_{error.get('corner', 'general')}"
-        )
+        # NOTE: brake_now/off_track are already spoken directly and
+        # immediately by fast_layer.py's FastLayer.check() (via
+        # AudioManager.play()/play_error(), synchronously, on the telemetry
+        # thread - zero LLM/queue latency, which is the whole point of the
+        # fast layer). This event only reaches here because FastLayer ALSO
+        # pushes it onto shared_event_queue for dashboard feedback_callback
+        # and logging. Calling audio_manager.play_text() here as well used
+        # to re-speak the SAME alert a second time, seconds later, through
+        # ai_core's slower path - confirmed via analyze_audio_queue.py: the
+        # relayed copy could arrive while unrelated slow-layer coaching was
+        # already speaking, sit queued behind it, and get silently dropped
+        # once stale. Dashboard/log side effects still happen above; only
+        # the redundant second audio dispatch is removed.
 
         return None
 
@@ -82,6 +101,7 @@ def process_single_error(error, system_prompt, audio_manager, force_fallback=Fal
 
     # Execute Guardrails & Slow Layer Feedback
     result = apply_guardrail(coaching_request, answer_text, error=error)
+    log_event("guardrail_done", key=latency_key, detail=error_type)
     if result and result.get("is_valid", False):
         feedback_text = result.get("feedback", answer_text)
         print(f"\n[Slow Layer Feedback]: {feedback_text}")
@@ -93,7 +113,8 @@ def process_single_error(error, system_prompt, audio_manager, force_fallback=Fal
         audio_manager.play_text(
             feedback_text,
             priority="normal",
-            cooldown_key=f"{error_type}_{error.get('corner')}"
+            cooldown_key=f"{error_type}_{error.get('corner')}",
+            latency_key=latency_key,
         )
     return result
 
@@ -170,6 +191,9 @@ def ai_queue_consumer_loop(event_queue, audio_manager, stop_event, is_llm_availa
     while not stop_event.is_set():
         try:
             event = event_queue.get(block=True, timeout=1.0)
+            print(f">>> DEBUG got event: {event}")
+            if event is not None:
+                log_event("received", key=f"{event.get('session_id')}:{event.get('tag')}:{event.get('lap_number')}", detail=event.get("type"))
         except queue.Empty:
             continue
 
