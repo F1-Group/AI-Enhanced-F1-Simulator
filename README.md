@@ -65,7 +65,7 @@ pip install -r requirements.txt
 The coaching middleware uses a localized, offline **Ollama** server running **IBM Granite 2B** weights to eliminate cloud API latency and avoid token limits.
 #### Step 1: Install Ollama
 Open a new terminal window.
-* **Linux / WSL2:**
+* **Linux:**
   ```bash
   curl -fsSL https://ollama.com/install.sh | sh
   ```
