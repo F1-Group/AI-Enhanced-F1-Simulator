@@ -33,7 +33,7 @@ Before running the AI-Enhanced F1 Simulator, ensure your system satisfies the ha
   * **Windows:** Windows 10/11 with **WSL2** (Ubuntu distribution).
   * **macOS:** macOS 12+ (Intel / Apple Silicon). *Note: Running TORCS on macOS requires [Wine](https://www.winehq.org/) to emulate the x86/Windows environment.*
 * **RAM:** Minimum 8 GB (16 GB recommended to handle simultaneous simulation and LLM inference).
-* **Python Environment:** Python 3.10+ (ensure `pip` and `venv` are configured).
+* **Python Environment:** Python 3.13+ (ensure `pip` and `venv` are configured).
 ---
 ### 1.2 Repository & Dependency Installation
 
@@ -43,7 +43,7 @@ Clone the repository and install the necessary Python packages in a virtual envi
 # Clone the repository
 git clone https://github.com/F1-Group/AI-Enhanced-F1-Simulator.git
 
-cd AI-Enhanced-F1-Simulator
+cd AI-Enhanced-F1-Simulator/
 
 # Create virtual environment
 # macOS / Linux
@@ -64,6 +64,7 @@ pip install -r requirements.txt
 ### 1.3 Local AI Model Setup (Ollama & Granite 2B)
 The coaching middleware uses a localized, offline **Ollama** server running **IBM Granite 2B** weights to eliminate cloud API latency and avoid token limits.
 #### Step 1: Install Ollama
+Open a new terminal window.
 * **Linux / WSL2:**
   ```bash
   curl -fsSL https://ollama.com/install.sh | sh
@@ -89,6 +90,13 @@ ollama list
 ```
 *(You should see `granite3-dense:2b` listed in the installed models output.)*
 
+Test if the model loads and responds properly in your terminal:
+```bash
+ollama run granite3-dense:2b "Hello"
+```
+*(Confirm that the model generates a response without memory or loading errors, then exit the prompt using /bypass or Ctrl+D.)*
+
+Close the terminal window.
 
 ## 2. TORCS & Telemetry Configuration
 This section guides you through installing the **TORCS (The Open Racing Car Simulator)** simulator and configuring its telemetry server to stream vehicle data (`scr_server`) over UDP sockets to the Python coaching middleware.
@@ -102,7 +110,7 @@ TORCS is supported natively on Windows and Linux, while macOS requires **Wine** 
 #### B. macOS Installation (via Wine)
 Running TORCS on macOS requires running the Windows binary under **Wine**.
 1. Download and unzip `torcs.zip` from the [Link](https://drive.google.com/file/d/1edIgHxBrDELr5LQM50B-2MpmcIX0DVQt/view?usp=sharing) to your preferred directory (e.g., `$HOME/torcs` or `/Applications/torcs`)..
-2. Install Wine via Homebrew:
+2. Install Wine via Homebrew or [Wine Download](https://www.winehq.org/):
     ```bash
     # Install Homebrew if not already installed
     brew install --cask wine-stable
@@ -110,6 +118,7 @@ Running TORCS on macOS requires running the Windows binary under **Wine**.
 3. Open **System Settings > Privacy & Security** on your Mac and grant execution permissions to Wine.
 4. Launch TORCS using one of the following methods:
   - **Via Wine Terminal:**
+    Open Wine application.
     ```bash
     wine /path/to/your/torcs/torcs/wtorcs.exe
     ```
@@ -354,7 +363,7 @@ During an active race, the terminal logs real-time interaction between the **Fas
 Speaking audio: AI Coaching Speech
 
 # Fast Layer: Instant Event Alerts
-[Fast Layer] Brake NOW! (turn1)
+[Fast Layer] Brake NOW!
 Speaking audio: brake_now
 [Fast Layer] You are off track
 Speaking audio: off_track
@@ -390,7 +399,8 @@ Data saved successfully and safely! Absolute file path: .../telemetry_20260729_2
   <img src="./assets/images/Post-Race_Summary.png" alt="Post-Race Summary" width="400"/>
 </p>
 
-> **macOS Accessibility Notice:** If you see `This process is not trusted! Input event monitoring will not be possible until it is added to accessibility clients`, grant your Terminal or IDE (e.g., VS Code) key interception permissions under System Settings $\rightarrow$ Privacy & Security $\rightarrow$ Accessibility.
+> **macOS Accessibility Notice:** Since the middleware uses global keyboard listeners (`pynput`) for input monitoring, macOS will prompt you for permission or display a warning: `This process is not trusted! Input event monitoring will not be possible...`
+**Fix:** Go to **System Settings** $\rightarrow$ **Privacy & Security** $\rightarrow$ **Accessibility** (and **Input Monitoring**), toggle **ON** the switch for your terminal app (e.g., Terminal, iTerm2, or VS Code), then restart the terminal and re-run `python main.py`.
 
 
 ## 7. Troubleshooting & FAQs
