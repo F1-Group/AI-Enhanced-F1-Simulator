@@ -265,8 +265,12 @@ $RECYCLE.BIN/
 .nfs*
 
 # Data
-*.csv
-data/
+# *.csv
+# data/
+player_data/
+coaching_summary.json
+latest_data.txt
+lap_summary.json
 
 # Audio
 *.wav
