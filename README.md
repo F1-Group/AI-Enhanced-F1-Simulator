@@ -30,7 +30,7 @@ Before running the AI-Enhanced F1 Simulator, ensure your system satisfies the ha
 ### 1.1 System Requirements
 * **Operating System:** 
   * **Linux:** Ubuntu 22.04 LTS (native recommended).
-  * **Windows:** Windows 10/11 with **WSL2** (Ubuntu distribution).
+  * **Windows:** Windows 10/11.
   * **macOS:** macOS 12+ (Intel / Apple Silicon). *Note: Running TORCS on macOS requires [Wine](https://www.winehq.org/) to emulate the x86/Windows environment.*
 * **RAM:** Minimum 8 GB (16 GB recommended to handle simultaneous simulation and LLM inference).
 * **Python Environment:** Python 3.13+ (ensure `pip` and `venv` are configured).
