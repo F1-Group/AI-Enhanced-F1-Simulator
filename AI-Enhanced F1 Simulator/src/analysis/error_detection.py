@@ -53,7 +53,7 @@ MAX_ALIGN_GAP_M = 20.0          # grid points with worse alignment are ignored
 
 
 def detect_corners(baseline):
-    """Number the track's corners (turn1, turn2, ...) from the expert steer trace."""
+    """Identify the track's corners (all labelled "corner") from the expert steer trace."""
     if baseline.empty or "steer" not in baseline:
         return []
 
@@ -91,10 +91,10 @@ def detect_corners(baseline):
             merged.append(seg)
 
     corners = []
-    for n, (s, e) in enumerate(seg for seg in merged if seg[1] - seg[0] >= CORNER_MIN_LENGTH_M):
+    for s, e in (seg for seg in merged if seg[1] - seg[0] >= CORNER_MIN_LENGTH_M):
         zone = (baseline["lap_distance"] >= s) & (baseline["lap_distance"] <= e)
         apex = float(baseline.loc[zone, "lap_distance"][baseline.loc[zone, "speed_kmh"].idxmin()])
-        corners.append({"name": f"turn{n + 1}", "start_m": float(s), "end_m": float(e), "apex_m": apex})
+        corners.append({"name": "corner", "start_m": float(s), "end_m": float(e), "apex_m": apex})
     return corners
 
 
@@ -304,7 +304,7 @@ def detect_sector_time_loss(deltas, track_length_m):
                 [f"sector_{i + 1}", "lap_time", "speed_kmh"],
                 f"Significant time loss detected in {sector}.",
                 f"You lost about {loss:.1f} s to the baseline in {sector}; "
-                f"focus on the corners between {boundaries[i]:.0f} m and {boundaries[i + 1]:.0f} m.",
+                f"focus on the corners in that sector.",
                 {
                     "time_loss_s": round(loss, 2),
                     "sector_start_m": round(float(boundaries[i]), 0),

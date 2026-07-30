@@ -91,6 +91,16 @@ _TURN_NUMBER = re.compile(r"\b(the\s+)?turn\s+\d+\b", re.IGNORECASE)
 def _replace_turn_with_corner(text: str) -> str:
     return _TURN_NUMBER.sub("the corner", text)
 
+
+# The model sometimes says "delta"/"time delta" despite the system prompt
+# telling it to use plain words instead. Normalize it the same way as the
+# turn-number case above rather than trusting the prompt alone.
+_DELTA_WORDING = re.compile(r"\btime\s+delta\b|\bdelta\b", re.IGNORECASE)
+
+
+def _replace_delta_wording(text: str) -> str:
+    return _DELTA_WORDING.sub("time loss", text)
+
 FALLBACK_RESPONSES = {
     "default": "Focus on braking points and consistent throttle application.",
     "late_braking": "Move your braking point earlier and trail brake into the apex.",
@@ -101,7 +111,7 @@ FALLBACK_RESPONSES = {
 }
 
 def validate_output(response: str, error_type: str = "default"):
-    response = _replace_turn_with_corner(_strip_apology(response))
+    response = _replace_delta_wording(_replace_turn_with_corner(_strip_apology(response)))
     words = response.split()
     word_count = len(words)
 

@@ -262,10 +262,8 @@ class LiveCoach:
                     # Fall back to text feature matching if structured field is missing
                     msg = error.get("message", "")
                     hint = error.get("coaching_hint", "")
-                    for i in range(1, 15):
-                        if f"turn{i}" in msg or f"turn{i}" in hint:
-                            location_key = f"turn{i}"
-                            break
+                    if "corner" in msg or "corner" in hint:
+                        location_key = "corner"
                     if not location_key:
                         for s in (1, 2, 3):
                             if f"Sector {s}" in msg or f"Sector {s}" in hint:
