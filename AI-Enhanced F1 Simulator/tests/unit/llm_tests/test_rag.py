@@ -82,6 +82,33 @@ def test_same_filename_in_different_subdirs_does_not_collide(isolated_kb):
     assert collection.count() == 2
 
 
+def test_retrieve_triggers_auto_load_when_collection_is_empty(isolated_kb):
+    write, collection = isolated_kb
+    write("driving_technique/cornering.txt", "Turn in smoothly.\n\nApex late for a better exit.")
+
+    assert collection.count() == 0
+    assert rag._IS_LOADED is False
+
+    results = rag.retrieve("cornering advice", top_k=2)
+
+    assert rag._IS_LOADED is True
+    assert collection.count() == 2
+    assert results
+    assert all(doc.strip() for doc in results)
+
+
+def test_retrieve_called_repeatedly_does_not_reload_or_duplicate(isolated_kb):
+    write, collection = isolated_kb
+    write("driving_technique/braking.txt", "Brake earlier into the apex.\n\nRelease the brake smoothly.")
+
+    for _ in range(3):
+        rag.retrieve("braking", top_k=2)
+
+    # Auto-load must only fire once (on the first empty-collection query) -
+    # repeated retrieve() calls must not re-read files or re-insert chunks.
+    assert collection.count() == 2
+
+
 def test_paragraph_break_convention_is_consistent():
     # Real knowledge base files must use a blank line ("\n\n") to separate
     # paragraphs, since that is the exact delimiter load_knowledge_base()
