@@ -157,6 +157,30 @@ def handle_game_finished():
     # Send a poison pill (None) to let the AI Thread start generating the lap summary
     shared_event_queue.put(None)
 
+def stop_race_session():
+    """Called when user presses BACK on Dashboard to force stop the race"""
+    global client, audio_manager, ai_stop_event, shared_event_queue
+    print("[Main] Stop race requested via Back button. Stopping threads and client...")
+
+    ai_stop_event.set()
+
+    if audio_manager and hasattr(audio_manager, "stop_all"):
+        audio_manager.stop_all()
+
+    while not shared_event_queue.empty():
+        try:
+            shared_event_queue.get_nowait()
+            shared_event_queue.task_done()
+        except queue.Empty:
+            break
+
+    if client:
+        try:
+            client.stop()
+        except Exception as e:
+            print(f"[Main Warning] Error stopping client on back: {e}")
+        client = None
+
 def main():
     global dash
     print("[Main] Launching Dashboard GUI directly...")
@@ -164,7 +188,8 @@ def main():
     dash = TelemetryDashboard(
         init_callback=run_initialization,
         start_race_callback=start_race_session,
-        on_game_finished_callback=handle_game_finished
+        on_game_finished_callback=handle_game_finished,
+        stop_race_callback=stop_race_session
     )
 
     try:

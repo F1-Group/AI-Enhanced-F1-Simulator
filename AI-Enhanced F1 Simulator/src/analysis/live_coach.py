@@ -32,7 +32,7 @@ from .alignment import build_baseline, distance_grid
 from .error_detection import detect_corners
 from .lap_utils import LAP_RESET_DROP_M, clean_telemetry, load_telemetry, split_laps
 from .run_analysis import (DEFAULT_EXPERT, LATEST_POINTER,
-                           PROJECT_ROOT, analyse_lap, session_id_from)
+                           analyse_lap, session_id_from)
 
 POLL_S = 0.05
 MIN_LAP_FRACTION = 0.95
@@ -41,7 +41,6 @@ MIN_REALTIME_ROWS = 50
 LAP_TIME_RESET_DROP_S = 2.0
 LAP_TIME_RESET_MAX_S = 2.0
 LAP_COUNTER_FIELDS = ("lap_count", "lap_number", "lap", "laps", "completed_laps")
-COACHING_SUMMARY_PATH = PROJECT_ROOT / "data" / "coaching_summary.json"
 
 
 def wait_for_recording(timeout_s, freshness_s=10.0, stop_event=None):

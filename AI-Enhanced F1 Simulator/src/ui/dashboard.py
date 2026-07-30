@@ -108,7 +108,7 @@ class TrackPositionBar(tk.Canvas):
 class TelemetryDashboard:
     REFRESH_MS = 50
 
-    def __init__(self, init_callback=None, start_race_callback=None, on_game_finished_callback=None):
+    def __init__(self, init_callback=None, start_race_callback=None, on_game_finished_callback=None, stop_race_callback=None):
         self.root = tk.Tk()
         self.root.title("AI Race Telemetry System")
         self.root.geometry("800x600")
@@ -119,6 +119,9 @@ class TelemetryDashboard:
         self.init_callback = init_callback
         self.start_race_callback = start_race_callback
         self.on_game_finished_callback = on_game_finished_callback
+        self.stop_race_callback = stop_race_callback
+
+        self._update_job = None
 
         # Status variables
         self.llm_connected = False
@@ -392,6 +395,27 @@ class TelemetryDashboard:
 
         self.root.after(100, self._check_torcs_connection)
 
+    def _on_click_back_from_dashboard(self):
+        print("[Dashboard] Back button pressed. Stopping active race session...")
+
+        if self._update_job is not None:
+            self.root.after_cancel(self._update_job)
+            self._update_job = None
+
+        if self.stop_race_callback:
+            self.stop_race_callback()
+
+        if USING_REAL_CACHE:
+            try:
+                cache.clear()
+            except Exception as e:
+                print(f"[Dashboard Warning] Failed to reset cache on back: {e}")
+
+        if self.dashboard_frame:
+            self.dashboard_frame.destroy()
+            self.dashboard_frame = None
+
+        self._build_new_race_page()
 
     # Connecting Page
     def _build_connecting_page(self):
@@ -588,6 +612,15 @@ class TelemetryDashboard:
         self.lbl_session = tk.Label(title_frame, text="Olethros Road 1", fg=GREY, bg=BG, font=("Courier", 11))
         self.lbl_session.pack(side="left", padx=20)
 
+        # back button so we don't have to close the whole app to go back to menu
+        btn_back = tk.Button(
+            title_frame, text="< BACK", fg="black", bg=WHITE,
+            activebackground=GREY, activeforeground="black",
+            font=("Courier", 10, "bold"), width=8, height=2, bd=1,
+            command=self._on_click_back_from_dashboard
+        )
+        btn_back.pack(side="right", padx=10)
+
         tk.Frame(self.dashboard_frame, bg=BORDER, height=1).pack(fill="x", padx=10)
 
         content = tk.Frame(self.dashboard_frame, bg=BG)
@@ -685,6 +718,14 @@ class TelemetryDashboard:
         self.lbl_off_track = tk.Label(p, text="ON TRACK", fg=GREEN, bg=PANEL_BG, font=("Courier", 14, "bold"))
         self.lbl_off_track.pack(anchor="w", pady=(6, 0))
 
+        tk.Frame(p, bg=BORDER, height=1).pack(fill="x", pady=8)
+        tk.Label(p, text="Lap Distance / Sector", fg=GREY, bg=PANEL_BG, font=("Courier", 9)).pack(anchor="w")
+        self.lbl_lap_dist = tk.Label(p, text="0 m", fg=WHITE, bg=PANEL_BG, font=("Courier", 16, "bold"))
+        self.lbl_lap_dist.pack(anchor="w", pady=(2, 0))
+        
+        self.lbl_sector = tk.Label(p, text="Sector 1", fg=YELLOW, bg=PANEL_BG, font=("Courier", 14, "bold"))
+        self.lbl_sector.pack(anchor="w")
+
     def _build_bottom_row(self):
         bottom = tk.Frame(self.dashboard_frame, bg=BG)
         bottom.pack(fill="x", padx=10, pady=6)
@@ -730,7 +771,7 @@ class TelemetryDashboard:
             current_time = time.strftime("%H:%M:%S")
 
             if layer == "fast":
-                prefix = f"[{current_time}] [FAST] "
+                prefix = f"[{current_time}] [WARNING] "
                 tag = "fast"
             elif layer == "summary":
                 prefix = f"[{current_time}] [SUMMARY] "
@@ -778,7 +819,7 @@ class TelemetryDashboard:
         except Exception as e:
             print(f"[Dashboard Error] Update error: {e}")
 
-        self.root.after(self.REFRESH_MS, self._update)
+        self._update_job = self.root.after(self.REFRESH_MS, self._update)
 
     def _refresh_ui(self, data, status):
         speed = data.get("speed_kmh", 0) / 3.6
@@ -792,6 +833,7 @@ class TelemetryDashboard:
         track_pos = data.get("track_pos", 0.0)
         angle = data.get("angle", 0.0)
         wheel_spin = data.get("wheel_spin", 0.0)
+        lap_dist = data.get("lap_distance", data.get("distFromStart", 0.0))
 
         self.lbl_speed.config(text=str(int(max(0, speed))))
         self.gear_box.config(text=str(gear) if gear > 0 else ("N" if gear == 0 else "R"))
@@ -820,6 +862,20 @@ class TelemetryDashboard:
         spin_colour = RED if wheel_spin > 100 else (YELLOW if wheel_spin > 70 else GREEN)
         self.wheel_spin_bar.set_value(wheel_spin_fraction, colour=spin_colour)
         self.lbl_wheel_spin.config(text=f"{wheel_spin:.0f} rad/s")
+
+        sector_len = TRACK_LENGTH_M / 3.0
+        if lap_dist < sector_len:
+            sector_name = "Sector 1"
+            sector_color = YELLOW
+        elif lap_dist < sector_len * 2:
+            sector_name = "Sector 2"
+            sector_color = BLUE
+        else:
+            sector_name = "Sector 3"
+            sector_color = PURPLE
+
+        self.lbl_lap_dist.config(text=f"{lap_dist:.1f} m")
+        self.lbl_sector.config(text=sector_name, fg=sector_color)
 
         if abs(track_pos) > 1.0:
             self.lbl_off_track.config(text="OFF TRACK", fg=RED)
