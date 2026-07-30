@@ -43,6 +43,8 @@ Clone the repository and install the necessary Python packages in a virtual envi
 # Clone the repository
 git clone https://github.com/F1-Group/AI-Enhanced-F1-Simulator.git
 
+cd AI-Enhanced-F1-Simulator
+
 # Create virtual environment
 # macOS / Linux
 python3 -m venv venv  
