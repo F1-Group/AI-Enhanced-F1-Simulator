@@ -91,10 +91,10 @@ def detect_corners(baseline):
             merged.append(seg)
 
     corners = []
-    for s, e in (seg for seg in merged if seg[1] - seg[0] >= CORNER_MIN_LENGTH_M):
+    for i, (s, e) in enumerate(seg for seg in merged if seg[1] - seg[0] >= CORNER_MIN_LENGTH_M):
         zone = (baseline["lap_distance"] >= s) & (baseline["lap_distance"] <= e)
         apex = float(baseline.loc[zone, "lap_distance"][baseline.loc[zone, "speed_kmh"].idxmin()])
-        corners.append({"name": "corner", "start_m": float(s), "end_m": float(e), "apex_m": apex})
+        corners.append({"name": f"T{i + 1}", "start_m": float(s), "end_m": float(e), "apex_m": apex})
     return corners
 
 

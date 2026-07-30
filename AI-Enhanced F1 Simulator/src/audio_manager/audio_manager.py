@@ -381,6 +381,19 @@ class AudioManager:
             return self._enqueue_speech(fallback_text, str(audio_path), priority=priority, interrupt=interrupt)
         return False
 
+    def _cooldown_key_for_error(self, error):
+        """Cooldown key for a slow/fast-layer error dict.
+
+        Includes both the error type and the corner (e.g. "late_braking_T1")
+        so the same issue firing at different corners does not suppress each
+        other under one shared per-type cooldown.
+        """
+        error_type = error.get("type")
+        corner = error.get("corner")
+        if error_type and corner:
+            return f"{error_type}_{corner}"
+        return error.get("audio_key") or error.get("tag") or error.get("audio_file")
+
     def play_error(self, error):
         """Handle incoming error dictionaries cleanly without templates."""
         tag = error.get("tag")
@@ -392,7 +405,7 @@ class AudioManager:
             return self.play(tag, priority=priority, interrupt=interrupt)
 
         if audio_file:
-            cooldown_key = error.get("audio_key") or audio_file
+            cooldown_key = self._cooldown_key_for_error(error)
             now = time.time()
             if now - self._last_played.get(cooldown_key, 0) < self.cooldown_seconds:
                 return False
@@ -406,7 +419,7 @@ class AudioManager:
 
         fallback_text = self._message_for_error(error)
         if fallback_text:
-            cooldown_key = tag or fallback_text
+            cooldown_key = self._cooldown_key_for_error(error) or fallback_text
             now = time.time()
             if now - self._last_played.get(cooldown_key, 0) < self.cooldown_seconds:
                 return False

@@ -306,7 +306,7 @@ class LiveCoach:
 
         # Limit the maximum number of errors sent per lap or snapshot,
         # then push to the external IPC queue
-        MAX_ERRORS_PER_LAP = 2  
+        MAX_ERRORS_PER_LAP = 3
         errors_to_process = new_errors[:MAX_ERRORS_PER_LAP]
 
         for error in errors_to_process:
