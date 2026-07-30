@@ -13,7 +13,7 @@ class _FakeAudioManager:
     def __init__(self):
         self.played = []
 
-    def play_text(self, text, priority="normal", cooldown_key=None):
+    def play_text(self, text, priority="normal", cooldown_key=None, latency_key=None):
         self.played.append((text, priority, cooldown_key))
 
 
