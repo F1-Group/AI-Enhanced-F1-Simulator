@@ -4,7 +4,7 @@ def clean_my_data(raw_string):
     # Target fields for the first and second categories
     target_categories = [
         'curLapTime', 'distFromStart', 'speedX', 'trackPos', 
-        'angle', 'wheelSpinVel', 'gear', 'rpm', 'racePos', 'fuel'
+        'angle', 'wheelSpinVel', 'gear', 'rpm', 'racePos', 'fuel', 'damage'
     ]
 
     # Extract all (key value) pairs from the raw TORCS UDP packet
@@ -54,5 +54,8 @@ def clean_my_data(raw_string):
     # Context fields
     cleaned_data['race_pos'] = int(raw_data.get('racePos', 1))
     cleaned_data['fuel'] = float(raw_data.get('fuel', 0.0))
+
+    # Damage
+    cleaned_data['damage'] = int(raw_data.get('damage', 0))
 
     return cleaned_data

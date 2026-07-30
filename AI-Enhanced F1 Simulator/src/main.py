@@ -4,9 +4,16 @@ import sys
 import threading
 import queue
 from pathlib import Path
+import multiprocessing as mp
 
 if platform.system() == "Darwin":
     os.environ["OBJC_DISABLE_INITIALIZE_FORK_SAFETY"] = "YES"
+
+if platform.system() == "Linux":
+    try:
+        mp.set_start_method('spawn', force=True)
+    except RuntimeError:
+        pass
 
 SRC_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SRC_DIR.parent

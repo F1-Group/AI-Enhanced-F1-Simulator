@@ -104,6 +104,7 @@ class InputHandler:
         self._running = False
         if self._process is not None and self._process.is_alive():
             self._process.terminate()
+            self._process.join()
             print("[InputHandler] Multiprocessing pynput listener process stopped.")
 
     def update(self):
@@ -128,3 +129,6 @@ class InputHandler:
 
     def get_action(self):
         return self.update()
+
+if __name__ == '__main__':
+    pass

@@ -1,0 +1,361 @@
+{"ts": 1785416278.2679198, "stage": "published", "key": "20260730_135739:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416278.268407, "stage": "received", "key": "20260730_135739:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416278.857305, "stage": "queued_for_voice", "key": "100932.868683041", "detail": "off_track"}
+{"ts": 1785416278.8576472, "stage": "audio_enqueued", "key": "100932.868683041", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416278.857731, "stage": "audio_interrupt_purge", "key": "100932.868683041", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416278.857843, "stage": "voice_start", "key": "100932.868683041", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.001}"}
+{"ts": 1785416280.695771, "stage": "voice_done", "key": "100932.868683041", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.838}"}
+{"ts": 1785416281.2345579, "stage": "guardrail_done", "key": "20260730_135739:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416281.2352011, "stage": "queued_for_voice", "key": "20260730_135739:S1_time_loss:1", "detail": "AI Coaching Speech"}
+{"ts": 1785416281.235313, "stage": "audio_enqueued", "key": "20260730_135739:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"interrupt\": false, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416281.235543, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416281.2355042, "stage": "voice_start", "key": "20260730_135739:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"wait_s\": 0.0}"}
+{"ts": 1785416282.5990012, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416285.6414149, "stage": "queued_for_voice", "key": "100939.652766833", "detail": "off_track"}
+{"ts": 1785416285.642686, "stage": "audio_enqueued", "key": "100939.652766833", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416285.6430762, "stage": "audio_interrupt_purge", "key": "100939.652766833", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416285.6432698, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416285.658491, "stage": "voice_done", "key": "20260730_135739:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"duration_s\": 4.423}"}
+{"ts": 1785416285.6589818, "stage": "voice_start", "key": "100939.652766833", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.018}"}
+{"ts": 1785416287.426985, "stage": "voice_done", "key": "100939.652766833", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.768}"}
+{"ts": 1785416288.40879, "stage": "published", "key": "20260730_135739:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416288.409199, "stage": "received", "key": "20260730_135739:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416289.806251, "stage": "guardrail_done", "key": "20260730_135739:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416289.8067882, "stage": "queued_for_voice", "key": "20260730_135739:S1_time_loss:1", "detail": "AI Coaching Speech"}
+{"ts": 1785416289.806952, "stage": "audio_enqueued", "key": "20260730_135739:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"interrupt\": false, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416289.8071198, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416289.807153, "stage": "voice_start", "key": "20260730_135739:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"wait_s\": 0.0}"}
+{"ts": 1785416293.885466, "stage": "queued_for_voice", "key": "100947.896781208", "detail": "off_track"}
+{"ts": 1785416293.8867142, "stage": "audio_enqueued", "key": "100947.896781208", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416293.886863, "stage": "audio_interrupt_purge", "key": "100947.896781208", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416293.887069, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416293.937031, "stage": "voice_done", "key": "20260730_135739:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"duration_s\": 4.13}"}
+{"ts": 1785416293.9373949, "stage": "voice_start", "key": "100947.896781208", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.052}"}
+{"ts": 1785416295.686389, "stage": "voice_done", "key": "100947.896781208", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.749}"}
+{"ts": 1785416296.903003, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416299.933912, "stage": "queued_for_voice", "key": "100953.945203833", "detail": "off_track"}
+{"ts": 1785416299.935136, "stage": "audio_enqueued", "key": "100953.945203833", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416299.935654, "stage": "audio_interrupt_purge", "key": "100953.945203833", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416299.937964, "stage": "voice_start", "key": "100953.945203833", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.004}"}
+{"ts": 1785416299.938581, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416300.865013, "stage": "published", "key": "20260730_135739:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416300.866299, "stage": "received", "key": "20260730_135739:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416301.6654909, "stage": "voice_done", "key": "100953.945203833", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.727}"}
+{"ts": 1785416302.261565, "stage": "guardrail_done", "key": "20260730_135739:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416302.262771, "stage": "queued_for_voice", "key": "20260730_135739:S1_time_loss:1", "detail": "AI Coaching Speech"}
+{"ts": 1785416302.262939, "stage": "audio_enqueued", "key": "20260730_135739:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"interrupt\": false, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416302.263079, "stage": "voice_start", "key": "20260730_135739:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"wait_s\": 0.0}"}
+{"ts": 1785416302.952422, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416305.97452, "stage": "queued_for_voice", "key": "100959.985787", "detail": "off_track"}
+{"ts": 1785416305.9753711, "stage": "audio_enqueued", "key": "100959.985787", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416305.975719, "stage": "audio_interrupt_purge", "key": "100959.985787", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416305.976792, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416306.030079, "stage": "voice_done", "key": "20260730_135739:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"duration_s\": 3.767}"}
+{"ts": 1785416306.030299, "stage": "voice_start", "key": "100959.985787", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.056}"}
+{"ts": 1785416307.781182, "stage": "voice_done", "key": "100959.985787", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.751}"}
+{"ts": 1785416308.987189, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416315.452951, "stage": "queued_for_voice", "key": "100969.464182416", "detail": "brake_now"}
+{"ts": 1785416315.453505, "stage": "audio_enqueued", "key": "100969.464182416", "detail": "{\"description\": \"brake_now\", \"priority\": \"urgent\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416315.453606, "stage": "audio_interrupt_purge", "key": "100969.464182416", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416315.453747, "stage": "voice_start", "key": "100969.464182416", "detail": "{\"description\": \"brake_now\", \"priority\": \"urgent\", \"wait_s\": 0.001}"}
+{"ts": 1785416315.45382, "stage": "received", "key": "None:None:None", "detail": "brake_now"}
+{"ts": 1785416315.558966, "stage": "queued_for_voice", "key": "100969.570196833", "detail": "off_track"}
+{"ts": 1785416315.559425, "stage": "audio_enqueued", "key": "100969.570196833", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416315.5595908, "stage": "audio_interrupt_purge", "key": "100969.570196833", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416315.560512, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416315.603229, "stage": "voice_done", "key": "100969.464182416", "detail": "{\"description\": \"brake_now\", \"duration_s\": 0.147}"}
+{"ts": 1785416315.6034582, "stage": "voice_start", "key": "100969.570196833", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.044}"}
+{"ts": 1785416316.9858098, "stage": "published", "key": "20260730_135739:turn1_poor_corner_exit:1", "detail": "poor_corner_exit"}
+{"ts": 1785416316.986312, "stage": "received", "key": "20260730_135739:turn1_poor_corner_exit:1", "detail": "poor_corner_exit"}
+{"ts": 1785416317.3097641, "stage": "voice_done", "key": "100969.570196833", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.706}"}
+{"ts": 1785416318.209387, "stage": "guardrail_done", "key": "20260730_135739:turn1_poor_corner_exit:1", "detail": "poor_corner_exit"}
+{"ts": 1785416318.209942, "stage": "queued_for_voice", "key": "20260730_135739:turn1_poor_corner_exit:1", "detail": "AI Coaching Speech"}
+{"ts": 1785416318.2100391, "stage": "audio_enqueued", "key": "20260730_135739:turn1_poor_corner_exit:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"interrupt\": false, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416318.210144, "stage": "voice_start", "key": "20260730_135739:turn1_poor_corner_exit:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"wait_s\": 0.0}"}
+{"ts": 1785416320.6920881, "stage": "queued_for_voice", "key": "100974.703288416", "detail": "off_track"}
+{"ts": 1785416320.693181, "stage": "audio_enqueued", "key": "100974.703288416", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416320.693599, "stage": "audio_interrupt_purge", "key": "100974.703288416", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416320.7003992, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416320.7147992, "stage": "voice_done", "key": "20260730_135739:turn1_poor_corner_exit:1", "detail": "{\"description\": \"AI Coaching Speech\", \"duration_s\": 2.504}"}
+{"ts": 1785416320.715047, "stage": "voice_start", "key": "100974.703288416", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.023}"}
+{"ts": 1785416322.469055, "stage": "voice_done", "key": "100974.703288416", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.754}"}
+{"ts": 1785416323.731554, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416324.80581, "stage": "published", "key": "20260730_135739:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416324.806261, "stage": "received", "key": "20260730_135739:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416326.316832, "stage": "guardrail_done", "key": "20260730_135739:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416326.31744, "stage": "queued_for_voice", "key": "20260730_135739:S1_time_loss:1", "detail": "AI Coaching Speech"}
+{"ts": 1785416326.317573, "stage": "audio_enqueued", "key": "20260730_135739:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"interrupt\": false, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416326.31773, "stage": "voice_start", "key": "20260730_135739:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"wait_s\": 0.0}"}
+{"ts": 1785416326.76787, "stage": "queued_for_voice", "key": "100980.779053458", "detail": "off_track"}
+{"ts": 1785416326.768575, "stage": "audio_enqueued", "key": "100980.779053458", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416326.768758, "stage": "audio_interrupt_purge", "key": "100980.779053458", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416326.769056, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416326.7932868, "stage": "voice_done", "key": "20260730_135739:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"duration_s\": 0.475}"}
+{"ts": 1785416326.793622, "stage": "voice_start", "key": "100980.779053458", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.026}"}
+{"ts": 1785416328.5501041, "stage": "voice_done", "key": "100980.779053458", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.756}"}
+{"ts": 1785416330.045365, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416333.075603, "stage": "queued_for_voice", "key": "100987.086762", "detail": "off_track"}
+{"ts": 1785416333.077418, "stage": "audio_enqueued", "key": "100987.086762", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416333.077745, "stage": "audio_interrupt_purge", "key": "100987.086762", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416333.078134, "stage": "voice_start", "key": "100987.086762", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.003}"}
+{"ts": 1785416333.078366, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416334.812201, "stage": "voice_done", "key": "100987.086762", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.734}"}
+{"ts": 1785416341.306947, "stage": "queued_for_voice", "key": "100995.318072458", "detail": "off_track"}
+{"ts": 1785416341.30737, "stage": "audio_enqueued", "key": "100995.318072458", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416341.307814, "stage": "audio_interrupt_purge", "key": "100995.318072458", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416341.30806, "stage": "voice_start", "key": "100995.318072458", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.001}"}
+{"ts": 1785416341.3079948, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416343.0342, "stage": "voice_done", "key": "100995.318072458", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.726}"}
+{"ts": 1785416344.351011, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416344.4176278, "stage": "published", "key": "20260730_135739:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416344.4181361, "stage": "received", "key": "20260730_135739:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416345.749384, "stage": "guardrail_done", "key": "20260730_135739:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416345.750069, "stage": "queued_for_voice", "key": "20260730_135739:S1_time_loss:1", "detail": "AI Coaching Speech"}
+{"ts": 1785416345.750283, "stage": "audio_enqueued", "key": "20260730_135739:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"interrupt\": false, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416345.750462, "stage": "voice_start", "key": "20260730_135739:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"wait_s\": 0.0}"}
+{"ts": 1785416347.378102, "stage": "queued_for_voice", "key": "101001.389201375", "detail": "off_track"}
+{"ts": 1785416347.3785, "stage": "audio_enqueued", "key": "101001.389201375", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416347.3789608, "stage": "audio_interrupt_purge", "key": "101001.389201375", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416347.3791418, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416347.398767, "stage": "voice_done", "key": "20260730_135739:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"duration_s\": 1.648}"}
+{"ts": 1785416347.3990378, "stage": "voice_start", "key": "101001.389201375", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.021}"}
+{"ts": 1785416347.515311, "stage": "published", "key": "20260730_135739:turn2_poor_corner_exit:1", "detail": "poor_corner_exit"}
+{"ts": 1785416347.5157819, "stage": "received", "key": "20260730_135739:turn2_poor_corner_exit:1", "detail": "poor_corner_exit"}
+{"ts": 1785416348.879489, "stage": "guardrail_done", "key": "20260730_135739:turn2_poor_corner_exit:1", "detail": "poor_corner_exit"}
+{"ts": 1785416348.880039, "stage": "queued_for_voice", "key": "20260730_135739:turn2_poor_corner_exit:1", "detail": "AI Coaching Speech"}
+{"ts": 1785416348.880169, "stage": "audio_enqueued", "key": "20260730_135739:turn2_poor_corner_exit:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"interrupt\": false, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416349.219578, "stage": "voice_done", "key": "101001.389201375", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.82}"}
+{"ts": 1785416349.219928, "stage": "voice_start", "key": "20260730_135739:turn2_poor_corner_exit:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"wait_s\": 0.34}"}
+{"ts": 1785416350.396018, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416353.438745, "stage": "queued_for_voice", "key": "101007.449822416", "detail": "off_track"}
+{"ts": 1785416353.439747, "stage": "audio_enqueued", "key": "101007.449822416", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416353.440119, "stage": "audio_interrupt_purge", "key": "101007.449822416", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416353.445994, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416353.489675, "stage": "voice_done", "key": "20260730_135739:turn2_poor_corner_exit:1", "detail": "{\"description\": \"AI Coaching Speech\", \"duration_s\": 4.269}"}
+{"ts": 1785416353.489943, "stage": "voice_start", "key": "101007.449822416", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.051}"}
+{"ts": 1785416355.240232, "stage": "voice_done", "key": "101007.449822416", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.75}"}
+{"ts": 1785416356.480077, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416361.698901, "stage": "queued_for_voice", "key": "101015.70994675", "detail": "off_track"}
+{"ts": 1785416361.69925, "stage": "audio_enqueued", "key": "101015.70994675", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416361.699727, "stage": "audio_interrupt_purge", "key": "101015.70994675", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416361.6999092, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416361.700015, "stage": "voice_start", "key": "101015.70994675", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.001}"}
+{"ts": 1785416363.4631581, "stage": "voice_done", "key": "101015.70994675", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.763}"}
+{"ts": 1785416363.858409, "stage": "published", "key": "20260730_135739:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416363.85884, "stage": "received", "key": "20260730_135739:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416365.28292, "stage": "guardrail_done", "key": "20260730_135739:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416365.283552, "stage": "queued_for_voice", "key": "20260730_135739:S1_time_loss:1", "detail": "AI Coaching Speech"}
+{"ts": 1785416365.2836869, "stage": "audio_enqueued", "key": "20260730_135739:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"interrupt\": false, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416365.2837949, "stage": "voice_start", "key": "20260730_135739:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"wait_s\": 0.0}"}
+{"ts": 1785416374.194803, "stage": "voice_done", "key": "20260730_135739:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"duration_s\": 8.911}"}
+{"ts": 1785416380.514731, "stage": "queued_for_voice", "key": "101034.525699833", "detail": "off_track"}
+{"ts": 1785416380.5157309, "stage": "audio_enqueued", "key": "101034.525699833", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416380.516141, "stage": "audio_interrupt_purge", "key": "101034.525699833", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416380.516512, "stage": "voice_start", "key": "101034.525699833", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.002}"}
+{"ts": 1785416380.516712, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416382.25799, "stage": "voice_done", "key": "101034.525699833", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.741}"}
+{"ts": 1785416386.6433332, "stage": "queued_for_voice", "key": "101040.654278666", "detail": "off_track"}
+{"ts": 1785416386.6457548, "stage": "audio_enqueued", "key": "101040.654278666", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416386.646044, "stage": "audio_interrupt_purge", "key": "101040.654278666", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416386.6470752, "stage": "voice_start", "key": "101040.654278666", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.004}"}
+{"ts": 1785416386.647189, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416388.392195, "stage": "voice_done", "key": "101040.654278666", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.745}"}
+{"ts": 1785416389.644806, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416392.162128, "stage": "published", "key": "20260730_135739:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416392.162577, "stage": "received", "key": "20260730_135739:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416393.74003, "stage": "guardrail_done", "key": "20260730_135739:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416393.7405791, "stage": "queued_for_voice", "key": "20260730_135739:S1_time_loss:1", "detail": "AI Coaching Speech"}
+{"ts": 1785416393.7408059, "stage": "audio_enqueued", "key": "20260730_135739:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"interrupt\": false, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416393.740923, "stage": "voice_start", "key": "20260730_135739:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"wait_s\": 0.0}"}
+{"ts": 1785416400.828345, "stage": "queued_for_voice", "key": "101054.839230125", "detail": "off_track"}
+{"ts": 1785416400.8288882, "stage": "audio_enqueued", "key": "101054.839230125", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416400.829359, "stage": "audio_interrupt_purge", "key": "101054.839230125", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416400.8296058, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416400.879839, "stage": "voice_done", "key": "20260730_135739:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"duration_s\": 7.139}"}
+{"ts": 1785416400.8807318, "stage": "voice_start", "key": "101054.839230125", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.052}"}
+{"ts": 1785416402.6308858, "stage": "voice_done", "key": "101054.839230125", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.749}"}
+{"ts": 1785416407.3564951, "stage": "queued_for_voice", "key": "101061.367356791", "detail": "off_track"}
+{"ts": 1785416407.360415, "stage": "audio_enqueued", "key": "101061.367356791", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416407.3607402, "stage": "audio_interrupt_purge", "key": "101061.367356791", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416407.36092, "stage": "voice_start", "key": "101061.367356791", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.004}"}
+{"ts": 1785416407.360978, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416409.0992389, "stage": "voice_done", "key": "101061.367356791", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.738}"}
+{"ts": 1785416412.4147341, "stage": "published", "key": "20260730_135739:S2_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416412.41519, "stage": "received", "key": "20260730_135739:S2_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416413.1587799, "stage": "queued_for_voice", "key": "101067.169619125", "detail": "off_track"}
+{"ts": 1785416413.159811, "stage": "audio_enqueued", "key": "101067.169619125", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416413.1600509, "stage": "audio_interrupt_purge", "key": "101067.169619125", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416413.1605031, "stage": "voice_start", "key": "101067.169619125", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.002}"}
+{"ts": 1785416413.681449, "stage": "guardrail_done", "key": "20260730_135739:S2_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416413.682275, "stage": "queued_for_voice", "key": "20260730_135739:S2_time_loss:1", "detail": "AI Coaching Speech"}
+{"ts": 1785416413.68248, "stage": "audio_enqueued", "key": "20260730_135739:S2_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"interrupt\": false, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416413.682675, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416414.892071, "stage": "voice_done", "key": "101067.169619125", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.731}"}
+{"ts": 1785416414.892422, "stage": "voice_start", "key": "20260730_135739:S2_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"wait_s\": 1.21}"}
+{"ts": 1785416417.524302, "stage": "queued_for_voice", "key": "101071.535121", "detail": "off_track"}
+{"ts": 1785416417.525625, "stage": "audio_enqueued", "key": "101071.535121", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416417.525745, "stage": "audio_interrupt_purge", "key": "101071.535121", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416417.525897, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416417.52921, "stage": "voice_done", "key": "20260730_135739:S2_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"duration_s\": 2.637}"}
+{"ts": 1785416417.529361, "stage": "voice_start", "key": "101071.535121", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.005}"}
+{"ts": 1785416419.284538, "stage": "voice_done", "key": "101071.535121", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.755}"}
+{"ts": 1785416423.3592908, "stage": "published", "key": "20260730_135739:S2_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416423.3597498, "stage": "received", "key": "20260730_135739:S2_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416424.77967, "stage": "guardrail_done", "key": "20260730_135739:S2_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416424.7803268, "stage": "queued_for_voice", "key": "20260730_135739:S2_time_loss:1", "detail": "AI Coaching Speech"}
+{"ts": 1785416424.780433, "stage": "audio_enqueued", "key": "20260730_135739:S2_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"interrupt\": false, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416424.780601, "stage": "voice_start", "key": "20260730_135739:S2_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"wait_s\": 0.0}"}
+{"ts": 1785416432.588064, "stage": "voice_done", "key": "20260730_135739:S2_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"duration_s\": 7.807}"}
+{"ts": 1785416433.6638741, "stage": "queued_for_voice", "key": "101087.674631166", "detail": "off_track"}
+{"ts": 1785416433.664264, "stage": "audio_enqueued", "key": "101087.674631166", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416433.664701, "stage": "audio_interrupt_purge", "key": "101087.674631166", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416433.6649, "stage": "voice_start", "key": "101087.674631166", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.001}"}
+{"ts": 1785416433.6650639, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416435.420012, "stage": "voice_done", "key": "101087.674631166", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.755}"}
+{"ts": 1785416436.664057, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416439.707278, "stage": "queued_for_voice", "key": "101093.718011041", "detail": "off_track"}
+{"ts": 1785416439.7077289, "stage": "audio_enqueued", "key": "101093.718011041", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416439.708127, "stage": "audio_interrupt_purge", "key": "101093.718011041", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416439.708367, "stage": "voice_start", "key": "101093.718011041", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.001}"}
+{"ts": 1785416439.7084641, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416441.416002, "stage": "voice_done", "key": "101093.718011041", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.707}"}
+{"ts": 1785416442.7098198, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416445.759718, "stage": "queued_for_voice", "key": "101099.770411", "detail": "off_track"}
+{"ts": 1785416445.760143, "stage": "audio_enqueued", "key": "101099.770411", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416445.760677, "stage": "audio_interrupt_purge", "key": "101099.770411", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416445.760926, "stage": "voice_start", "key": "101099.770411", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.001}"}
+{"ts": 1785416445.760978, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416447.5153291, "stage": "voice_done", "key": "101099.770411", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.754}"}
+{"ts": 1785416452.051203, "stage": "queued_for_voice", "key": "101106.061886", "detail": "off_track"}
+{"ts": 1785416452.0518012, "stage": "audio_enqueued", "key": "101106.061886", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416452.0528798, "stage": "audio_interrupt_purge", "key": "101106.061886", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416452.053869, "stage": "voice_start", "key": "101106.061886", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.003}"}
+{"ts": 1785416452.054049, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416453.799524, "stage": "voice_done", "key": "101106.061886", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.745}"}
+{"ts": 1785416455.330904, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416458.422177, "stage": "queued_for_voice", "key": "101112.432835333", "detail": "off_track"}
+{"ts": 1785416458.4226, "stage": "audio_enqueued", "key": "101112.432835333", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416458.42301, "stage": "audio_interrupt_purge", "key": "101112.432835333", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416458.4231591, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416458.423244, "stage": "voice_start", "key": "101112.432835333", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.001}"}
+{"ts": 1785416460.1265962, "stage": "voice_done", "key": "101112.432835333", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.703}"}
+{"ts": 1785416464.461746, "stage": "published", "key": "20260730_135739:S2_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416464.462198, "stage": "received", "key": "20260730_135739:S2_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416464.612732, "stage": "queued_for_voice", "key": "101118.623365333", "detail": "off_track"}
+{"ts": 1785416464.6130571, "stage": "audio_enqueued", "key": "101118.623365333", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416464.6131442, "stage": "audio_interrupt_purge", "key": "101118.623365333", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416464.613299, "stage": "voice_start", "key": "101118.623365333", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.001}"}
+{"ts": 1785416465.9727302, "stage": "guardrail_done", "key": "20260730_135739:S2_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416465.973421, "stage": "queued_for_voice", "key": "20260730_135739:S2_time_loss:1", "detail": "AI Coaching Speech"}
+{"ts": 1785416465.9736729, "stage": "audio_enqueued", "key": "20260730_135739:S2_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"interrupt\": false, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416465.973811, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416466.365738, "stage": "voice_done", "key": "101118.623365333", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.752}"}
+{"ts": 1785416466.3661308, "stage": "voice_start", "key": "20260730_135739:S2_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"wait_s\": 0.393}"}
+{"ts": 1785416468.786782, "stage": "queued_for_voice", "key": "101122.79739175", "detail": "off_track"}
+{"ts": 1785416468.7878451, "stage": "audio_enqueued", "key": "101122.79739175", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416468.7880352, "stage": "audio_interrupt_purge", "key": "101122.79739175", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416468.78822, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416468.809909, "stage": "voice_done", "key": "20260730_135739:S2_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"duration_s\": 2.443}"}
+{"ts": 1785416468.810169, "stage": "voice_start", "key": "101122.79739175", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.023}"}
+{"ts": 1785416470.5101922, "stage": "voice_done", "key": "101122.79739175", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.7}"}
+{"ts": 1785416738.351053, "stage": "published", "key": "20260730_140528:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416738.351816, "stage": "received", "key": "20260730_140528:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416739.923247, "stage": "guardrail_done", "key": "20260730_140528:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416739.930986, "stage": "queued_for_voice", "key": "20260730_140528:S1_time_loss:1", "detail": "AI Coaching Speech"}
+{"ts": 1785416739.931246, "stage": "audio_enqueued", "key": "20260730_140528:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"interrupt\": false, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416739.93137, "stage": "voice_start", "key": "20260730_140528:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"wait_s\": 0.0}"}
+{"ts": 1785416745.256135, "stage": "queued_for_voice", "key": "101399.265641458", "detail": "off_track"}
+{"ts": 1785416745.256659, "stage": "audio_enqueued", "key": "101399.265641458", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416745.257152, "stage": "audio_interrupt_purge", "key": "101399.265641458", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416745.257319, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416745.2892869, "stage": "voice_done", "key": "20260730_140528:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"duration_s\": 5.358}"}
+{"ts": 1785416745.2895648, "stage": "voice_start", "key": "101399.265641458", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.033}"}
+{"ts": 1785416747.0561311, "stage": "voice_done", "key": "101399.265641458", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.766}"}
+{"ts": 1785416748.293507, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416751.292893, "stage": "queued_for_voice", "key": "101405.302375458", "detail": "off_track"}
+{"ts": 1785416751.293258, "stage": "audio_enqueued", "key": "101405.302375458", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416751.293674, "stage": "audio_interrupt_purge", "key": "101405.302375458", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416751.293828, "stage": "voice_start", "key": "101405.302375458", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.001}"}
+{"ts": 1785416751.293907, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416753.0514078, "stage": "voice_done", "key": "101405.302375458", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.757}"}
+{"ts": 1785416754.293359, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416757.3158011, "stage": "queued_for_voice", "key": "101411.32525975", "detail": "off_track"}
+{"ts": 1785416757.317065, "stage": "audio_enqueued", "key": "101411.32525975", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416757.317239, "stage": "audio_interrupt_purge", "key": "101411.32525975", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416757.317447, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416757.3175051, "stage": "voice_start", "key": "101411.32525975", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.002}"}
+{"ts": 1785416759.075535, "stage": "voice_done", "key": "101411.32525975", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.758}"}
+{"ts": 1785416761.232702, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416766.989418, "stage": "queued_for_voice", "key": "101420.998836583", "detail": "off_track"}
+{"ts": 1785416766.9913018, "stage": "audio_enqueued", "key": "101420.998836583", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416766.991617, "stage": "audio_interrupt_purge", "key": "101420.998836583", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416766.992092, "stage": "voice_start", "key": "101420.998836583", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.003}"}
+{"ts": 1785416766.992175, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416767.5491872, "stage": "published", "key": "20260730_140528:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416767.549718, "stage": "received", "key": "20260730_140528:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416768.743472, "stage": "voice_done", "key": "101420.998836583", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.751}"}
+{"ts": 1785416769.160707, "stage": "guardrail_done", "key": "20260730_140528:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416769.1613052, "stage": "queued_for_voice", "key": "20260730_140528:S1_time_loss:1", "detail": "AI Coaching Speech"}
+{"ts": 1785416769.16151, "stage": "audio_enqueued", "key": "20260730_140528:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"interrupt\": false, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416769.161624, "stage": "voice_start", "key": "20260730_140528:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"wait_s\": 0.0}"}
+{"ts": 1785416771.206527, "stage": "queued_for_voice", "key": "101425.215929583", "detail": "off_track"}
+{"ts": 1785416771.2071931, "stage": "audio_enqueued", "key": "101425.215929583", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416771.2076302, "stage": "audio_interrupt_purge", "key": "101425.215929583", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416771.207906, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416771.240531, "stage": "voice_done", "key": "20260730_140528:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"duration_s\": 2.079}"}
+{"ts": 1785416771.2407942, "stage": "voice_start", "key": "101425.215929583", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.034}"}
+{"ts": 1785416773.041444, "stage": "voice_done", "key": "101425.215929583", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.801}"}
+{"ts": 1785416779.418769, "stage": "queued_for_voice", "key": "101433.428137041", "detail": "off_track"}
+{"ts": 1785416779.420095, "stage": "audio_enqueued", "key": "101433.428137041", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416779.420464, "stage": "audio_interrupt_purge", "key": "101433.428137041", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416779.421047, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416779.420974, "stage": "voice_start", "key": "101433.428137041", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.002}"}
+{"ts": 1785416781.1656802, "stage": "voice_done", "key": "101433.428137041", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.744}"}
+{"ts": 1785416782.218409, "stage": "published", "key": "20260730_140528:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416782.218848, "stage": "received", "key": "20260730_140528:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416783.751523, "stage": "guardrail_done", "key": "20260730_140528:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416783.752176, "stage": "queued_for_voice", "key": "20260730_140528:S1_time_loss:1", "detail": "AI Coaching Speech"}
+{"ts": 1785416783.752372, "stage": "audio_enqueued", "key": "20260730_140528:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"interrupt\": false, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416783.7524831, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416783.752552, "stage": "voice_start", "key": "20260730_140528:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"wait_s\": 0.0}"}
+{"ts": 1785416785.704281, "stage": "queued_for_voice", "key": "101439.713623208", "detail": "off_track"}
+{"ts": 1785416785.7061682, "stage": "audio_enqueued", "key": "101439.713623208", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416785.706534, "stage": "audio_interrupt_purge", "key": "101439.713623208", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416785.721777, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416785.72752, "stage": "voice_done", "key": "20260730_140528:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"duration_s\": 1.975}"}
+{"ts": 1785416785.727804, "stage": "voice_start", "key": "101439.713623208", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.024}"}
+{"ts": 1785416786.066313, "stage": "published", "key": "20260730_140528:turn1_poor_corner_exit:1", "detail": "poor_corner_exit"}
+{"ts": 1785416786.0668402, "stage": "received", "key": "20260730_140528:turn1_poor_corner_exit:1", "detail": "poor_corner_exit"}
+{"ts": 1785416787.3631868, "stage": "guardrail_done", "key": "20260730_140528:turn1_poor_corner_exit:1", "detail": "poor_corner_exit"}
+{"ts": 1785416787.365386, "stage": "queued_for_voice", "key": "20260730_140528:turn1_poor_corner_exit:1", "detail": "AI Coaching Speech"}
+{"ts": 1785416787.365558, "stage": "audio_enqueued", "key": "20260730_140528:turn1_poor_corner_exit:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"interrupt\": false, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416787.451618, "stage": "voice_done", "key": "101439.713623208", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.724}"}
+{"ts": 1785416787.4519832, "stage": "voice_start", "key": "20260730_140528:turn1_poor_corner_exit:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"wait_s\": 0.087}"}
+{"ts": 1785416791.888812, "stage": "queued_for_voice", "key": "101445.898131791", "detail": "off_track"}
+{"ts": 1785416791.889248, "stage": "audio_enqueued", "key": "101445.898131791", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"interrupt\": true, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416791.889699, "stage": "audio_interrupt_purge", "key": "101445.898131791", "detail": "{\"purged_count\": 0, \"purged\": []}"}
+{"ts": 1785416791.889885, "stage": "received", "key": "None:off_track:None", "detail": "poor_track_position"}
+{"ts": 1785416791.9185421, "stage": "voice_done", "key": "20260730_140528:turn1_poor_corner_exit:1", "detail": "{\"description\": \"AI Coaching Speech\", \"duration_s\": 4.466}"}
+{"ts": 1785416791.918893, "stage": "voice_start", "key": "101445.898131791", "detail": "{\"description\": \"off_track\", \"priority\": \"high\", \"wait_s\": 0.03}"}
+{"ts": 1785416793.680384, "stage": "voice_done", "key": "101445.898131791", "detail": "{\"description\": \"off_track\", \"duration_s\": 1.761}"}
+{"ts": 1785416990.138718, "stage": "published", "key": "20260730_140940:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416990.140811, "stage": "received", "key": "20260730_140940:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416991.741218, "stage": "guardrail_done", "key": "20260730_140940:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785416991.7418659, "stage": "queued_for_voice", "key": "20260730_140940:S1_time_loss:1", "detail": "AI Coaching Speech"}
+{"ts": 1785416991.7420852, "stage": "audio_enqueued", "key": "20260730_140940:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"interrupt\": false, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785416991.742199, "stage": "voice_start", "key": "20260730_140940:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"wait_s\": 0.0}"}
+{"ts": 1785417001.668332, "stage": "published", "key": "20260730_140940:turn1_poor_corner_exit:1", "detail": "poor_corner_exit"}
+{"ts": 1785417001.6689322, "stage": "received", "key": "20260730_140940:turn1_poor_corner_exit:1", "detail": "poor_corner_exit"}
+{"ts": 1785417002.3488169, "stage": "voice_done", "key": "20260730_140940:S1_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"duration_s\": 10.606}"}
+{"ts": 1785417002.9715729, "stage": "guardrail_done", "key": "20260730_140940:turn1_poor_corner_exit:1", "detail": "poor_corner_exit"}
+{"ts": 1785417002.972211, "stage": "queued_for_voice", "key": "20260730_140940:turn1_poor_corner_exit:1", "detail": "AI Coaching Speech"}
+{"ts": 1785417002.972447, "stage": "audio_enqueued", "key": "20260730_140940:turn1_poor_corner_exit:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"interrupt\": false, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785417002.972586, "stage": "voice_start", "key": "20260730_140940:turn1_poor_corner_exit:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"wait_s\": 0.0}"}
+{"ts": 1785417004.698427, "stage": "published", "key": "20260730_140940:turn2_poor_corner_exit:1", "detail": "poor_corner_exit"}
+{"ts": 1785417004.69898, "stage": "received", "key": "20260730_140940:turn2_poor_corner_exit:1", "detail": "poor_corner_exit"}
+{"ts": 1785417005.704861, "stage": "guardrail_done", "key": "20260730_140940:turn2_poor_corner_exit:1", "detail": "poor_corner_exit"}
+{"ts": 1785417005.705527, "stage": "queued_for_voice", "key": "20260730_140940:turn2_poor_corner_exit:1", "detail": "AI Coaching Speech"}
+{"ts": 1785417005.705659, "stage": "audio_enqueued", "key": "20260730_140940:turn2_poor_corner_exit:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"interrupt\": false, \"mode\": \"speech\", \"queue_len_before\": 0}"}
+{"ts": 1785417011.6894221, "stage": "voice_done", "key": "20260730_140940:turn1_poor_corner_exit:1", "detail": "{\"description\": \"AI Coaching Speech\", \"duration_s\": 8.717}"}
+{"ts": 1785417011.690013, "stage": "voice_start", "key": "20260730_140940:turn2_poor_corner_exit:1", "detail": "{\"description\": \"AI Coaching Speech\", \"priority\": \"normal\", \"wait_s\": 5.984}"}
+{"ts": 1785417011.6901948, "stage": "audio_dropped_stale", "key": "20260730_140940:turn2_poor_corner_exit:1", "detail": "{\"description\": \"AI Coaching Speech\", \"age_s\": 5.985}"}
