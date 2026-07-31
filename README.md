@@ -23,7 +23,7 @@ Integrating IBM Granite models into an Open Source racing simulator - TORCS.
   - [6.3 Real-Time Coaching](#63-real-time-coaching)
   - [6.4 Post-Race Summary & Graceful System Shutdown](#64-post-race-summary--graceful-system-shutdown)
 - [7. Troubleshooting & FAQs](#7-troubleshooting--faqs)
-- [Appendix: Acquiring Expert Telemetry via Java Sidecar](#appendix-acquiring-expert-telemetry-via-java-sidecar)
+- [Appendix: Acquiring Expert Telemetry](#appendix-acquiring-expert-telemetry)
 
 ## 1. Prerequisites & Environment Setup
 Before running the AI-Enhanced F1 Simulator, ensure your system satisfies the hardware/OS requirements, runtime environments, and local AI model dependencies detailed below.
@@ -435,7 +435,7 @@ Data saved successfully and safely! Absolute file path: .../telemetry_20260729_2
 ## 7. Troubleshooting & FAQs
 
 
-## Appendix: Acquiring Expert Telemetry via Java Sidecar
+## Appendix: Acquiring Expert Telemetry
 
 To evaluate player performance against a competitive benchmark, expert baseline telemetry is collected from **Ahura** (a Java-based champion agent for TORCS) using a **Cross-Language Sidecar Pattern**.
 
