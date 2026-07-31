@@ -11,10 +11,9 @@ Integrating IBM Granite models into an Open Source racing simulator - TORCS.
   - [2.2 Configuring TORCS Race & Telemetry Server](#22-configuring-torcs-race--telemetry-server)
   - [2.3 Telemetry Integration Architecture](#23-telemetry-integration-architecture)
 - [3. IBM Granite / Local LLM Integration](#3-ibm-granite--local-llm-integration)
-  - [3.1 Prerequisites — Install Ollama and Download Granite](#31-prerequisites--install-ollama-and-download-granite)
-  - [3.2 Connection Architecture](#32-connection-architecture)
-  - [3.3 Configuration (llm_client.py)](#33-configuration)
-  - [3.4 Prompt Structure (prompts.py)](#34-prompt-structure)
+  - [3.1 Connection Architecture](#31-connection-architecture)
+  - [3.2 Configuration](#32-configuration)
+  - [3.3 Prompt Structure](#33-prompt-structure)
 - [4. Pipeline Architecture & Core Middleware](#4-pipeline-architecture--core-middleware)
   - [4.1 Hybrid Architecture & Data Flow](#41-hybrid-architecture--data-flow)
   - [4.2 Core Python Modules & Data Architecture](#42-core-python-modules--data-architecture)
@@ -178,33 +177,10 @@ The interaction between the simulator and the client application operates as a l
 * **Driving Commands:** Based on incoming telemetry and control logic, `Python (client.py)` computes and sends actionable control inputs back to the TORCS server in real time.
 
 ## 3. IBM Granite / Local LLM Integration
+
 Every coaching line comes from **IBM Granite 2B** (`granite3-dense:2b`), running locally through **Ollama**. No API key, no network call during inference.
 
-### 3.1 Prerequisites — Install Ollama and Download Granite
-
-**Step 1 — Install Ollama**
-
-Go to https://ollama.com and download the installer for your operating system (Mac, Windows, or Linux).
-
-**Step 2 — Download the Granite model**
-
-```bash
-ollama pull granite3-dense:2b
-```
-
-This downloads the model (around 1.6 GB). You only need to do this once.
-
-**Step 3 — Verify it works**
-
-```bash
-ollama run granite3-dense:2b "hello"
-```
-
-If you see a response, Granite is ready. The system will start Ollama automatically when you run the pipeline.
-
----
-
-### 3.2 Connection Architecture
+### 3.1 Connection Architecture
 
 `llm/llm_client.py` handles the connection using the official `ollama` Python package. Ollama runs at `http://localhost:11434` by default:
 
@@ -220,7 +196,7 @@ When the system starts, it automatically checks if Ollama is running, starts it 
 
 ---
 
-### 3.3 Configuration
+### 3.2 Configuration
 
 No API key needed. There are only two settings to know about:
 
@@ -248,7 +224,7 @@ ollama pull granite3-dense:8b
 
 ---
 
-### 3.4 Prompt Structure
+### 3.3 Prompt Structure
 
 Each coaching call sends Granite two messages:
 
