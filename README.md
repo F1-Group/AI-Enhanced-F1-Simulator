@@ -29,17 +29,18 @@ Integrating IBM Granite models into an Open Source racing simulator - TORCS.
 Before running the AI-Enhanced F1 Simulator, ensure your system satisfies the hardware/OS requirements, runtime environments, and local AI model dependencies detailed below.
 
 ### 1.1 System Requirements
+> **Supported platforms:** macOS and Windows only. Linux is not supported - the upstream TORCS `scr_server` telemetry option this project depends on cannot be built/installed on Linux, which is outside this project's control.
+
 * **Operating System:** 
-  * **Linux:** Ubuntu 22.04 LTS (native recommended).
   * **Windows:** Windows 10/11.
   * **macOS:** macOS 12+ (Intel / Apple Silicon). *Note: Running TORCS on macOS requires [Wine](https://www.winehq.org/) to emulate the x86/Windows environment.*
 * **RAM:** Minimum 8 GB (16 GB recommended to handle simultaneous simulation and LLM inference).
 * **Python Environment:** Python 3.13.0+ (ensure `pip` and `venv` are configured).
 
 > **Cross-Platform Note on Terminal Commands:**
-> * **Python Executable:** Use `python3` on macOS/Linux and `python` (or `py`) on Windows.
+> * **Python Executable:** Use `python3` on macOS and `python` (or `py`) on Windows.
 > * **Virtual Environment Activation:** 
->   * macOS/Linux: `source venv/bin/activate`
+>   * macOS: `source venv/bin/activate`
 >   * Windows: `.\venv\Scripts\activate`
 > * **Path Separators:** Replace `/` with `\` if you are using Windows CMD/PowerShell.
 ---
@@ -54,13 +55,13 @@ git clone https://github.com/F1-Group/AI-Enhanced-F1-Simulator.git
 cd AI-Enhanced-F1-Simulator/
 
 # Create virtual environment
-# macOS / Linux
+# macOS
 python3 -m venv venv  
 # Windows
 python -m venv venv
 
 # Activate virtual environment
-# macOS / Linux
+# macOS
 source venv/bin/activate  
 # Windows
 venv\Scripts\activate
@@ -73,10 +74,6 @@ pip install -r requirements.txt
 The coaching middleware uses a localized, offline **Ollama** server running **IBM Granite 2B** weights to eliminate cloud API latency and avoid token limits.
 #### Step 1: Install Ollama
 Open a new terminal window.
-* **Linux:**
-  ```bash
-  curl -fsSL https://ollama.com/install.sh | sh
-  ```
 * **macOS:** Download and install the application directly from [Ollama.com](https://ollama.com/download/mac) or install via Homebrew:
   ```bash
   # Install Homebrew if not already installed
@@ -112,21 +109,13 @@ Close the terminal window.
 ## 2. TORCS & Telemetry Configuration
 This section guides you through installing the **TORCS (The Open Racing Car Simulator)** simulator and configuring its telemetry server to stream vehicle data (`scr_server`) over UDP sockets to the Python coaching middleware.
 ### 2.1 TORCS Installation & Setup
-TORCS is supported natively on Windows and Linux, while macOS requires **Wine** emulation.
+TORCS is supported natively on Windows, while macOS requires **Wine** emulation.
 
 #### A. Windows Installation
 1. Download and unzip `torcs.zip` from the [Link](https://drive.google.com/file/d/1aJni3MQl82gNy2QpoM6IKRdqoTUjGNQd/view?usp=sharing).
 2. Verify `torcs\wtorcs.exe` is executable.
 
-#### B. Linux (Ubuntu / Debian) Installation
-1. Install TORCS via the system package manager:
-   ```bash
-   sudo apt-get update
-   sudo apt-get install torcs
-   ```
-2. Verify installation by running `torcs` in your terminal.
-
-#### C. macOS Installation (via Wine)
+#### B. macOS Installation (via Wine)
 Running TORCS on macOS requires running the Windows binary under **Wine**.
 1. Download and unzip `torcs.zip` from the [Link](https://drive.google.com/file/d/1aJni3MQl82gNy2QpoM6IKRdqoTUjGNQd/view?usp=sharing) to your preferred directory (e.g., `$HOME/torcs` or `/Applications/torcs`)..
 2. Install Wine via Homebrew or [Wine Download](https://www.winehq.org/):
@@ -265,7 +254,7 @@ Before running the middleware, set up your Python environment and install the re
     ```
 2. Activate your Python virtual environment (if applicable):
     ```bash
-    # macOS / Linux
+    # macOS
     source venv/bin/activate
     # Windows
     .\venv\Scripts\activate
