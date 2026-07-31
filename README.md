@@ -23,6 +23,7 @@ Integrating IBM Granite models into an Open Source racing simulator - TORCS.
   - [6.3 Real-Time Coaching](#63-real-time-coaching)
   - [6.4 Post-Race Summary & Graceful System Shutdown](#64-post-race-summary--graceful-system-shutdown)
 - [7. Troubleshooting & FAQs](#7-troubleshooting--faqs)
+- [Appendix: Acquiring Expert Telemetry via Java Sidecar](#appendix-acquiring-expert-telemetry-via-java-sidecar)
 
 ## 1. Prerequisites & Environment Setup
 Before running the AI-Enhanced F1 Simulator, ensure your system satisfies the hardware/OS requirements, runtime environments, and local AI model dependencies detailed below.
@@ -34,6 +35,13 @@ Before running the AI-Enhanced F1 Simulator, ensure your system satisfies the ha
   * **macOS:** macOS 12+ (Intel / Apple Silicon). *Note: Running TORCS on macOS requires [Wine](https://www.winehq.org/) to emulate the x86/Windows environment.*
 * **RAM:** Minimum 8 GB (16 GB recommended to handle simultaneous simulation and LLM inference).
 * **Python Environment:** Python 3.13.0+ (ensure `pip` and `venv` are configured).
+
+> **Cross-Platform Note on Terminal Commands:**
+> * **Python Executable:** Use `python3` on macOS/Linux and `python` (or `py`) on Windows.
+> * **Virtual Environment Activation:** 
+>   * macOS/Linux: `source venv/bin/activate`
+>   * Windows: `.\venv\Scripts\activate`
+> * **Path Separators:** Replace `/` with `\` if you are using Windows CMD/PowerShell.
 ---
 ### 1.2 Repository & Dependency Installation
 
@@ -425,3 +433,47 @@ Data saved successfully and safely! Absolute file path: .../telemetry_20260729_2
 
 
 ## 7. Troubleshooting & FAQs
+
+---
+
+## Appendix: Acquiring Expert Telemetry via Java Sidecar
+
+To evaluate player performance against a competitive benchmark, expert baseline telemetry is collected from **Ahura** (a Java-based champion agent for TORCS) using a **Cross-Language Sidecar Pattern**.
+
+
+### A. Technical Overview (Data Decoupling & Protocol Alignment)
+
+* **Java UDP Broadcast:** Ahura's core communication module (`Client.java`) is extended to broadcast real-time telemetry packets and control inputs over UDP on Port `3002`.
+* **Python Sidecar Listener:** A dedicated background thread in Python listens on Port `3002`, asynchronously parsing, cleaning, and logging the incoming stream to CSV.
+
+---
+
+### B. Step-by-Step Recording Guide
+
+#### Step 1: Initialize TORCS Server
+Follow [Section 2.2: Configuring TORCS Race & Telemetry Server](#22-configuring-torcs-race--telemetry-server) until TORCS displays:
+```text
+Initializing Driver scr_server 1...
+```
+#### Step 2: Start Python Receiver Sidecar
+Open a new terminal tab/window and run:
+```bash
+cd /path/to/your/repository
+cd Baseline/Python
+python3 client.py
+```
+*(Verify the terminal outputs: Waiting for data at port 3002...)*
+
+#### Step 3: Launch Ahura Java Agent
+Open another terminal tab/window and execute:
+```bash
+cd /path/to/your/repository
+cd Baseline/Ahura
+java -cp bin ahuraDriver.Client ahuraDriver.DriverControllerE6 host:127.0.0.1 port:3001
+```
+
+#### Step 4: Verification & Output Log
+Once connected, Ahura will take control of the car in TORCS. The Python listener will continuously capture telemetry and save the final benchmark dataset to:
+```text
+Baseline/Python/expert_data/expert_data.csv
+```
