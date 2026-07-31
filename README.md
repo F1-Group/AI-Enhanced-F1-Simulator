@@ -11,9 +11,10 @@ Integrating IBM Granite models into an Open Source racing simulator - TORCS.
   - [2.2 Configuring TORCS Race & Telemetry Server](#22-configuring-torcs-race--telemetry-server)
   - [2.3 Telemetry Integration Architecture](#23-telemetry-integration-architecture)
 - [3. IBM Granite / Local LLM Integration](#3-ibm-granite--local-llm-integration)
-  - [3.1 Connection Architecture](#31-connection-architecture)
-  - [3.2 Configuration (llm_client.py)](#32-configuration-llm_clientpy)
-  - [3.3 Prompt Structure (prompts.py)](#33-prompt-structure-promptspy)
+  - [3.1 Prerequisites — Install Ollama and Download Granite](#31-prerequisites--install-ollama-and-download-granite)
+  - [3.2 Connection Architecture](#32-connection-architecture)
+  - [3.3 Configuration (llm_client.py)](#33-configuration)
+  - [3.4 Prompt Structure (prompts.py)](#34-prompt-structure)
 - [4. Pipeline Architecture & Core Middleware](#4-pipeline-architecture--core-middleware)
   - [4.1 Hybrid Architecture & Data Flow](#41-hybrid-architecture--data-flow)
   - [4.2 Core Python Modules & Data Architecture](#42-core-python-modules--data-architecture)
@@ -177,53 +178,77 @@ The interaction between the simulator and the client application operates as a l
 * **Driving Commands:** Based on incoming telemetry and control logic, `Python (client.py)` computes and sends actionable control inputs back to the TORCS server in real time.
 
 ## 3. IBM Granite / Local LLM Integration
+Every coaching line comes from **IBM Granite 2B** (`granite3-dense:2b`), running locally through **Ollama**. No API key, no network call during inference.
 
-No cloud LLM here. Every coaching line comes from **IBM Granite 2B** (`granite3-dense:2b`), running locally through **Ollama**. No API key, no network call during inference.
+### 3.1 Prerequisites — Install Ollama and Download Granite
 
-### 3.1 Connection Architecture
+**Step 1 — Install Ollama**
 
-`llm/llm_client.py` handles the connection. It uses the official `ollama` Python package instead of raw HTTP, so it only needs a model name. Ollama's own daemon handles the connection at `http://localhost:11434`:
+Go to https://ollama.com and download the installer for your operating system (Mac, Windows, or Linux).
+
+**Step 2 — Download the Granite model**
+
+```bash
+ollama pull granite3-dense:2b
+```
+
+This downloads the model (around 1.6 GB). You only need to do this once.
+
+**Step 3 — Verify it works**
+
+```bash
+ollama run granite3-dense:2b "hello"
+```
+
+If you see a response, Granite is ready. The system will start Ollama automatically when you run the pipeline.
+
+---
+
+### 3.2 Connection Architecture
+
+`llm/llm_client.py` handles the connection using the official `ollama` Python package. Ollama runs at `http://localhost:11434` by default:
 
 ```python
 import ollama
 
 MODEL_NAME = "granite3-dense:2b"
-
 REQUEST_TIMEOUT_SECONDS = 10
 _client = ollama.Client(timeout=REQUEST_TIMEOUT_SECONDS)
 ```
 
-`init_granite_model()` runs at startup and does three things: checks if Ollama is already running (`_client.list()`), starts `ollama serve` in the background if not, then sends a throwaway `"hi"` request so the model is already loaded before the race starts. This avoids a slow first response later.
+When the system starts, it automatically checks if Ollama is running, starts it if not, and sends a warmup message to load the model into memory before the race begins.
 
-`get_ai_link_status()` is a simple health check for the Dashboard GUI (`_client.chat()` with a `"ping"` message). `ask_race_engineer(system_prompt, user_prompt)` is the function every coaching request goes through. It retries once on failure, then raises an error. `ai_core.py` catches that and falls back to the static `FALLBACK_SCRIPTS` text, or trips the circuit breaker.
+---
 
-### 3.2 Configuration (`llm_client.py`)
+### 3.3 Configuration
 
-There's no separate `config.py`. Inference is local and needs no authentication, so there are only two settings, both constants in `llm/llm_client.py`:
+No API key needed. There are only two settings to know about:
 
-| Setting | Location | Default | Purpose |
-| :--- | :--- | :--- | :--- |
-| `MODEL_NAME` | `llm_client.py:9` | `"granite3-dense:2b"` | Which locally-pulled Ollama model to query. Must match a model already pulled via `ollama pull <name>`. |
-| `REQUEST_TIMEOUT_SECONDS` | `llm_client.py:15` | `10` | Per-call timeout so a stalled/loading Ollama server fails fast instead of hanging the coaching thread. |
-| `_client` (`ollama.Client(...)`) | `llm_client.py:16` | host unset → Ollama's own default `http://localhost:11434` | The client instance used for every request. |
+| Setting | Default | Purpose |
+| :--- | :--- | :--- |
+| `MODEL_NAME` | `"granite3-dense:2b"` | Which Ollama model to use. Must be pulled first with `ollama pull <name>`. |
+| `REQUEST_TIMEOUT_SECONDS` | `10` | How long to wait before giving up on a slow response. |
 
-There's no API key field, because Ollama serves models locally with no authentication by default.
-
-To use a different model, or an Ollama instance on a different host/port (e.g. another machine on the LAN), edit these two lines:
+To switch to a different model or a non-default Ollama host, edit these two lines in `llm/llm_client.py`:
 
 ```python
-# llm/llm_client.py
-MODEL_NAME = "granite3-dense:8b"           # swap to any other locally-pulled model
+MODEL_NAME = "granite3-dense:8b"
 
 _client = ollama.Client(
-    host="http://127.0.0.1:11434",         # override only if Ollama isn't on the default host/port
+    host="http://127.0.0.1:11434",
     timeout=REQUEST_TIMEOUT_SECONDS,
 )
 ```
 
-Pull the new model first (`ollama pull granite3-dense:8b`). `init_granite_model()` will only warn, not fail, if the model isn't downloaded yet.
+Then pull the new model first:
 
-### 3.3 Prompt Structure (`prompts.py`)
+```bash
+ollama pull granite3-dense:8b
+```
+
+---
+
+### 3.4 Prompt Structure
 
 Each coaching call sends Granite two messages:
 
@@ -234,23 +259,21 @@ messages = [
 ]
 ```
 
-The system prompt comes from `coaching_style.get_system_prompt(style)`. It picks one of three fixed personas (`aggressive`, `supportive`, `technical`; default is `technical`). All three share the same `_SHARED_RULES` block. This block sets the domain knowledge Granite can use (tyre slip thresholds, fuel-weight effect, sector loss thresholds, etc.) and hard rules it must follow: never invent a number that isn't in the telemetry, never say "delta", and reply like a real race engineer on the radio.
+The system prompt picks one of three coaching personas (`aggressive`, `supportive`, `technical`; default is `technical`). All three share the same core rules: never invent a number that is not in the telemetry, and reply like a real race engineer on the radio.
 
-The user prompt comes from `prompts.build_user_prompt(telemetry, coaching_request, knowledge)`. It formats the live telemetry as plain key/value lines:
+The user prompt formats the live telemetry as plain text:
 
 ```text
-TELEMETRY DATA (a single instantaneous snapshot, no expert comparison — do not
-invent a target/adjustment number for any of these fields unless that same
-field also appears in the Evidence below):
+TELEMETRY DATA:
 - Lap distance: 1820.5m
 - Speed: 212.4 km/h
-- Track position (centerline offset): 0.15
-- Car angle vs track: 0.03
+- Track position: 0.15
+- Car angle: 0.03
 - Wheel spin: 0.12
-- Current lap time: 88.3s
-- Throttle input: 0.68
-- Brake input: 0.45
-- Steering angle: -0.12
+- Lap time: 88.3s
+- Throttle: 0.68
+- Brake: 0.45
+- Steering: -0.12
 - Gear: 5
 - RPM: 11200
 
@@ -259,7 +282,7 @@ COACHING CONTEXT: Brake 25m earlier before T1.
 REPLY IN ONE SENTENCE ONLY. Maximum 20 words.
 ```
 
-`telemetry` is the raw dict off the UDP stream (see [Section 2.3](#23-telemetry-integration-architecture)). `coaching_request` is the hint text from the error-detection layer (e.g. `"Brake 25m earlier before T1."`). The one-sentence / 20-word limit keeps replies short enough to speak aloud without lagging behind the live telemetry.
+The 20-word limit keeps responses short enough to speak aloud without falling behind the live race.
 
 ## 4. Pipeline Architecture & Core Middleware
 
