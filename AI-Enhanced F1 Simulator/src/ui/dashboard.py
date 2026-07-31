@@ -205,11 +205,19 @@ class TelemetryDashboard:
         ).pack(pady=(0, 25))
 
         instructions_text = (
-            "1. Start TORCS Simulator on your PC.\n"
-            "2. Select 'Race' -> 'Quick Race' and configure UDP server (Port 3001).\n"
-            "3. Click 'START SYSTEM' on the Home screen to connect.\n"
-            "4. Monitor real-time speed, RPM, throttle, and track status on Live Dashboard.\n"
-            "5. Receive live coaching advice from AI Race Engineer in the console."
+            "1. Driving Controls\n"
+            "• ↑ / ↓ : Throttle / Brake\n"
+            "• ← / → : Steer Left / Right\n"
+            "• A(a) / Z(z) : Shift Up / Down (Hold Z past N for Reverse)\n"
+            "• F1 : In-Game Keys Menu\n\n"
+            "2. Setup & Connection\n"
+            "• Launch TORCS on your PC.\n"
+            "• Go to 'Race' > 'Quick Race' > 'Configure Race'.\n"
+            "• Set Track to 'Olethros Road 1'.\n"
+            "• Add 'scr_server 1' to the driver list.\n"
+            "• Click 'New Race' in TORCS.\n"
+            "• When TORCS shows 'Initializing Driver...', return here and click 'New Race'.\n"
+            "• Once connected, live telemetry will start automatically!"
         )
 
         tk.Label(
@@ -777,7 +785,7 @@ class TelemetryDashboard:
                 prefix = f"[{current_time}] [SUMMARY] "
                 tag = "summary"
             else:
-                prefix = f"[{current_time}] [AI COACH]"
+                prefix = f"[{current_time}] [AI COACH] "
                 tag = "slow"
 
             self.txt_coach.insert("end", prefix, "time")

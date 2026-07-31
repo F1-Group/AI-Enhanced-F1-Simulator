@@ -33,7 +33,7 @@ Before running the AI-Enhanced F1 Simulator, ensure your system satisfies the ha
   * **Windows:** Windows 10/11.
   * **macOS:** macOS 12+ (Intel / Apple Silicon). *Note: Running TORCS on macOS requires [Wine](https://www.winehq.org/) to emulate the x86/Windows environment.*
 * **RAM:** Minimum 8 GB (16 GB recommended to handle simultaneous simulation and LLM inference).
-* **Python Environment:** Python 3.13+ (ensure `pip` and `venv` are configured).
+* **Python Environment:** Python 3.13.0+ (ensure `pip` and `venv` are configured).
 ---
 ### 1.2 Repository & Dependency Installation
 
@@ -75,7 +75,10 @@ Open a new terminal window.
   brew install ollama
   ```
 
-* **Windows:** Download and run the installer directly from [Ollama.com](https://ollama.com/download/windows)
+* **Windows:** Download and run the installer directly from [Ollama.com](https://ollama.com/download/windows) or install via PowerShell:
+  ```bash
+  irm https://ollama.com/install.ps1 | iex
+  ```
 
 #### Step 2: Pull the Granite 2B Model
 Pull the specific 2B dense model weights to your local machine:
@@ -104,7 +107,7 @@ This section guides you through installing the **TORCS (The Open Racing Car Simu
 TORCS is supported natively on Windows and Linux, while macOS requires **Wine** emulation.
 
 #### A. Windows Installation
-1. Download and unzip `torcs.zip` from the [Link](https://drive.google.com/file/d/1edIgHxBrDELr5LQM50B-2MpmcIX0DVQt/view?usp=sharing).
+1. Download and unzip `torcs.zip` from the [Link](https://drive.google.com/file/d/1aJni3MQl82gNy2QpoM6IKRdqoTUjGNQd/view?usp=sharing).
 2. Verify `torcs\wtorcs.exe` is executable.
 
 #### B. Linux (Ubuntu / Debian) Installation
@@ -117,7 +120,7 @@ TORCS is supported natively on Windows and Linux, while macOS requires **Wine** 
 
 #### C. macOS Installation (via Wine)
 Running TORCS on macOS requires running the Windows binary under **Wine**.
-1. Download and unzip `torcs.zip` from the [Link](https://drive.google.com/file/d/1edIgHxBrDELr5LQM50B-2MpmcIX0DVQt/view?usp=sharing) to your preferred directory (e.g., `$HOME/torcs` or `/Applications/torcs`)..
+1. Download and unzip `torcs.zip` from the [Link](https://drive.google.com/file/d/1aJni3MQl82gNy2QpoM6IKRdqoTUjGNQd/view?usp=sharing) to your preferred directory (e.g., `$HOME/torcs` or `/Applications/torcs`)..
 2. Install Wine via Homebrew or [Wine Download](https://www.winehq.org/):
     ```bash
     # Install Homebrew if not already installed
@@ -229,11 +232,21 @@ Ensure your local Ollama background daemon is active and serving requests.
     ```bash
     ollama serve
     ```
+    > **Note on Potential Port Conflicts:**  
+    > If you see the error `listen tcp 127.0.0.1:11434: bind: Only one usage of each socket address...`, **this is normal**. It indicates that the Ollama server is already running in the background (e.g., in your system tray). You can safely ignore this warning and proceed to the next step.
+
 2. Verify that the Granite 2B model is pulled and ready:
     ```bash
     ollama list
     ```
-*(Ensure granite3-dense:2b is present in the output list.)*
+    *(Ensure `granite3-dense:2b` is present in the output list.)*
+
+3. **Pre-warm the Granite Model (Recommended):**  
+   To prevent `Error: timed out` during application initialization—which can happen when the system loads Hugging Face embedding models and ChromaDB vector databases simultaneously—it is strongly recommended to pre-warm the Granite model into memory before launching the main application:
+    ```bash
+    ollama run granite3-dense:2b "Hello"
+    ```
+    *(Once you receive a response, press `Ctrl+D` or type `/bye` to exit. The model will remain primed in system memory for fast initialization.)*
 
 #### Step 2: Launch Middleware Application
 Before running the middleware, set up your Python environment and install the required dependencies (for detailed installation instructions, please refer to [Section 1.2: Repository & Dependency Installation](#12-repository--dependency-installation)).
