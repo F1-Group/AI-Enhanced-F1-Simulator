@@ -11,6 +11,10 @@ Integrating IBM Granite models into an Open Source racing simulator - TORCS.
   - [2.2 Configuring TORCS Race & Telemetry Server](#22-configuring-torcs-race--telemetry-server)
   - [2.3 Telemetry Integration Architecture](#23-telemetry-integration-architecture)
 - [3. IBM Granite / Local LLM Integration](#3-ibm-granite--local-llm-integration)
+  - [3.1 Prerequisites — Install Ollama and Download Granite](#31-prerequisites--install-ollama-and-download-granite)
+  - [3.2 Connection Architecture](#32-connection-architecture)
+  - [3.3 Configuration (llm_client.py)](#33-configuration)
+  - [3.4 Prompt Structure (prompts.py)](#34-prompt-structure)
 - [4. Pipeline Architecture & Core Middleware](#4-pipeline-architecture--core-middleware)
   - [4.1 Hybrid Architecture & Data Flow](#41-hybrid-architecture--data-flow)
   - [4.2 Core Python Modules & Data Architecture](#42-core-python-modules--data-architecture)
@@ -182,7 +186,111 @@ The interaction between the simulator and the client application operates as a l
 * **Driving Commands:** Based on incoming telemetry and control logic, `Python (client.py)` computes and sends actionable control inputs back to the TORCS server in real time.
 
 ## 3. IBM Granite / Local LLM Integration
+Every coaching line comes from **IBM Granite 2B** (`granite3-dense:2b`), running locally through **Ollama**. No API key, no network call during inference.
 
+### 3.1 Prerequisites — Install Ollama and Download Granite
+
+**Step 1 — Install Ollama**
+
+Go to https://ollama.com and download the installer for your operating system (Mac, Windows, or Linux).
+
+**Step 2 — Download the Granite model**
+
+```bash
+ollama pull granite3-dense:2b
+```
+
+This downloads the model (around 1.6 GB). You only need to do this once.
+
+**Step 3 — Verify it works**
+
+```bash
+ollama run granite3-dense:2b "hello"
+```
+
+If you see a response, Granite is ready. The system will start Ollama automatically when you run the pipeline.
+
+---
+
+### 3.2 Connection Architecture
+
+`llm/llm_client.py` handles the connection using the official `ollama` Python package. Ollama runs at `http://localhost:11434` by default:
+
+```python
+import ollama
+
+MODEL_NAME = "granite3-dense:2b"
+REQUEST_TIMEOUT_SECONDS = 10
+_client = ollama.Client(timeout=REQUEST_TIMEOUT_SECONDS)
+```
+
+When the system starts, it automatically checks if Ollama is running, starts it if not, and sends a warmup message to load the model into memory before the race begins.
+
+---
+
+### 3.3 Configuration
+
+No API key needed. There are only two settings to know about:
+
+| Setting | Default | Purpose |
+| :--- | :--- | :--- |
+| `MODEL_NAME` | `"granite3-dense:2b"` | Which Ollama model to use. Must be pulled first with `ollama pull <name>`. |
+| `REQUEST_TIMEOUT_SECONDS` | `10` | How long to wait before giving up on a slow response. |
+
+To switch to a different model or a non-default Ollama host, edit these two lines in `llm/llm_client.py`:
+
+```python
+MODEL_NAME = "granite3-dense:8b"
+
+_client = ollama.Client(
+    host="http://127.0.0.1:11434",
+    timeout=REQUEST_TIMEOUT_SECONDS,
+)
+```
+
+Then pull the new model first:
+
+```bash
+ollama pull granite3-dense:8b
+```
+
+---
+
+### 3.4 Prompt Structure
+
+Each coaching call sends Granite two messages:
+
+```python
+messages = [
+    {"role": "system", "content": system_prompt},  # persona, from coaching_style.py
+    {"role": "user",   "content": user_prompt},     # telemetry + context, from prompts.py
+]
+```
+
+The system prompt picks one of three coaching personas (`aggressive`, `supportive`, `technical`; default is `technical`). All three share the same core rules: never invent a number that is not in the telemetry, and reply like a real race engineer on the radio.
+
+The user prompt formats the live telemetry as plain text:
+
+```text
+TELEMETRY DATA:
+- Lap distance: 1820.5m
+- Speed: 212.4 km/h
+- Track position: 0.15
+- Car angle: 0.03
+- Wheel spin: 0.12
+- Lap time: 88.3s
+- Throttle: 0.68
+- Brake: 0.45
+- Steering: -0.12
+- Gear: 5
+- RPM: 11200
+
+COACHING CONTEXT: Brake 25m earlier before T1.
+
+REPLY IN ONE SENTENCE ONLY. Maximum 20 words.
+```
+
+The 20-word limit keeps responses short enough to speak aloud without falling behind the live race.
 
 ## 4. Pipeline Architecture & Core Middleware
 
