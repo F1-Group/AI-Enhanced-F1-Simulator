@@ -434,7 +434,6 @@ Data saved successfully and safely! Absolute file path: .../telemetry_20260729_2
 
 ## 7. Troubleshooting & FAQs
 
----
 
 ## Appendix: Acquiring Expert Telemetry via Java Sidecar
 
