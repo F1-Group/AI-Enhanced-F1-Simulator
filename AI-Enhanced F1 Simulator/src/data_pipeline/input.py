@@ -127,8 +127,5 @@ class InputHandler:
 
         return self.state
 
-    def get_action(self):
-        return self.update()
-
 if __name__ == '__main__':
     pass
