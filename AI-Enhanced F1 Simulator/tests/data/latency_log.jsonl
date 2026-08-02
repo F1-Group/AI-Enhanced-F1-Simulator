@@ -866,3 +866,5 @@
 {"ts": 1785592875.1138968, "stage": "voice_done", "key": "20260801_145726:S3_time_loss:1", "detail": "{\"description\": \"AI Coaching Speech\", \"duration_s\": 8.848}"}
 {"ts": 1785592902.8076649, "stage": "published", "key": "20260801_145726:corner_poor_corner_exit:1", "detail": "poor_corner_exit"}
 {"ts": 1785592902.839947, "stage": "published", "key": "20260801_145726:S1_time_loss:1", "detail": "sector_time_loss"}
+{"ts": 1785703603.255861, "stage": "guardrail_done", "key": "session_002:exit_err:1", "detail": "poor_corner_exit"}
+{"ts": 1785703824.868961, "stage": "guardrail_done", "key": "session_race_02:exit_err:1", "detail": "poor_corner_exit"}
