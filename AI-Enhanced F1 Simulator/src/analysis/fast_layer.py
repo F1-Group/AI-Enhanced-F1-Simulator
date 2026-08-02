@@ -152,12 +152,8 @@ class FastLayer:
                     "coaching_hint": "You are off track!",
                     "interrupt": True,
                 }
-                if self._manager:
-                    try:
-                        self._manager.play_error(error_evt)
-                    except Exception as e:
-                        print(f"[Fast Layer Warning] Off track audio play failed: {e}")
-
+                # Audio intentionally disabled for off_track: detection and
+                # the event-queue push (dashboard/logging) stay active below.
                 if self._event_queue:
                     try:
                         self._event_queue.put_nowait(error_evt)
