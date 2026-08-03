@@ -21,6 +21,24 @@ APPROACH_ZONE_M = 150.0
 # |track_pos| beyond this means the car is off the tarmac.
 OFF_TRACK_POS = 1.0
 
+# A car can briefly point across the track during a spin or recovery. Only
+# announce wrong-way driving when it is moving forward while facing more than
+# 90 degrees away from the track direction for a sustained period.
+WRONG_WAY_ANGLE_RAD = np.pi / 2
+WRONG_WAY_MIN_SPEED_KMH = 10.0
+WRONG_WAY_CONFIRM_SECONDS = 1.0
+WRONG_WAY_COOLDOWN_SECONDS = 6.0
+
+# TORCS reports engine RPM directly. These conservative thresholds sit near
+# the useful upper/lower bounds observed in the supplied expert telemetry.
+# They are kept here (rather than in the audio layer) so they can be tuned
+# after play-testing without changing playback behaviour.
+SHIFT_UP_RPM = 9000.0
+SHIFT_DOWN_RPM = 6000.0
+SHIFT_MIN_SPEED_KMH = 10.0
+SHIFT_COOLDOWN_SECONDS = 5.0
+MAX_FORWARD_GEAR = 6
+
 
 class FastLayer:
     def __init__(self, baseline, corners, manager, event_queue=None):
@@ -42,6 +60,34 @@ class FastLayer:
         self._manager = manager
         self._last_fast_play = {}
         self._event_queue = event_queue
+        self._wrong_way_since = None
+
+    def _play_and_publish(self, tag, message, frame, priority="high"):
+        """Speak a deterministic alert and mirror it to the dashboard queue.
+
+        Queue events use high priority so ai_core treats them as Fast Layer
+        feedback and does not send them through Granite or speak them again.
+        AudioManager still owns the actual per-tag audio priority.
+        """
+        if self._manager:
+            try:
+                self._manager.play(tag)
+            except Exception as exc:
+                print(f"[Fast Layer Warning] {tag} audio failed: {exc}")
+
+        if self._event_queue:
+            try:
+                self._event_queue.put_nowait({
+                    "tag": tag,
+                    "type": tag,
+                    "priority": priority,
+                    "interrupt": tag == "wrong_way",
+                    "message": message,
+                    "coaching_hint": message,
+                    "telemetry": frame,
+                })
+            except Exception as exc:
+                print(f"[Fast Layer Warning] {tag} event queue failed: {exc}")
 
     def _get_current_corner_zone(self, d):
         candidate_zones = []
@@ -94,11 +140,50 @@ class FastLayer:
         """
         d = frame.get("lap_distance", 0.0)
         speed = frame.get("speed_kmh", 0.0)
-        current_time = time.time()
+        current_time = time.monotonic()
 
-        # Collisions spike the speed sensor past 1000 km/h (see lap_utils);
-        # a glitched frame must never fire an urgent interrupt.
-        if not 0.0 <= speed <= SPEED_MAX_VALID:
+        # Collisions spike the speed sensor past 1000 km/h (see lap_utils).
+        # Negative speed is legitimate while reversing, so validate the
+        # magnitude here and handle reverse motion in the wrong-way rule.
+        if abs(speed) > SPEED_MAX_VALID:
+            return None
+
+        gear = int(frame.get("gear", 0) or 0)
+        rpm = float(frame.get("rpm", 0.0) or 0.0)
+        angle = float(frame.get("angle", 0.0) or 0.0)
+
+        # Wrong-way warning: require a sustained condition so a normal spin,
+        # collision, or momentary sideways attitude does not trigger speech.
+        # TORCS angle describes the car's heading relative to the track. When
+        # reversing, actual travel direction is the opposite of that heading.
+        reverse_motion = speed < -WRONG_WAY_MIN_SPEED_KMH or (
+            gear < 0 and abs(speed) >= WRONG_WAY_MIN_SPEED_KMH
+        )
+        travel_angle = angle + (np.pi if reverse_motion else 0.0)
+        travel_angle = (travel_angle + np.pi) % (2 * np.pi) - np.pi
+        wrong_way = (
+            abs(speed) >= WRONG_WAY_MIN_SPEED_KMH
+            and abs(travel_angle) > WRONG_WAY_ANGLE_RAD
+        )
+        if wrong_way:
+            if self._wrong_way_since is None:
+                self._wrong_way_since = current_time
+            confirmed = current_time - self._wrong_way_since >= WRONG_WAY_CONFIRM_SECONDS
+            cooled_down = (
+                current_time - self._last_fast_play.get("wrong_way", float("-inf"))
+                >= WRONG_WAY_COOLDOWN_SECONDS
+            )
+            if confirmed and cooled_down:
+                print("[Fast Layer] Wrong way - turn around")
+                self._last_fast_play["wrong_way"] = current_time
+                self._play_and_publish("wrong_way", "Wrong way. Turn around.", frame)
+                return "wrong_way"
+        else:
+            self._wrong_way_since = None
+
+        # The remaining rules assume forward longitudinal speed. Wrong-way
+        # detection above is the only coaching rule applicable in reverse.
+        if speed < 0.0:
             return None
 
         active_zone = self._get_current_corner_zone(d)
@@ -160,5 +245,39 @@ class FastLayer:
                     except Exception as e:
                         print(f"[Fast Layer Warning] Event queue put failed: {e}")
                 return "off_track"
+
+        # Gear coaching is deliberately evaluated after safety alerts. It is
+        # advisory, does not interrupt speech, and is rate-limited separately
+        # from AudioManager's own duplicate-message cooldown.
+        if wrong_way:
+            return None
+
+        shift_tag = None
+        shift_message = None
+        if (
+            1 <= gear < MAX_FORWARD_GEAR
+            and speed >= SHIFT_MIN_SPEED_KMH
+            and rpm >= SHIFT_UP_RPM
+        ):
+            shift_tag = "shift_up"
+            shift_message = "Shift up."
+        elif (
+            gear > 1
+            and speed >= SHIFT_MIN_SPEED_KMH
+            and 0.0 < rpm <= SHIFT_DOWN_RPM
+        ):
+            shift_tag = "shift_down"
+            shift_message = "Shift down."
+
+        if shift_tag:
+            cooled_down = (
+                current_time - self._last_fast_play.get(shift_tag, float("-inf"))
+                >= SHIFT_COOLDOWN_SECONDS
+            )
+            if cooled_down:
+                print(f"[Fast Layer] {shift_message}")
+                self._last_fast_play[shift_tag] = current_time
+                self._play_and_publish(shift_tag, shift_message, frame)
+                return shift_tag
 
         return None
