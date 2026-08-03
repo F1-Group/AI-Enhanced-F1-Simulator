@@ -33,6 +33,21 @@ BUILTIN_ALERTS = {
         "priority": "high",
         "interrupt": False,
     },
+    "wrong_way": {
+        "message": "Wrong way. Turn around.",
+        "priority": "high",
+        "interrupt": True,
+    },
+    "shift_up": {
+        "message": "Shift up.",
+        "priority": "normal",
+        "interrupt": False,
+    },
+    "shift_down": {
+        "message": "Shift down.",
+        "priority": "normal",
+        "interrupt": False,
+    },
 }
 
 PRIORITY_ORDER = {

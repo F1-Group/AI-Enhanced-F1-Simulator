@@ -17,6 +17,8 @@ Integrating IBM Granite models into an Open Source racing simulator - TORCS.
 - [4. Pipeline Architecture & Core Middleware](#4-pipeline-architecture--core-middleware)
   - [4.1 Hybrid Architecture & Data Flow](#41-hybrid-architecture--data-flow)
   - [4.2 Core Python Modules & Data Architecture](#42-core-python-modules--data-architecture)
+  - [4.3 Telemetry Analysis & Live Coaching](#43-telemetry-analysis--live-coaching)
+  - [4.4 Priority-Based Audio Management](#44-priority-based-audio-management)
 - [5. Step-by-Step Execution Guide](#5-step-by-step-execution-guide)
   - [5.1 Execution Guide](#51-execution-guide)
   - [5.2 TORCS Game Controls & Display Shortcuts](#52-torcs-game-controls--display-shortcuts)
@@ -281,7 +283,7 @@ To manage the high frequency of incoming UDP data alongside the higher latency o
 </p>
 
 1. **Telemetry Ingestion & Human Input Intercept:** The `Client` class connects to TORCS (`scr_server`) via UDP on port `3001` to receive continuous raw telemetry packets. Simultaneously, the dedicated `Input` process intercepts player keyboard commands asynchronously, which `Controller` converts into continuous control values to drive the vehicle.
-2. **Fast Layer (Rule-Based Alerts):** Reads latest telemetry directly from the thread-safe cache. For critical driving events (e.g., immediate collision risks or severe off-track errors), the system bypasses LLM latency completely to trigger real-time audio and dashboard alerts instantly.
+2. **Fast Layer (Rule-Based Alerts):** Reads the latest telemetry directly from the thread-safe cache. Deterministic rules bypass LLM latency to provide immediate braking, wrong-way, and gear-shift voice prompts. Off-track events remain visible on the dashboard and in logs, but their audio is intentionally disabled.
 3. **Slow Layer (LLM Race Engineering):** Stores telemetry logs to disk and conducts lap comparisons against expert driving benchmarks. Dynamic error labels, background domain knowledge (F1 rules, track layout heuristics), and telemetry metrics are combined into structured prompts fed into the **IBM Granite 2B** model via Ollama. Validated AI responses are delivered as high-level race coaching advice.
 
 ---
@@ -297,6 +299,132 @@ To prevent high-frequency UDP socket traffic from being blocked by disk I/O oper
 | `Client` (`client.py`) | **UDP Network & Lifecycle Manager:** Handles UDP socket communication on port `3001` with TORCS (`scr_server 1`). Manages game lifecycles via a Finite State Machine (FSM) triggered by UDP timeouts. |
 | `Input` (`input.py`) | **Asynchronous Keyboard Process:** Operates in a dedicated child process (`multiprocessing.Process`) to capture raw human keyboard input in real time, bypassing Python's GIL to ensure zero latency. |
 | `Controller` (`controller.py`) | **Input Translator:** Converts raw binary keyboard events captured from `Input` into precise continuous floating-point signals for vehicle steering, braking, and throttle application. |
+
+### 4.3 Telemetry Analysis & Live Coaching
+
+The `analysis/` package converts raw TORCS telemetry into measurable, location-specific coaching events. Instead of comparing the player and expert at the same timestamp, both laps are aligned by **lap distance**. This allows the system to compare braking, speed, racing line, and throttle at the same physical point on the track.
+
+#### Analysis Pipeline
+
+1. **Telemetry cleaning and lap segmentation (`lap_utils.py`)**
+   - Removes physically implausible collision-related speed spikes above `600 km/h` and interpolates across invalid samples.
+   - Detects a new lap when `lap_distance` drops by more than `500 m`.
+   - Removes duplicate or backwards distance samples caused by stopping, spinning, or reversing.
+
+2. **Distance-based alignment (`alignment.py`)**
+   - Resamples expert telemetry onto a shared distance grid at `5 m` intervals.
+   - Builds a standing-start baseline from expert lap 1 or a flying-lap baseline from expert laps 2 and above.
+   - Calculates player-minus-expert deltas for lap time, speed, track position, angle, wheel spin, throttle, brake, and steering.
+   - Marks future, unreached positions during live analysis so they cannot generate false errors.
+
+3. **Corner and error detection (`error_detection.py`)**
+   - Detects corners automatically from sustained steering activity in the expert baseline.
+   - Divides each corner into approach, apex, and exit regions.
+   - Generates structured errors containing type, location, severity, confidence, coaching hint, related telemetry, and measured evidence.
+
+4. **Live orchestration (`live_coach.py`)**
+   - Follows the active CSV referenced by `data/latest_data.txt` and runs the Fast Layer on every incoming frame.
+   - Creates a real-time Slow Layer snapshot every `0.75 s` once sufficient data is available.
+   - Analyses completed laps on background workers so pandas processing and AI inference do not block telemetry ingestion.
+   - Applies location-based deduplication and per-error cooldowns before publishing events.
+   - Publishes no more than three Slow Layer errors per analysis pass to avoid overwhelming the driver.
+
+5. **Offline analysis and deterministic replay**
+   - `run_analysis.py` compares a recorded player CSV with the expert baseline and writes structured JSON reports.
+   - `replay.py` streams a recorded CSV at the original `50 Hz` rate, or faster, enabling repeatable coaching and latency tests without launching TORCS.
+
+#### Detected Driving Errors
+
+| Error Type | Detection Meaning | Layer |
+| :--- | :--- | :--- |
+| `brake_now` | The player approaches a corner at least `25 km/h` faster than the expert while applying less than `0.30` brake. | Fast |
+| `off_track` | Absolute TORCS track position exceeds `1.0`. Detection and dashboard logging remain active, but audio is intentionally disabled. | Fast |
+| `wrong_way` | The vehicle's sustained travel direction differs from the forward track direction by more than `90°`; announces “Wrong way. Turn around.” | Fast |
+| `shift_up` | Engine speed reaches `9000 RPM` in a forward gear below sixth; announces “Shift up.” | Fast |
+| `shift_down` | Engine speed falls to `6000 RPM` or below while moving in a forward gear above first; announces “Shift down.” | Fast |
+| `late_braking` | The player's braking point is at least `25 m` later than the expert, or the player reaches the corner too fast without braking. | Slow |
+| `poor_corner_exit` | Mean exit speed is at least `12 km/h` below the expert baseline. | Slow |
+| `poor_track_position` | Mean racing-line deviation through a corner is at least `0.35` relative to the expert. | Slow |
+| `unstable_throttle` | Player throttle variation through a corner exceeds expert variation by at least `0.15`. | Slow |
+| `sector_time_loss` | The player loses at least `2.0 s` against the expert within one of three equal-distance sectors. | Slow |
+
+Fast Layer events are deterministic and bypass Granite generation. `brake_now`, `wrong_way`, `shift_up`, and `shift_down` are spoken immediately, while `off_track` is shown and logged without audio. Slow Layer events contain measured evidence and are passed to the RAG and Granite pipeline for concise, context-aware coaching. Real-time analysis ignores corners already passed by the vehicle, while completed-lap analysis evaluates every corner.
+
+The analysis report follows this general structure:
+
+```json
+{
+  "type": "poor_corner_exit",
+  "corner": "turn3",
+  "severity": "high",
+  "confidence": 0.95,
+  "message": "Poor corner exit detected at turn3.",
+  "coaching_hint": "Get on the throttle earlier and more progressively out of turn3.",
+  "evidence": {
+    "exit_speed_deficit_kmh": 18.4,
+    "mean_throttle_gap": 0.21
+  }
+}
+```
+
+To analyse the latest completed recording manually:
+
+```bash
+cd "AI-Enhanced F1 Simulator/src"
+python -m analysis.run_analysis
+```
+
+To analyse a specific recording:
+
+```bash
+python -m analysis.run_analysis ../data/player_data/telemetry_<timestamp>.csv
+```
+
+### 4.4 Priority-Based Audio Management
+
+The `audio_manager/` package provides a non-blocking output channel for urgent alerts, AI-generated coaching, and prerecorded sounds. `AudioManager` owns a background worker and a thread-safe `PriorityQueue`, allowing analysis and AI threads to submit messages without waiting for playback to finish.
+
+#### Priority and Interruption Policy
+
+| Priority | Typical Content | Behaviour |
+| :--- | :--- | :--- |
+| `urgent` | `brake_now` | Interrupts current speech, clears queued messages, and plays immediately. |
+| `high` | `wrong_way` and other safety-critical audio events | Interrupts lower-priority speech when configured and plays before normal coaching. |
+| `normal` | `shift_up`, `shift_down`, and Granite-generated coaching | Standard advisory priority without interrupting safety alerts. |
+| `low` / `slow` | Non-urgent sounds or long-form feedback | Played after more important messages. |
+
+The audio system includes the following safeguards:
+
+- **Cooldown control:** repeated messages with the same key are suppressed for `4 s` by default.
+- **Stale-message removal:** queued coaching older than `2.5 s` is discarded because outdated advice can distract the driver.
+- **True interruption:** urgent events stop both queued audio and speech already playing.
+- **Speech timeout:** a TTS message is terminated if it runs for more than `30 s`.
+- **Graceful fallback:** if a WAV file or `pygame` mixer is unavailable, the manager can speak the error's coaching hint instead.
+- **Safe shutdown:** active speech, queued jobs, and mixer resources are stopped when the race or application ends.
+- **Latency instrumentation:** enqueue, voice-start, completion, interruption, and stale-drop events are logged for integration analysis.
+
+Cross-platform output is selected automatically:
+
+| Platform | Speech Backend |
+| :--- | :--- |
+| macOS | Native `say` command, preferring Samantha, Daniel, or Alex |
+| Windows | `pyttsx3` with an installed English system voice |
+| Unavailable TTS | Console warning and prerecorded WAV support through `pygame` when available |
+
+The combined analysis-to-audio flow is:
+
+```text
+TORCS telemetry
+      |
+      +--> Fast Layer rule --> immediate driver alert ---+
+      |                                                  |
+      +--> Distance alignment --> Slow Layer error       |
+                                --> Granite coaching ----+--> PriorityQueue
+                                                               |
+                                                        cooldown/stale check
+                                                               |
+                                                        speech or WAV output
+```
 
 
 ## 5. Step-by-Step Execution Guide
@@ -465,14 +593,22 @@ During an active race, the terminal logs real-time interaction between the **Fas
 Speaking audio: AI Coaching Speech
 
 # Fast Layer: Instant Event Alerts
-[Fast Layer] Brake NOW!
+[Fast Layer] Brake NOW! (turn3)
 Speaking audio: brake_now
+[Fast Layer] Wrong way - turn around
+Speaking audio: wrong_way
+[Fast Layer] Shift up.
+Speaking audio: shift_up
+[Fast Layer] Shift down.
+Speaking audio: shift_down
 [Fast Layer] You are off track
-Speaking audio: off_track
+# Off-track remains a dashboard/log event; no off-track speech is played.
 
 # Audio Queue Management (Skipping Stale / Outdated Audio Alerts)
 [Timeout Dropped] AI Coaching Speech is too old (2.84s old), skipping.
 ```
+
+The gear prompts are advisory: `shift_up` is triggered at `9000 RPM` or above, while `shift_down` is triggered at `6000 RPM` or below when the car is moving in a forward gear above first. A wrong-way prompt requires the vehicle to travel at least `10 km/h` in the opposite track direction for one continuous second, preventing momentary spins from producing false warnings.
 
 <p align="center">
   <img src="./assets/images/Live_Telemetry_Dashboard_Coaching.png" alt="Live Telemetry Dashboard Coaching" width="400"/>
