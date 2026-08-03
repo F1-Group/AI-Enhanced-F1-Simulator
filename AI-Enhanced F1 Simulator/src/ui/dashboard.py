@@ -20,6 +20,7 @@ except ImportError:
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 SUMMARY_FILE = PROJECT_ROOT / "data" / "lap_summary.json"
 TRACK_LENGTH_M = 6283.0
+DAMAGE_MAX = 10000 
 
 BG = "#0d0d0d"
 PANEL_BG = "#1a1a1a"
@@ -127,8 +128,14 @@ class TelemetryDashboard:
         self.llm_connected = False
         self.best_lap = None
         self.prev_lap = None
+        self.current_lap = 1
         self._last_lap_time_seen = 0.0
         self.selected_style = "supportive"
+
+        # sector timing 
+        self.current_sector = 1
+        self.sector_start_lap_time = 0.0
+        self.sector_times = [None, None, None]
 
         # Frame containers for each page
         self.home_frame = None
@@ -393,6 +400,15 @@ class TelemetryDashboard:
                 SUMMARY_FILE.unlink()
             except Exception:
                 pass
+
+        # this would use to reset the lap and sector tracking for the new race
+        self.best_lap = None
+        self.prev_lap = None
+        self.current_lap = 1
+        self._last_lap_time_seen = 0.0
+        self.current_sector = 1
+        self.sector_start_lap_time = 0.0
+        self.sector_times = [None, None, None]
 
         self.new_race_frame.pack_forget()
         self._build_connecting_page()
@@ -659,9 +675,30 @@ class TelemetryDashboard:
         self.lbl_race_pos.pack(anchor="w", pady=2)
 
         tk.Frame(p, bg=BORDER, height=1).pack(fill="x", pady=6)
+        tk.Label(p, text="Lap", fg=GREY, bg=PANEL_BG, font=("Courier", 9)).pack(anchor="w")
+        self.lbl_lap_number = tk.Label(p, text="1", fg=BLUE, bg=PANEL_BG, font=("Courier", 22, "bold"))
+        self.lbl_lap_number.pack(anchor="w", pady=(2, 0))
+
+        tk.Frame(p, bg=BORDER, height=1).pack(fill="x", pady=6)
         tk.Label(p, text="Current Lap", fg=GREY, bg=PANEL_BG, font=("Courier", 9)).pack(anchor="w")
         self.lbl_current_lap = tk.Label(p, text="--:--.---", fg=YELLOW, bg=PANEL_BG, font=("Courier", 20, "bold"))
         self.lbl_current_lap.pack(anchor="w", pady=(2, 0))
+
+        self.lbl_lap_dist = tk.Label(p, text="0 m", fg=GREY, bg=PANEL_BG, font=("Courier", 10))
+        self.lbl_lap_dist.pack(anchor="w", pady=(4, 0))
+
+        self.lbl_sector = tk.Label(p, text="Sector 1", fg=YELLOW, bg=PANEL_BG, font=("Courier", 12, "bold"))
+        self.lbl_sector.pack(anchor="w")
+
+        # per-sector split times, to let you know which sector is fast/slow
+        sector_time_row = tk.Frame(p, bg=PANEL_BG)
+        sector_time_row.pack(anchor="w", pady=(4, 0))
+        self.lbl_s1 = tk.Label(sector_time_row, text="S1: --", fg=GREY, bg=PANEL_BG, font=("Courier", 9, "bold"))
+        self.lbl_s1.pack(side="left", padx=(0, 10))
+        self.lbl_s2 = tk.Label(sector_time_row, text="S2: --", fg=GREY, bg=PANEL_BG, font=("Courier", 9, "bold"))
+        self.lbl_s2.pack(side="left", padx=(0, 10))
+        self.lbl_s3 = tk.Label(sector_time_row, text="S3: --", fg=GREY, bg=PANEL_BG, font=("Courier", 9, "bold"))
+        self.lbl_s3.pack(side="left")
 
         tk.Frame(p, bg=BORDER, height=1).pack(fill="x", pady=6)
         tk.Label(p, text="Previous Lap", fg=GREY, bg=PANEL_BG, font=("Courier", 9)).pack(anchor="w")
@@ -717,6 +754,19 @@ class TelemetryDashboard:
         self.lbl_wheel_spin = tk.Label(p, text="-- rad/s", fg=GREY, bg=PANEL_BG, font=("Courier", 9))
         self.lbl_wheel_spin.pack(anchor="w")
 
+        # damage tracker - to lets us see how much damage the car is currently taking
+        tk.Frame(p, bg=BORDER, height=1).pack(fill="x", pady=8)
+        tk.Label(p, text="Car Damage", fg=GREY, bg=PANEL_BG, font=("Courier", 9)).pack(anchor="w")
+        self.damage_bar = BarWidget(p, colour=GREEN, width=160, height=18)
+        self.damage_bar.pack(anchor="w", pady=(2, 4))
+
+        dmg_row = tk.Frame(p, bg=PANEL_BG)
+        dmg_row.pack(anchor="w")
+        self.lbl_damage_raw = tk.Label(dmg_row, text=f"0 / {DAMAGE_MAX}", fg=WHITE, bg=PANEL_BG, font=("Courier", 10, "bold"))
+        self.lbl_damage_raw.pack(side="left")
+        self.lbl_damage_pct = tk.Label(dmg_row, text="(0%)", fg=GREY, bg=PANEL_BG, font=("Courier", 10))
+        self.lbl_damage_pct.pack(side="left", padx=(6, 0))
+
         tk.Frame(p, bg=BORDER, height=1).pack(fill="x", pady=8)
         tk.Label(p, text="Car Angle vs Track", fg=GREY, bg=PANEL_BG, font=("Courier", 9)).pack(anchor="w")
         self.lbl_angle = tk.Label(p, text="0.00 rad", fg=WHITE, bg=PANEL_BG, font=("Courier", 16, "bold"))
@@ -725,14 +775,6 @@ class TelemetryDashboard:
         tk.Frame(p, bg=BORDER, height=1).pack(fill="x", pady=8)
         self.lbl_off_track = tk.Label(p, text="ON TRACK", fg=GREEN, bg=PANEL_BG, font=("Courier", 14, "bold"))
         self.lbl_off_track.pack(anchor="w", pady=(6, 0))
-
-        tk.Frame(p, bg=BORDER, height=1).pack(fill="x", pady=8)
-        tk.Label(p, text="Lap Distance / Sector", fg=GREY, bg=PANEL_BG, font=("Courier", 9)).pack(anchor="w")
-        self.lbl_lap_dist = tk.Label(p, text="0 m", fg=WHITE, bg=PANEL_BG, font=("Courier", 16, "bold"))
-        self.lbl_lap_dist.pack(anchor="w", pady=(2, 0))
-        
-        self.lbl_sector = tk.Label(p, text="Sector 1", fg=YELLOW, bg=PANEL_BG, font=("Courier", 14, "bold"))
-        self.lbl_sector.pack(anchor="w")
 
     def _build_bottom_row(self):
         bottom = tk.Frame(self.dashboard_frame, bg=BG)
@@ -800,6 +842,22 @@ class TelemetryDashboard:
             if USING_REAL_CACHE:
                 status = cache.get_status()
                 data = cache.get_telemetry()
+
+                # If there is a critical damage torcs started doing weird stuff, so we just end the session and show an error page
+                if data is not None and data.get("damage", 0) >= DAMAGE_MAX:
+                    print(f"[Dashboard] Damage exceeded {DAMAGE_MAX}, car's toast. Ending session.")
+                    if self._update_job is not None:
+                        self.root.after_cancel(self._update_job)
+                        self._update_job = None
+                    if self.stop_race_callback:
+                        self.stop_race_callback()
+                    if self.dashboard_frame:
+                        self.dashboard_frame.pack_forget()
+                    self._show_error_page(
+                        f"CRITICAL DAMAGE ({int(data.get('damage', 0))}/{DAMAGE_MAX}) - the car took too "
+                        f"much damage and flew off the track. Restart the race to continue."
+                    )
+                    return
 
                 # Detect race finished
                 if status == GameStatus.FINISHED:
@@ -871,19 +929,49 @@ class TelemetryDashboard:
         self.wheel_spin_bar.set_value(wheel_spin_fraction, colour=spin_colour)
         self.lbl_wheel_spin.config(text=f"{wheel_spin:.0f} rad/s")
 
+        # damage bar and also persentage display as well as color behavior which based on the damage
+        dmg = data.get("damage", 0)
+        dmg_pct = min((dmg / DAMAGE_MAX) * 100.0, 100.0)
+
+        if dmg_pct < 40:
+            dmg_colour = GREEN
+        elif dmg_pct < 75:
+            dmg_colour = YELLOW
+        else:
+            dmg_colour = RED
+
+        self.damage_bar.set_value(dmg_pct / 100.0, colour=dmg_colour)
+        self.lbl_damage_raw.config(text=f"{int(dmg)} / {DAMAGE_MAX}")
+        self.lbl_damage_pct.config(text=f"({dmg_pct:.0f}%)", fg=dmg_colour)
+
         sector_len = TRACK_LENGTH_M / 3.0
         if lap_dist < sector_len:
-            sector_name = "Sector 1"
-            sector_color = YELLOW
+            sector_num, sector_color = 1, YELLOW
         elif lap_dist < sector_len * 2:
-            sector_name = "Sector 2"
-            sector_color = BLUE
+            sector_num, sector_color = 2, BLUE
         else:
-            sector_name = "Sector 3"
-            sector_color = PURPLE
+            sector_num, sector_color = 3, PURPLE
+
+        # new sector detected, and lock the time of the previous sector
+        if sector_num > self.current_sector:
+            self.sector_times[self.current_sector - 1] = lap_time - self.sector_start_lap_time
+            self.sector_start_lap_time = lap_time
+            self.current_sector = sector_num
 
         self.lbl_lap_dist.config(text=f"{lap_dist:.1f} m")
-        self.lbl_sector.config(text=sector_name, fg=sector_color)
+        self.lbl_sector.config(text=f"Sector {sector_num}", fg=sector_color)
+
+        # used to split 3 different sector times so it's easier to see, as well as to highlight the sector you're currently in
+        live_sector_time = lap_time - self.sector_start_lap_time
+        for i, lbl in enumerate((self.lbl_s1, self.lbl_s2, self.lbl_s3)):
+            n = i + 1
+            if n < self.current_sector:
+                t = self.sector_times[i]
+                lbl.config(text=f"S{n}: {t:.2f}s" if t is not None else f"S{n}: --", fg=WHITE)
+            elif n == self.current_sector:
+                lbl.config(text=f"S{n}: {live_sector_time:.2f}s", fg=YELLOW)
+            else:
+                lbl.config(text=f"S{n}: --", fg=GREY)
 
         if abs(track_pos) > 1.0:
             self.lbl_off_track.config(text="OFF TRACK", fg=RED)
@@ -894,6 +982,12 @@ class TelemetryDashboard:
             self.prev_lap = self._last_lap_time_seen
             if self.best_lap is None or self._last_lap_time_seen < self.best_lap:
                 self.best_lap = self._last_lap_time_seen
+            self.current_lap += 1
+            self.lbl_lap_number.config(text=str(self.current_lap))
+
+            self.current_sector = 1
+            self.sector_start_lap_time = 0.0
+            self.sector_times = [None, None, None]
 
         self._last_lap_time_seen = lap_time
         self.lbl_current_lap.config(text=format_lap_time(lap_time))
