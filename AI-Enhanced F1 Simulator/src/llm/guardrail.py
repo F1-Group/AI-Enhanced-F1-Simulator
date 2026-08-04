@@ -81,11 +81,12 @@ def _strip_apology(text: str) -> str:
     return _APOLOGY_LEAD.sub("", text, count=1).strip().strip("\"'")
 
 
-# The model sometimes invents a specific turn number (e.g. "Turn 1") even for
-# sector-level errors where no turn was ever identified. Rather than relying
-# on the prompt alone, normalize any "Turn N" wording down to "corner" so the
-# feedback text never claims more precision than the error data actually has.
-_TURN_NUMBER = re.compile(r"\b(the\s+)?turn\s+\d+\b", re.IGNORECASE)
+# The model sometimes invents a specific turn number - either spelled out
+# ("Turn 1") or abbreviated ("T1") - even for sector-level errors where no
+# turn was ever identified. Rather than relying on the prompt alone,
+# normalize any of that wording down to "corner" so the feedback text never
+# claims more precision than the error data actually has.
+_TURN_NUMBER = re.compile(r"\b(the\s+)?turn\s+\d+\b|\bT\d+\b", re.IGNORECASE)
 
 
 def _replace_turn_with_corner(text: str) -> str:
@@ -100,6 +101,14 @@ _DELTA_WORDING = re.compile(r"\btime\s+delta\b|\bdelta\b", re.IGNORECASE)
 
 def _replace_delta_wording(text: str) -> str:
     return _DELTA_WORDING.sub("time loss", text)
+
+
+def normalize_wording(text: str) -> str:
+    """Strip invented turn numbers ("Turn 1", "T1", ...) down to "corner",
+    for text sent to the driver that doesn't go through the full
+    apply_guardrail pipeline (e.g. the lap-end summary).
+    """
+    return _replace_turn_with_corner(text)
 
 FALLBACK_RESPONSES = {
     "default": "Focus on braking points and consistent throttle application.",
