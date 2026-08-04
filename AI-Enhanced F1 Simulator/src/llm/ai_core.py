@@ -17,7 +17,7 @@ if str(_LATENCY_DIR) not in sys.path:
 from latency_logger import log_event
 from llm.prompts import build_user_prompt
 from llm.llm_client import ask_race_engineer
-from llm.guardrail import apply_guardrail
+from llm.guardrail import apply_guardrail, normalize_wording
 from llm.coaching_style import get_system_prompt
 from llm.rag import retrieve
 from llm.llm_client import get_fallback_text
@@ -164,7 +164,7 @@ def generate_summary(all_results, system_prompt, force_fallback=False):
     print("\n[AI] Compiling Macro Lap Summary Review")
 
     try:
-        summary_text = ask_race_engineer(system_prompt, summary_prompt)
+        summary_text = normalize_wording(ask_race_engineer(system_prompt, summary_prompt))
         _reset_llm_breaker()
         return summary_text, False
     except Exception as e:
