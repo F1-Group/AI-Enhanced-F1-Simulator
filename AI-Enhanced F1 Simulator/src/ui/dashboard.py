@@ -401,6 +401,13 @@ class TelemetryDashboard:
             except Exception:
                 pass
 
+        if USING_REAL_CACHE:
+            try:
+                cache.clear()
+                print("[Dashboard] Cache cleared for New Race.")
+            except Exception as e:
+                print(f"[Dashboard Warning] Failed to clear cache: {e}")
+
         # this would use to reset the lap and sector tracking for the new race
         self.best_lap = None
         self.prev_lap = None
@@ -529,6 +536,12 @@ class TelemetryDashboard:
 
     def _on_click_back_to_new_race(self):
         print("[Dashboard] Returning to NEW RACE setup page...")
+
+        if USING_REAL_CACHE:
+            try:
+                cache.clear()
+            except Exception as e:
+                print(f"[Dashboard Warning] Failed to clear cache on back to new race: {e}")
         
         if self.error_frame:
             self.error_frame.destroy()
@@ -888,7 +901,7 @@ class TelemetryDashboard:
         self._update_job = self.root.after(self.REFRESH_MS, self._update)
 
     def _refresh_ui(self, data, status):
-        speed = data.get("speed_kmh", 0) / 3.6
+        speed = data.get("speed_kmh", 0)
         gear = data.get("gear", 1)
         rpm = data.get("rpm", 0)
         throttle = data.get("throttle", 0)

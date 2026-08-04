@@ -36,5 +36,10 @@ class DataCache:
         with self._lock:
             return self._status
 
+    def clear(self):
+        with self._lock:
+            self._data = None
+            self._status = GameStatus.CONNECTING
+
 # Shared instance
 cache = DataCache()
