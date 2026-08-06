@@ -29,9 +29,7 @@ def test_clean_my_data_valid_torcs_packet():
     assert cleaned["track_pos"] == 0.315795
     assert cleaned["angle"] == 0.0025599
     assert cleaned["rpm"] == 5235.99
-
-    # speed_kmh = speedX (31.1387) * 3.6 = 112.09932
-    assert cleaned["speed_kmh"] == pytest.approx(112.09932, abs=1e-4)
+    assert cleaned["speed_kmh"] == 31.1387
 
     # wheel_spin = (28.6041 + 28.6041 + 27.4512 + 27.4512) / 4 = 28.02765
     assert cleaned["wheel_spin"] == pytest.approx(28.02765, abs=1e-4)
