@@ -50,5 +50,5 @@ field also appears in the Evidence below):
 {knowledge_section}
 COACHING CONTEXT: {coaching_request}
 
-REPLY IN ONE SENTENCE ONLY. Maximum 20 words.
+REPLY IN ONE SENTENCE ONLY. Maximum 12 words.
 """
