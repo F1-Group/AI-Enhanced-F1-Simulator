@@ -119,7 +119,10 @@ class LiveCoach:
         self.track_length = max(lap["lap_distance"].max() for lap in self.expert_laps)
         baseline = build_baseline(self.expert_laps[1:] or self.expert_laps,
                                   distance_grid(self.track_length))
-        self.fast_layer = FastLayer(baseline, detect_corners(baseline), manager, event_queue=self.event_output_queue)
+        # kept on self (not just handed to FastLayer) so main.py can push it into
+        # the shared cache for the dashboard to show "which turn am I in" live
+        self.corners = detect_corners(baseline)
+        self.fast_layer = FastLayer(baseline, self.corners, manager, event_queue=self.event_output_queue)
         
         self.lap_number = 0
         self.session_id = None

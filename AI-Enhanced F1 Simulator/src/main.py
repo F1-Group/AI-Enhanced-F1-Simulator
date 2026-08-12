@@ -137,6 +137,8 @@ def start_race_session(llm_connected, style="supportive"):
         use_granite=llm_connected,
         cache=cache
     )
+    # show "which turn am I in" live without doing its own pandas analysis
+    cache.set_corners(coach.corners, coach.track_length)
     
     coach_thread = threading.Thread(
         target=coach.start_coaching_loop,

@@ -136,6 +136,7 @@ class TelemetryDashboard:
         self.current_sector = 1
         self.sector_start_lap_time = 0.0
         self.sector_times = [None, None, None]
+        self._track_corners = []
 
         # Frame containers for each page
         self.home_frame = None
@@ -416,6 +417,7 @@ class TelemetryDashboard:
         self.current_sector = 1
         self.sector_start_lap_time = 0.0
         self.sector_times = [None, None, None]
+        self._track_corners = []
 
         self.new_race_frame.pack_forget()
         self._build_connecting_page()
@@ -480,6 +482,7 @@ class TelemetryDashboard:
             # Switch to dashboard only when data is received or GameStatus changes to RACING
             if status == GameStatus.RACING or telemetry is not None:
                 print("[Dashboard] Connection established! Moving to Live Dashboard.")
+                self._track_corners = cache.get_corners()
                 self.connecting_frame.pack_forget()
                 self._build_dashboard_ui()
                 self.root.after(self.REFRESH_MS, self._update)
@@ -789,6 +792,9 @@ class TelemetryDashboard:
         self.lbl_off_track = tk.Label(p, text="ON TRACK", fg=GREEN, bg=PANEL_BG, font=("Courier", 14, "bold"))
         self.lbl_off_track.pack(anchor="w", pady=(6, 0))
 
+        self.lbl_turn = tk.Label(p, text="Straight", fg=GREY, bg=PANEL_BG, font=("Courier", 12, "bold"))
+        self.lbl_turn.pack(anchor="w", pady=(4, 0))
+
     def _build_bottom_row(self):
         bottom = tk.Frame(self.dashboard_frame, bg=BG)
         bottom.pack(fill="x", padx=10, pady=6)
@@ -868,7 +874,7 @@ class TelemetryDashboard:
                         self.dashboard_frame.pack_forget()
                     self._show_error_page(
                         f"CRITICAL DAMAGE ({int(data.get('damage', 0))}/{DAMAGE_MAX}) - the car took too "
-                        f"much damage and flew off the track. Restart the race to continue."
+                        f"much damage and flew off track. Restart the race to continue."
                     )
                     return
 
@@ -901,7 +907,7 @@ class TelemetryDashboard:
         self._update_job = self.root.after(self.REFRESH_MS, self._update)
 
     def _refresh_ui(self, data, status):
-        speed = data.get("speed_kmh", 0)
+        speed = data.get("speed_kmh", 0) / 3.6
         gear = data.get("gear", 1)
         rpm = data.get("rpm", 0)
         throttle = data.get("throttle", 0)
@@ -942,7 +948,7 @@ class TelemetryDashboard:
         self.wheel_spin_bar.set_value(wheel_spin_fraction, colour=spin_colour)
         self.lbl_wheel_spin.config(text=f"{wheel_spin:.0f} rad/s")
 
-        # damage bar and also persentage display as well as color behavior which based on the damage
+        # damage bar - straight percentage of DAMAGE_MAX, clamp so bar never overflows
         dmg = data.get("damage", 0)
         dmg_pct = min((dmg / DAMAGE_MAX) * 100.0, 100.0)
 
@@ -965,7 +971,7 @@ class TelemetryDashboard:
         else:
             sector_num, sector_color = 3, PURPLE
 
-        # new sector detected, and lock the time of the previous sector
+        # crossed into the next sector - lock in the split time for the one we just left
         if sector_num > self.current_sector:
             self.sector_times[self.current_sector - 1] = lap_time - self.sector_start_lap_time
             self.sector_start_lap_time = lap_time
@@ -974,7 +980,18 @@ class TelemetryDashboard:
         self.lbl_lap_dist.config(text=f"{lap_dist:.1f} m")
         self.lbl_sector.config(text=f"Sector {sector_num}", fg=sector_color)
 
-        # used to split 3 different sector times so it's easier to see, as well as to highlight the sector you're currently in
+        # which turn are we currently in, if any - self._track_corners comes from
+        # the shared cache (main.py fills it in from LiveCoach's detected corners)
+        current_turn_name = None
+        for corner in self._track_corners:
+            if corner["start_m"] <= lap_dist <= corner["end_m"]:
+                current_turn_name = corner["name"]
+                break
+        if current_turn_name:
+            self.lbl_turn.config(text=f"Turn {current_turn_name[1:]}" if current_turn_name.startswith("T") else current_turn_name, fg=ORANGE)
+        else:
+            self.lbl_turn.config(text="Straight", fg=GREY)
+
         live_sector_time = lap_time - self.sector_start_lap_time
         for i, lbl in enumerate((self.lbl_s1, self.lbl_s2, self.lbl_s3)):
             n = i + 1
@@ -998,6 +1015,7 @@ class TelemetryDashboard:
             self.current_lap += 1
             self.lbl_lap_number.config(text=str(self.current_lap))
 
+            # fresh sector splits for the new lap
             self.current_sector = 1
             self.sector_start_lap_time = 0.0
             self.sector_times = [None, None, None]
