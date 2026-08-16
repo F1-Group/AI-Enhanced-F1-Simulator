@@ -8,10 +8,7 @@ import ollama
 
 MODEL_NAME = "granite3-dense:2b"
 
-# ollama's module-level chat()/list() use a client with timeout=None (wait
-# forever). A per-call timeout ensures a stalled/loading local Ollama server
-# can't hang ask_race_engineer() indefinitely - failures surface quickly and
-# let the retry/fallback logic actually run.
+# We added a timeout for Ollama calls to prevent them from hanging indefinitely and allow the retry and fallback logic to run.
 REQUEST_TIMEOUT_SECONDS = 10
 _client = ollama.Client(timeout=REQUEST_TIMEOUT_SECONDS)
 
@@ -21,14 +18,14 @@ def init_granite_model():
     
     os_type = platform.system()
     
-    # Check if the Ollama background service is running
+    # Check if the Ollama service is running
     try:
         _client.list()
     except Exception:
         print("[Ollama] Service not running. Attempting to start Ollama background process...")
         try:
             if os_type == "Windows":
-                # Windows logic: Find the Ollama executable and launch it in the background without a CMD window
+                # Find the Ollama executable and launch it in the background
                 ollama_bin = shutil.which("ollama.exe") or shutil.which("ollama")
                 if not ollama_bin:
                     # Common default installation path on Windows
@@ -38,7 +35,7 @@ def init_granite_model():
                         ollama_bin = candidate
 
                 if ollama_bin:
-                    # CREATE_NO_WINDOW (0x08000000) prevents the black CMD window from popping up
+                    # To prevents the black CMD window from popping up when running the command.
                     subprocess.Popen(
                         [ollama_bin, "serve"],
                         stdout=subprocess.DEVNULL,
@@ -48,14 +45,14 @@ def init_granite_model():
                 else:
                     raise FileNotFoundError("Ollama executable not found in PATH or standard directory.")
             else:
-                # macOS / Linux logic
+                # macOS or Linux logic
                 subprocess.Popen(
                     ["ollama", "serve"],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL
                 )
 
-            # Give Windows a slightly longer wait time (buffer) to start the service
+            # Give Windows a slightly longer wait time to start the service
             wait_time = 3.0 if os_type == "Windows" else 2.0
             time.sleep(wait_time)
             

@@ -1,7 +1,7 @@
 import json
 import re
 
-# ─── INPUT GUARDRAIL ───────────────────────────────────────────────────────────
+# Input guardrail
 
 BLOCKED_TOPICS = [
     "politics", "food", "music", "movie", "sport",
@@ -10,13 +10,7 @@ BLOCKED_TOPICS = [
     "joke", "poem", "story", "recipe"
 ]
 
-# Word-boundary match so racing terms that merely contain a blocked word as a
-# substring (motorsport, gloves, history, ...) are not mistaken for the
-# blocked topic itself. weather/stock/money were dropped from BLOCKED_TOPICS
-# entirely - they're whole-word racing terms too (wet weather, stock car,
-# money shift), not just substrings, so a word boundary alone can't save them.
-# A plain \b treats "-" as a boundary, so "time" would still match inside
-# "real-time". (?<![\w-]) / (?![\w-]) also excludes hyphenated compounds.
+# Match whole words only, so we don't block racing terms like "motorsport" or "history" just because they contain a blocked word.
 _BLOCKED_TOPIC_PATTERN = re.compile(
     r"(?<![\w-])(" + "|".join(re.escape(topic) for topic in BLOCKED_TOPICS) + r")(?![\w-])"
 )
@@ -29,10 +23,8 @@ RACING_KEYWORDS = [
     "braking", "detected", "turn", "exit", "entry", "time loss"
 ]
 
-# Same word-boundary reasoning as _BLOCKED_TOPIC_PATTERN: a plain `in` check
-# (and even a plain \b, which treats "-" as a boundary) lets "time" match
-# inside "real-time", turning an unrelated word into a false racing-keyword
-# hit.
+# Use the same word-boundary check as _BLOCKED_TOPIC_PATTERN.
+# A simple `in` or `\b` check can match "time" in "real-time", which can incorrectly trigger the racing keyword check.
 _RACING_KEYWORD_PATTERN = re.compile(
     r"(?<![\w-])(" + "|".join(re.escape(kw) for kw in RACING_KEYWORDS) + r")(?![\w-])"
 )
@@ -47,9 +39,9 @@ def validate_input(coaching_request: str):
     return True, None
 
 
-# ─── OUTPUT GUARDRAIL ──────────────────────────────────────────────────────────
+# Output guardrail
 
-MAX_WORDS = 40
+MAX_WORDS = 40 # To prevent system cut off the whole feedback
 
 INVALID_PHRASES = [
     "i don't know",
@@ -67,10 +59,7 @@ INVALID_PHRASES = [
     "it's important to note"
 ]
 
-# The local model habitually opens with an apology despite the system prompt
-# telling it not to. That opener carries no content, but the sentence after
-# it is usually genuine, specific coaching advice - so strip the apology
-# instead of discarding the whole response for a generic fallback.
+# Remove the model's unnecessary apology and keep the useful coaching advice.
 _APOLOGY_LEAD = re.compile(
     r"""^\s*["']?\s*(i'?m\s+)?(sorry|apolog\w*)\b[^,.;:]*[,.;:]+\s*""",
     re.IGNORECASE,
@@ -81,11 +70,7 @@ def _strip_apology(text: str) -> str:
     return _APOLOGY_LEAD.sub("", text, count=1).strip().strip("\"'")
 
 
-# The model sometimes invents a specific turn number - either spelled out
-# ("Turn 1") or abbreviated ("T1") - even for sector-level errors where no
-# turn was ever identified. Rather than relying on the prompt alone,
-# normalize any of that wording down to "corner" so the feedback text never
-# claims more precision than the error data actually has.
+# Use "corner" instead of specific turn numbers, since players may not know
 _TURN_NUMBER = re.compile(r"\b(the\s+)?turn\s+\d+\b|\bT\d+\b", re.IGNORECASE)
 
 
@@ -93,9 +78,7 @@ def _replace_turn_with_corner(text: str) -> str:
     return _TURN_NUMBER.sub("the corner", text)
 
 
-# The model sometimes says "delta"/"time delta" despite the system prompt
-# telling it to use plain words instead. Normalize it the same way as the
-# turn-number case above rather than trusting the prompt alone.
+# Use simpler wording instead of "delta" or "time delta" so the feedback is easier for players to understand.
 _DELTA_WORDING = re.compile(r"\btime\s+delta\b|\bdelta\b", re.IGNORECASE)
 
 
@@ -110,6 +93,25 @@ def normalize_wording(text: str) -> str:
     """
     return _replace_turn_with_corner(text)
 
+# Supportive and aggressive styles don't need specific numbers. Remove any numbers the model adds.
+_QUANTITY_UNIT_WORDS = {
+    "km/h": "speed", "kmh": "speed", "kph": "speed", "mph": "speed", "m/s": "speed",
+    "seconds": "time", "second": "time", "secs": "time", "sec": "time", "s": "time",
+    "meters": "distance", "meter": "distance", "metres": "distance", "metre": "distance", "m": "distance",
+    "%": "amount", "percent": "amount",
+}
+
+_QUANTITY_PATTERN = re.compile(
+    r"\b\d+(?:\.\d+)?\s*(" + "|".join(re.escape(u) for u in _QUANTITY_UNIT_WORDS) + r")\b",
+    re.IGNORECASE,
+)
+
+
+def _replace_quantity_wording(text: str) -> str:
+    text = _QUANTITY_PATTERN.sub(lambda m: _QUANTITY_UNIT_WORDS[m.group(1).lower()], text)
+    return re.sub(r"\s{2,}", " ", text).strip()
+
+
 FALLBACK_RESPONSES = {
     "default": "Focus on braking points and consistent throttle application.",
     "late_braking": "Move your braking point earlier and trail brake into the apex.",
@@ -119,31 +121,21 @@ FALLBACK_RESPONSES = {
     "sector_time_loss": "Focus on the key corners in this sector to recover time.",
 }
 
-def validate_output(response: str, error_type: str = "default"):
+def validate_output(response: str, error_type: str = "default", style: str = "technical"):
     response = _replace_delta_wording(_replace_turn_with_corner(_strip_apology(response)))
+    if style in ("aggressive", "supportive"):
+        response = _replace_quantity_wording(response)
     words = response.split()
     word_count = len(words)
 
-    # Truncate first so every check below judges the text that will actually
-    # reach the driver - otherwise a rambling response that opens with a
-    # refusal ("I cannot generate a response, as I am an AI...") but happens
-    # to trail off into real numbers later can dodge the INVALID_PHRASES
-    # check on the full text, only for MAX_WORDS to then cut those numbers
-    # away and leave the refusal as the final spoken line.
+    # Truncate first so the checks run on the text that will be spoken. Otherwise, invalid text may exist after truncation.
     if word_count > MAX_WORDS:
         candidate = ' '.join(words[:MAX_WORDS]).rstrip(',;') + '.'
     else:
         candidate = response
     candidate_lower = candidate.lower()
 
-    # A genuine refusal/hedge ("I'm not sure", "please note that", ...) never
-    # references anything about the drive itself, while real coaching text
-    # always does - a distance/speed number for aggressive/technical styles,
-    # or at least racing vocabulary (turn, apex, braking, ...) for supportive
-    # style, which is allowed to skip numbers. So only discard the response
-    # for containing one of these phrases when it has neither - that's what
-    # tells apart an actual non-answer from a coach who happens to open a
-    # specific, useful sentence with "It's important to note that...".
+    # Only reject these phrases when there's no racing content in the response. This avoids rejecting useful coaching that happens to use them.
     has_concrete_detail = bool(re.search(r"\d", candidate)) or bool(
         _RACING_KEYWORD_PATTERN.search(candidate_lower)
     )
@@ -158,9 +150,9 @@ def validate_output(response: str, error_type: str = "default"):
     return True, candidate
 
 
-# ─── JSON OUTPUT FOR UI TEAM ──────────────────────────────────────────────────
+# JSON output for UI team
 
-def apply_guardrail(coaching_request: str, response: str, error: dict = None):
+def apply_guardrail(coaching_request: str, response: str, error: dict = None, style: str = "technical"):
     """
     Apply guardrails and return a JSON object for the UI team.
 
@@ -168,6 +160,8 @@ def apply_guardrail(coaching_request: str, response: str, error: dict = None):
         coaching_request: coaching context generated from Team 2's error report
         response: Granite's raw response
         error: optional error dict from error_detection.py
+        style: coaching style in use ("aggressive"/"supportive"/"technical"),
+            controls whether stray numbers get stripped from the response
 
     Returns:
         dict: structured JSON output for UI team
@@ -189,7 +183,7 @@ def apply_guardrail(coaching_request: str, response: str, error: dict = None):
         }
 
     # Check output
-    output_valid, cleaned_response = validate_output(response, error_type)
+    output_valid, cleaned_response = validate_output(response, error_type, style=style)
 
     return {
         "is_valid": output_valid,
@@ -201,12 +195,12 @@ def apply_guardrail(coaching_request: str, response: str, error: dict = None):
     }
 
 
-def apply_guardrail_json(coaching_request: str, response: str, error: dict = None) -> str:
+def apply_guardrail_json(coaching_request: str, response: str, error: dict = None, style: str = "technical") -> str:
     """Same as apply_guardrail but returns a JSON string."""
-    return json.dumps(apply_guardrail(coaching_request, response, error), indent=2)
+    return json.dumps(apply_guardrail(coaching_request, response, error, style=style), indent=2)
 
 
-def apply_guardrail_simple(question: str, response: str):
+def apply_guardrail_simple(question: str, response: str, style: str = "technical"):
     """Returns (is_valid, text) tuple for granite_adapter.py compatibility."""
-    result = apply_guardrail(question, response)
+    result = apply_guardrail(question, response, style=style)
     return result["is_valid"], result["feedback"]
