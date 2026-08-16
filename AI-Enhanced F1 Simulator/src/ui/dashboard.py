@@ -907,7 +907,7 @@ class TelemetryDashboard:
         self._update_job = self.root.after(self.REFRESH_MS, self._update)
 
     def _refresh_ui(self, data, status):
-        speed = data.get("speed_kmh", 0) / 3.6
+        speed = data.get("speed_kmh", 0)
         gear = data.get("gear", 1)
         rpm = data.get("rpm", 0)
         throttle = data.get("throttle", 0)
