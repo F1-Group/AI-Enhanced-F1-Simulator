@@ -2,22 +2,22 @@ import os
 import chromadb
 from sentence_transformers import SentenceTransformer
 
-# Load the model or keep a global instance
+# Load the model
 embed_model = SentenceTransformer('all-MiniLM-L6-v2')
 chroma_client = chromadb.Client()
 collection = chroma_client.get_or_create_collection(name="f1_knowledge")
 
-# Global load status flag
+# Flag for load status
 _IS_LOADED = False
 
 def load_knowledge_base():
     global _IS_LOADED
 
-    # Return immediately if already loaded
+    # If the model is already loaded, then return
     if _IS_LOADED:
         return
 
-    # If ChromaDB already has data, mark as loaded and exit without reading files again
+    # If ChromaDB already has data, mark as loaded and return
     if collection.count() > 0:
         _IS_LOADED = True
         return
@@ -47,7 +47,7 @@ def load_knowledge_base():
     print(f"Knowledge base loaded: {doc_count} chunks indexed")
 
 def retrieve(query, top_k=3):
-    # Ensure the knowledge base is loaded before querying
+    # Make sure the knowledge base is loaded before querying
     if collection.count() == 0:
         load_knowledge_base()
 

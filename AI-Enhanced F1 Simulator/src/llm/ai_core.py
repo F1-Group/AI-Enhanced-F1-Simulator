@@ -22,11 +22,8 @@ from llm.coaching_style import get_system_prompt
 from llm.rag import retrieve
 from llm.llm_client import get_fallback_text
 
-# Circuit breaker for the LLM: a failed call trips it, and later calls skip
-# straight to fallback for _LLM_COOLDOWN_SECONDS instead of paying the full
-# retry/timeout cost again. After the cooldown, the next call is allowed to
-# probe the LLM again so a transient outage self-heals instead of forcing
-# fallback text for the rest of the session.
+# If the LLM fails, skip retries and use fallback.
+# After the cooldown, try the LLM again so temporary failures can recover.
 _LLM_COOLDOWN_SECONDS = 10
 _llm_retry_at = 0.0
 
@@ -44,15 +41,11 @@ def _reset_llm_breaker():
     global _llm_retry_at
     _llm_retry_at = 0.0
 
-def process_single_error(error, system_prompt, audio_manager, force_fallback=False, feedback_callback=None):
+def process_single_error(error, system_prompt, audio_manager, force_fallback=False, feedback_callback=None, style="technical"):
     """Processes an isolated telemetry infraction."""
     error_type = error.get("type") or error.get("tag") or "generic_error"
     coaching_request = f"{error.get('message', '')} {error.get('coaching_hint', '')}".strip()
-    # Same key live_coach.py logs "published" under and this module logs
-    # "received"/"guardrail_done" under - passed to AudioManager so
-    # queued_for_voice/voice_start join the same chain instead of being keyed
-    # by an unrelated created_time, which is what let analyze_latency.py's
-    # END-TO-END (published -> voice_start) metric never find a match.
+    # Use the same key across the coaching and audio logs so all events from the same request stay linked and END-TO-END latency can be calculated.
     latency_key = f"{error.get('session_id')}:{error.get('tag')}:{error.get('lap_number')}"
 
     # Fast Layer Event Interception
@@ -62,19 +55,7 @@ def process_single_error(error, system_prompt, audio_manager, force_fallback=Fal
         if feedback_callback:
             feedback_callback(fast_text, layer="fast")
 
-        # NOTE: brake_now/off_track are already spoken directly and
-        # immediately by fast_layer.py's FastLayer.check() (via
-        # AudioManager.play()/play_error(), synchronously, on the telemetry
-        # thread - zero LLM/queue latency, which is the whole point of the
-        # fast layer). This event only reaches here because FastLayer ALSO
-        # pushes it onto shared_event_queue for dashboard feedback_callback
-        # and logging. Calling audio_manager.play_text() here as well used
-        # to re-speak the SAME alert a second time, seconds later, through
-        # ai_core's slower path - confirmed via analyze_audio_queue.py: the
-        # relayed copy could arrive while unrelated slow-layer coaching was
-        # already speaking, sit queued behind it, and get silently dropped
-        # once stale. Dashboard/log side effects still happen above; only
-        # the redundant second audio dispatch is removed.
+        # FastLayer already speaks these alerts immediately. Keep the event for dashboard, but don't play it again here.
 
         return None
 
@@ -82,7 +63,7 @@ def process_single_error(error, system_prompt, audio_manager, force_fallback=Fal
     if force_fallback or _llm_breaker_is_open():
         answer_text = get_fallback_text(error_type)
     else:
-        # Execute memory-resident RAG retrieval
+        # Execute RAG retrieval
         knowledge_chunks = retrieve(coaching_request, top_k=2)
         knowledge_context = "\n".join(knowledge_chunks)
         # Package context together for the LLM
@@ -99,8 +80,8 @@ def process_single_error(error, system_prompt, audio_manager, force_fallback=Fal
             _trip_llm_breaker()
             answer_text = get_fallback_text(error_type)
 
-    # Execute Guardrails & Slow Layer Feedback
-    result = apply_guardrail(coaching_request, answer_text, error=error)
+    # Execute Slow Layer Feedback
+    result = apply_guardrail(coaching_request, answer_text, error=error, style=style)
     log_event("guardrail_done", key=latency_key, detail=error_type)
     if result and result.get("is_valid", False):
         feedback_text = result.get("feedback", answer_text)
@@ -109,7 +90,7 @@ def process_single_error(error, system_prompt, audio_manager, force_fallback=Fal
         if feedback_callback:
             feedback_callback(feedback_text, layer="slow")
 
-        # Broadcast to the driver in real time.
+        # Playout to the driver in real time.
         audio_manager.play_text(
             feedback_text,
             priority="normal",
@@ -203,7 +184,7 @@ def ai_queue_consumer_loop(event_queue, audio_manager, stop_event, is_llm_availa
             break
             
         try:
-            result = process_single_error(event, system_prompt, audio_manager, feedback_callback=feedback_callback)
+            result = process_single_error(event, system_prompt, audio_manager, feedback_callback=feedback_callback, style=style)
             if result:
                 merged = dict(result)
                 merged["error_type"] = event.get("type", "generic_error")
