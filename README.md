@@ -339,9 +339,9 @@ The `analysis/` package converts raw TORCS telemetry into measurable, location-s
 | :--- | :--- | :--- |
 | `brake_now` | The player approaches a corner at least `25 km/h` faster than the expert while applying less than `0.30` brake. | Fast |
 | `off_track` | Absolute TORCS track position exceeds `1.0`. Detection and dashboard logging remain active, but audio is intentionally disabled. | Fast |
-| `wrong_way` | The vehicle's sustained travel direction differs from the forward track direction by more than `90°`; announces “Wrong way. Turn around.” | Fast |
-| `shift_up` | Engine speed reaches `9000 RPM` in a forward gear below sixth; announces “Shift up.” | Fast |
-| `shift_down` | Engine speed falls to `6000 RPM` or below while moving in a forward gear above first; announces “Shift down.” | Fast |
+| `wrong_way` | The vehicle travels at least `10 m` in the reverse track direction, above `20 km/h`, for at least `1.5 s`; announces “Wrong way. Turn around.” once per incident. | Fast |
+| `shift_up` | On a stable, on-track line with at least `70%` throttle, engine speed remains at or above `8800 RPM` for `0.6 s`; announces “Shift up.” once for that gear. | Fast |
+| `shift_down` | On a stable, on-track line while braking at least `30%` with throttle released, engine speed remains at or below `4500 RPM` for `0.6 s` in a safe speed range; announces at most one “Shift down.” per braking episode. | Fast |
 | `late_braking` | The player's braking point is at least `25 m` later than the expert, or the player reaches the corner too fast without braking. | Slow |
 | `poor_corner_exit` | Mean exit speed is at least `12 km/h` below the expert baseline. | Slow |
 | `poor_track_position` | Mean racing-line deviation through a corner is at least `0.35` relative to the expert. | Slow |
@@ -608,7 +608,7 @@ Speaking audio: shift_down
 [Timeout Dropped] AI Coaching Speech is too old (2.84s old), skipping.
 ```
 
-The gear prompts are advisory: `shift_up` is triggered at `9000 RPM` or above, while `shift_down` is triggered at `6000 RPM` or below when the car is moving in a forward gear above first. A wrong-way prompt requires the vehicle to travel at least `10 km/h` in the opposite track direction for one continuous second, preventing momentary spins from producing false warnings.
+Gear conditions must remain stable for `0.6 s`. `shift_up` requires at least `8800 RPM`, `70%` throttle, and a settled on-track line. `shift_down` requires at most `4500 RPM`, at least `30%` brake, released throttle, a safe road speed, and a settled on-track line. Only one downshift is announced per continuous braking episode. A wrong-way prompt requires at least `10 m` of measured reverse track progress above `20 km/h` for `1.5 s`, preventing stationary turns and momentary spins from producing false warnings.
 
 <p align="center">
   <img src="./assets/images/Live_Telemetry_Dashboard_Coaching.png" alt="Live Telemetry Dashboard Coaching" width="400"/>

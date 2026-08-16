@@ -25,19 +25,35 @@ OFF_TRACK_POS = 1.0
 # announce wrong-way driving when it is moving forward while facing more than
 # 90 degrees away from the track direction for a sustained period.
 WRONG_WAY_ANGLE_RAD = np.pi / 2
-WRONG_WAY_MIN_SPEED_KMH = 10.0
-WRONG_WAY_CONFIRM_SECONDS = 1.0
-WRONG_WAY_COOLDOWN_SECONDS = 6.0
+WRONG_WAY_MIN_SPEED_KMH = 20.0
+WRONG_WAY_CONFIRM_SECONDS = 1.5
+WRONG_WAY_MIN_REVERSE_PROGRESS_M = 10.0
 
 # TORCS reports engine RPM directly. These conservative thresholds sit near
 # the useful upper/lower bounds observed in the supplied expert telemetry.
 # They are kept here (rather than in the audio layer) so they can be tuned
 # after play-testing without changing playback behaviour.
-SHIFT_UP_RPM = 9000.0
-SHIFT_DOWN_RPM = 6000.0
-SHIFT_MIN_SPEED_KMH = 10.0
-SHIFT_COOLDOWN_SECONDS = 5.0
+SHIFT_UP_RPM = 8800.0
+SHIFT_DOWN_RPM = 4500.0
+SHIFT_MIN_SPEED_KMH = 25.0
+SHIFT_CONFIRM_SECONDS = 0.6
 MAX_FORWARD_GEAR = 6
+SHIFT_MAX_TRACK_POS = 0.90
+SHIFT_MAX_ANGLE_RAD = 0.35
+SHIFT_MAX_STEER = 0.25
+SHIFT_UP_MIN_THROTTLE = 0.70
+SHIFT_DOWN_MIN_BRAKE = 0.30
+SHIFT_DOWN_MAX_THROTTLE = 0.05
+
+# Prevent mechanically unsafe downshift advice at high road speed. Values are
+# conservative limits derived from the supplied TORCS expert telemetry.
+DOWNSHIFT_MAX_SPEED_KMH = {
+    2: 180.0,
+    3: 280.0,
+    4: 360.0,
+    5: 430.0,
+    6: 480.0,
+}
 
 
 class FastLayer:
@@ -61,6 +77,13 @@ class FastLayer:
         self._last_fast_play = {}
         self._event_queue = event_queue
         self._wrong_way_since = None
+        self._wrong_way_start_dist = None
+        self._wrong_way_announced = False
+        self._observed_gear = None
+        self._shift_candidate = None
+        self._shift_candidate_since = None
+        self._shift_prompted_for_gear = False
+        self._downshift_prompted_in_braking = False
 
     def _play_and_publish(self, tag, message, frame, priority="high"):
         """Speak a deterministic alert and mirror it to the dashboard queue.
@@ -81,13 +104,20 @@ class FastLayer:
                     "tag": tag,
                     "type": tag,
                     "priority": priority,
-                    "interrupt": tag == "wrong_way",
+                    "interrupt": tag in {"wrong_way", "shift_up", "shift_down"},
                     "message": message,
                     "coaching_hint": message,
                     "telemetry": frame,
                 })
             except Exception as exc:
                 print(f"[Fast Layer Warning] {tag} event queue failed: {exc}")
+
+    def _signed_track_delta(self, start_m, end_m):
+        """Return shortest signed progress on the closed circuit."""
+        if self.track_length <= 0:
+            return end_m - start_m
+        half = self.track_length / 2.0
+        return (end_m - start_m + half) % self.track_length - half
 
     def _get_current_corner_zone(self, d):
         candidate_zones = []
@@ -151,6 +181,15 @@ class FastLayer:
         gear = int(frame.get("gear", 0) or 0)
         rpm = float(frame.get("rpm", 0.0) or 0.0)
         angle = float(frame.get("angle", 0.0) or 0.0)
+        throttle = float(frame.get("throttle", 0.0) or 0.0)
+        current_brake = float(frame.get("brake", 0.0) or 0.0)
+        steer = float(frame.get("steer", 0.0) or 0.0)
+        track_pos = float(frame.get("track_pos", 0.0) or 0.0)
+
+        # Releasing the brake starts a new braking episode. This prevents a
+        # single braking zone from producing a chain of downshift prompts.
+        if current_brake <= 0.10:
+            self._downshift_prompted_in_braking = False
 
         # Wrong-way warning: require a sustained condition so a normal spin,
         # collision, or momentary sideways attitude does not trigger speech.
@@ -168,18 +207,24 @@ class FastLayer:
         if wrong_way:
             if self._wrong_way_since is None:
                 self._wrong_way_since = current_time
-            confirmed = current_time - self._wrong_way_since >= WRONG_WAY_CONFIRM_SECONDS
-            cooled_down = (
-                current_time - self._last_fast_play.get("wrong_way", float("-inf"))
-                >= WRONG_WAY_COOLDOWN_SECONDS
+                self._wrong_way_start_dist = d
+            reverse_progress = max(
+                0.0,
+                -self._signed_track_delta(self._wrong_way_start_dist, d),
             )
-            if confirmed and cooled_down:
+            confirmed = (
+                current_time - self._wrong_way_since >= WRONG_WAY_CONFIRM_SECONDS
+                and reverse_progress >= WRONG_WAY_MIN_REVERSE_PROGRESS_M
+            )
+            if confirmed and not self._wrong_way_announced:
                 print("[Fast Layer] Wrong way - turn around")
-                self._last_fast_play["wrong_way"] = current_time
+                self._wrong_way_announced = True
                 self._play_and_publish("wrong_way", "Wrong way. Turn around.", frame)
                 return "wrong_way"
         else:
             self._wrong_way_since = None
+            self._wrong_way_start_dist = None
+            self._wrong_way_announced = False
 
         # The remaining rules assume forward longitudinal speed. Wrong-way
         # detection above is the only coaching rule applicable in reverse.
@@ -187,8 +232,6 @@ class FastLayer:
             return None
 
         active_zone = self._get_current_corner_zone(d)
-        current_brake = frame.get("brake", 0.0)
-
         if active_zone is not None:
             _, _, c_name = active_zone
 
@@ -246,37 +289,57 @@ class FastLayer:
                         print(f"[Fast Layer Warning] Event queue put failed: {e}")
                 return "off_track"
 
-        # Gear coaching is deliberately evaluated after safety alerts. It is
-        # advisory, does not interrupt speech, and is rate-limited separately
-        # from AudioManager's own duplicate-message cooldown.
+        # Gear coaching is evaluated after safety alerts. Only advise a shift
+        # while the car is settled. Downshifts additionally require deliberate
+        # braking with the throttle released.
         if wrong_way:
             return None
 
+        if gear != self._observed_gear:
+            self._observed_gear = gear
+            self._shift_candidate = None
+            self._shift_candidate_since = None
+            self._shift_prompted_for_gear = False
+
         shift_tag = None
-        shift_message = None
+        stable_for_shift = (
+            abs(track_pos) <= SHIFT_MAX_TRACK_POS
+            and abs(angle) <= SHIFT_MAX_ANGLE_RAD
+            and abs(steer) <= SHIFT_MAX_STEER
+        )
         if (
-            1 <= gear < MAX_FORWARD_GEAR
+            stable_for_shift
+            and 1 <= gear < MAX_FORWARD_GEAR
             and speed >= SHIFT_MIN_SPEED_KMH
             and rpm >= SHIFT_UP_RPM
+            and throttle >= SHIFT_UP_MIN_THROTTLE
+            and current_brake <= 0.05
         ):
             shift_tag = "shift_up"
-            shift_message = "Shift up."
         elif (
-            gear > 1
+            stable_for_shift
+            and gear > 1
             and speed >= SHIFT_MIN_SPEED_KMH
             and 0.0 < rpm <= SHIFT_DOWN_RPM
+            and speed <= DOWNSHIFT_MAX_SPEED_KMH.get(gear, float("inf"))
+            and current_brake >= SHIFT_DOWN_MIN_BRAKE
+            and throttle <= SHIFT_DOWN_MAX_THROTTLE
+            and not self._downshift_prompted_in_braking
         ):
             shift_tag = "shift_down"
-            shift_message = "Shift down."
 
-        if shift_tag:
-            cooled_down = (
-                current_time - self._last_fast_play.get(shift_tag, float("-inf"))
-                >= SHIFT_COOLDOWN_SECONDS
-            )
-            if cooled_down:
+        if shift_tag != self._shift_candidate:
+            self._shift_candidate = shift_tag
+            self._shift_candidate_since = current_time if shift_tag else None
+
+        if shift_tag and not self._shift_prompted_for_gear:
+            stable = current_time - self._shift_candidate_since >= SHIFT_CONFIRM_SECONDS
+            if stable:
+                shift_message = "Shift up." if shift_tag == "shift_up" else "Shift down."
                 print(f"[Fast Layer] {shift_message}")
-                self._last_fast_play[shift_tag] = current_time
+                self._shift_prompted_for_gear = True
+                if shift_tag == "shift_down":
+                    self._downshift_prompted_in_braking = True
                 self._play_and_publish(shift_tag, shift_message, frame)
                 return shift_tag
 

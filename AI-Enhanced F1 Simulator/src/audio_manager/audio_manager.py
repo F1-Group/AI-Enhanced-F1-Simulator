@@ -40,13 +40,13 @@ BUILTIN_ALERTS = {
     },
     "shift_up": {
         "message": "Shift up.",
-        "priority": "normal",
-        "interrupt": False,
+        "priority": "high",
+        "interrupt": True,
     },
     "shift_down": {
         "message": "Shift down.",
-        "priority": "normal",
-        "interrupt": False,
+        "priority": "high",
+        "interrupt": True,
     },
 }
 
