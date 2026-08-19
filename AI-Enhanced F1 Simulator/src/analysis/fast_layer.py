@@ -14,7 +14,7 @@ from .lap_utils import SPEED_MAX_VALID
 
 # How much faster than the expert (at the same point, while approaching a
 # corner without braking) counts as "you must brake NOW".
-OVERSPEED_KMH = 25.0
+OVERSPEED_KMH = 7.0
 BRAKE_LOW = 0.30
 APPROACH_ZONE_M = 150.0
 
@@ -25,7 +25,7 @@ OFF_TRACK_POS = 1.0
 # announce wrong-way driving when it is moving forward while facing more than
 # 90 degrees away from the track direction for a sustained period.
 WRONG_WAY_ANGLE_RAD = np.pi / 2
-WRONG_WAY_MIN_SPEED_KMH = 20.0
+WRONG_WAY_MIN_SPEED_KMH = 5.5
 WRONG_WAY_CONFIRM_SECONDS = 1.5
 WRONG_WAY_MIN_REVERSE_PROGRESS_M = 10.0
 
@@ -35,7 +35,7 @@ WRONG_WAY_MIN_REVERSE_PROGRESS_M = 10.0
 # after play-testing without changing playback behaviour.
 SHIFT_UP_RPM = 8800.0
 SHIFT_DOWN_RPM = 4500.0
-SHIFT_MIN_SPEED_KMH = 25.0
+SHIFT_MIN_SPEED_KMH = 7.0
 SHIFT_CONFIRM_SECONDS = 0.6
 MAX_FORWARD_GEAR = 6
 SHIFT_MAX_TRACK_POS = 0.90
@@ -48,11 +48,11 @@ SHIFT_DOWN_MAX_THROTTLE = 0.05
 # Prevent mechanically unsafe downshift advice at high road speed. Values are
 # conservative limits derived from the supplied TORCS expert telemetry.
 DOWNSHIFT_MAX_SPEED_KMH = {
-    2: 180.0,
-    3: 280.0,
-    4: 360.0,
-    5: 430.0,
-    6: 480.0,
+    2: 50.0,
+    3: 78.0,
+    4: 100.0,
+    5: 119.0,
+    6: 133.0,
 }
 
 

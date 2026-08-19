@@ -72,11 +72,9 @@ def start_race_session(llm_connected, style="supportive"):
     print("\n" + "="*50)
     print("[Main] New Race clicked! Creating TORCS Client & Data Pipeline...")
 
-    # Signal the OLD session's threads to stop, via the OLD stop_event object
-    # (kept alive by this local reference even after the global is swapped
-    # below). ai_queue_consumer_loop's ask_race_engineer() call has no HTTP
-    # timeout and can block for tens of seconds, so the old AI consumer
-    # thread may still be mid-call when the 2s join below gives up on it.
+    # Signal old threads to stop via local stop_event reference.
+    # ask_race_engineer() lacks an HTTP timeout (can block for tens of seconds),
+    # so the old consumer thread may outlive the 2s join() timeout.
     old_stop_event = ai_stop_event
     old_stop_event.set()
     if audio_manager:
@@ -93,15 +91,10 @@ def start_race_session(llm_connected, style="supportive"):
         print("[Main Warning] Stopping old Coach thread...")
         coach_thread.join(timeout=2.0)
 
-    # Fresh stop_event + queue for this session, instead of clearing/reusing
-    # the old ones. Reusing a single global Event was a race: if an old
-    # thread was still blocked past the 2s join above, clearing the shared
-    # flag here would un-signal its stop request behind its back, and it
-    # would keep polling shared_event_queue and speaking through the shared
-    # audio_manager indefinitely. A brand new Event/Queue per session means
-    # any straggling old thread keeps seeing *its own* stop_event as set
-    # (never touched again by this or future sessions) and can never publish
-    # into - or be fed by - the new session's queue.
+    # Create new stop_event and queue per session to avoid race conditions.
+    # Clearing a shared Event could accidentally un-signal stuck old threads,
+    # causing them to keep polling and using shared audio.
+    # Dedicated objects ensure lingering threads stay stopped and isolated
     ai_stop_event = threading.Event()
     shared_event_queue = queue.Queue()
 

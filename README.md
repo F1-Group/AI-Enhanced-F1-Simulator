@@ -1,5 +1,12 @@
 # AI-Enhanced-F1-Simulator
-Integrating IBM Granite models into an Open Source racing simulator - TORCS.
+<p align="center">
+  <img src="./assets/images/Dashboard.png" alt="Dashboard" width="800"/>
+</p>
+<p align="center">
+  <a href = "https://youtu.be/kEXgGcCtlPY"><b>👉Click here to watch demo video👈</b></a>
+</p>
+
+AI-Enhanced F1 Simulator is a real-time racing coach built on the open-source TORCS simulator. The system compares a driver's live telemetry against the championship-winning Ahura racing agent to spot performance gaps. Powered by local IBM Granite models running via Ollama, it delivers instant voice and text guidance during the race, along with detailed post-race analysis to help drivers improve their lap times.
 
 ## Table of Contents
 - [1. Prerequisites & Environment Setup](#1-prerequisites--environment-setup)
@@ -28,7 +35,6 @@ Integrating IBM Granite models into an Open Source racing simulator - TORCS.
   - [6.2 Handshake & Multiprocessing Input Startup](#62-handshake--multiprocessing-input-startup)
   - [6.3 Real-Time Coaching](#63-real-time-coaching)
   - [6.4 Post-Race Summary & Graceful System Shutdown](#64-post-race-summary--graceful-system-shutdown)
-- [7. Troubleshooting & FAQs](#7-troubleshooting--faqs)
 - [Appendix: Acquiring Expert Telemetry](#appendix-acquiring-expert-telemetry)
 
 ## 1. Prerequisites & Environment Setup
@@ -690,10 +696,6 @@ Data saved successfully and safely! Absolute file path: .../telemetry_20260729_2
 
 > **macOS Accessibility Notice:** Since the middleware uses global keyboard listeners (`pynput`) for input monitoring, macOS will prompt you for permission or display a warning: `This process is not trusted! Input event monitoring will not be possible...`
 **Fix:** Go to **System Settings** $\rightarrow$ **Privacy & Security** $\rightarrow$ **Accessibility** (and **Input Monitoring**), toggle **ON** the switch for your terminal app (e.g., Terminal, iTerm2, or VS Code), then restart the terminal and re-run `python main.py`.
-
-
-## 7. Troubleshooting & FAQs
-
 
 ## Appendix: Acquiring Expert Telemetry
 

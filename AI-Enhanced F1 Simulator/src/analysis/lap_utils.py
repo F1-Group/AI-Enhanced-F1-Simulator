@@ -11,9 +11,9 @@ import numpy as np
 import pandas as pd
 
 # Sanity bound for speed_kmh: comfortably above the highest reading seen in
-# normal driving (~510 in the expert recordings), so it only catches clear
+# normal driving, so it only catches clear
 # collision sensor spikes (which exceed 1000).
-SPEED_MAX_VALID = 600.0
+SPEED_MAX_VALID = 300.0
 
 # A lap reset shows up as lap_distance suddenly dropping by (almost) a full
 # track length. Any backwards jump bigger than this is treated as a new lap.

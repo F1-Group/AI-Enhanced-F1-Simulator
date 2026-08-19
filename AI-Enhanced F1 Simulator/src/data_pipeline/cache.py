@@ -42,7 +42,7 @@ class DataCache:
         """Called once per race (by main.py, right after LiveCoach builds its
         expert-baseline corner list) so the dashboard thread can show which
         turn the driver is currently in without needing pandas/analysis
-        imports of its own - just a plain list of dicts."""
+        imports of its own"""
         with self._lock:
             self._corners = list(corners) if corners else []
             self._track_length = track_length
