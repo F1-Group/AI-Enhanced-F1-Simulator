@@ -3,7 +3,7 @@
   <img src="./assets/images/Dashboard.png" alt="Dashboard" width="800"/>
 </p>
 <p align="center">
-  <a href = "https://youtu.be/kEXgGcCtlPY"><b>👉Click here to watch demo video👈</b></a>
+  <a href = "https://youtu.be/gdIVZpb0Jr4"><b>👉Click here to watch demo video👈</b></a>
 </p>
 
 AI-Enhanced F1 Simulator is a real-time racing coach built on the open-source TORCS simulator. The system compares a driver's live telemetry against the championship-winning Ahura racing agent to spot performance gaps. Powered by local IBM Granite models running via Ollama, it delivers instant voice and text guidance during the race, along with detailed post-race analysis to help drivers improve their lap times.
