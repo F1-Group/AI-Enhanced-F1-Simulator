@@ -1,5 +1,12 @@
 # AI-Enhanced-F1-Simulator
-Integrating IBM Granite models into an Open Source racing simulator - TORCS.
+<p align="center">
+  <img src="./assets/images/Dashboard.png" alt="Dashboard" width="800"/>
+</p>
+<p align="center">
+  <a href = "https://youtu.be/gdIVZpb0Jr4"><b>👉Click here to watch demo video👈</b></a>
+</p>
+
+AI-Enhanced F1 Simulator is a real-time racing coach built on the open-source TORCS simulator. The system compares a driver's live telemetry against the championship-winning Ahura racing agent to spot performance gaps. Powered by local IBM Granite models running via Ollama, it delivers instant voice and text guidance during the race, along with detailed post-race analysis to help drivers improve their lap times.
 
 ## Table of Contents
 - [1. Prerequisites & Environment Setup](#1-prerequisites--environment-setup)
@@ -19,6 +26,7 @@ Integrating IBM Granite models into an Open Source racing simulator - TORCS.
   - [4.2 Core Python Modules & Data Architecture](#42-core-python-modules--data-architecture)
   - [4.3 Telemetry Analysis & Live Coaching](#43-telemetry-analysis--live-coaching)
   - [4.4 Priority-Based Audio Management](#44-priority-based-audio-management)
+  - [4.5 Dashboard](#45-Dashboard)
 - [5. Step-by-Step Execution Guide](#5-step-by-step-execution-guide)
   - [5.1 Execution Guide](#51-execution-guide)
   - [5.2 TORCS Game Controls & Display Shortcuts](#52-torcs-game-controls--display-shortcuts)
@@ -27,7 +35,6 @@ Integrating IBM Granite models into an Open Source racing simulator - TORCS.
   - [6.2 Handshake & Multiprocessing Input Startup](#62-handshake--multiprocessing-input-startup)
   - [6.3 Real-Time Coaching](#63-real-time-coaching)
   - [6.4 Post-Race Summary & Graceful System Shutdown](#64-post-race-summary--graceful-system-shutdown)
-- [7. Troubleshooting & FAQs](#7-troubleshooting--faqs)
 - [Appendix: Acquiring Expert Telemetry](#appendix-acquiring-expert-telemetry)
 
 ## 1. Prerequisites & Environment Setup
@@ -339,9 +346,9 @@ The `analysis/` package converts raw TORCS telemetry into measurable, location-s
 | :--- | :--- | :--- |
 | `brake_now` | The player approaches a corner at least `25 km/h` faster than the expert while applying less than `0.30` brake. | Fast |
 | `off_track` | Absolute TORCS track position exceeds `1.0`. Detection and dashboard logging remain active, but audio is intentionally disabled. | Fast |
-| `wrong_way` | The vehicle's sustained travel direction differs from the forward track direction by more than `90°`; announces “Wrong way. Turn around.” | Fast |
-| `shift_up` | Engine speed reaches `9000 RPM` in a forward gear below sixth; announces “Shift up.” | Fast |
-| `shift_down` | Engine speed falls to `6000 RPM` or below while moving in a forward gear above first; announces “Shift down.” | Fast |
+| `wrong_way` | The vehicle travels at least `10 m` in the reverse track direction, above `20 km/h`, for at least `1.5 s`; announces “Wrong way. Turn around.” once per incident. | Fast |
+| `shift_up` | On a stable, on-track line with at least `70%` throttle, engine speed remains at or above `8800 RPM` for `0.6 s`; announces “Shift up.” once for that gear. | Fast |
+| `shift_down` | On a stable, on-track line while braking at least `30%` with throttle released, engine speed remains at or below `4500 RPM` for `0.6 s` in a safe speed range; announces at most one “Shift down.” per braking episode. | Fast |
 | `late_braking` | The player's braking point is at least `25 m` later than the expert, or the player reaches the corner too fast without braking. | Slow |
 | `poor_corner_exit` | Mean exit speed is at least `12 km/h` below the expert baseline. | Slow |
 | `poor_track_position` | Mean racing-line deviation through a corner is at least `0.35` relative to the expert. | Slow |
@@ -426,6 +433,56 @@ TORCS telemetry
                                                         speech or WAV output
 ```
 
+### 4.5 Dashboard
+
+This will be a walkthrough of how things are implemented or listed in the dashboard, and along with a quick tour that shows what it will look like when you open it. Starting with home screen down to ending a session.
+
+**Home Screen**
+
+On the home screen, run 'main.py'. At first, you will see a black home screen with two buttons for you to choose: **START SYSTEM** and **HOW TO PLAY**. "How to Play" is used for showing you how to play and follow the guidelines. For example: driving controls and TORCS setup steps.
+
+**Starting up**
+
+Press on the **START SYSTEM** it will take a few seconds for the app to load Granite and indexing the RAG knowledge base in the background of the screen, with the status which mention what's going on. If Ollama isn't running or can't be reached, then later you will get a yellow warning that says that the system is switching to offline coaching instead of online. This doesn't mean it crashes because the race still runs fine with any problem; you just get pre-written coaching lines instead of the ones that have been generated live by the model.
+
+**Picking a coaching style**
+
+After everything loads properly, it should say “System Ready,” then you can choose which AI engineer’s personality you would like, so you could choose 3 different types of AI personality based on your preferences, such as: **supportive**, **technical**, or **aggressive**. It only changes how the AI engineers talk to you in the console at the bottom of the live dashboard. For the supportive, it is to encourage the driver, for the technical, it’s just numbers with no opinion; and for the aggressive is for an aggressive style. These options are mentioned for you to pick at the beginning, depending on your preferences, and can’t be change during the race, so choose wisely.
+
+**Connecting to TORCS**
+
+Once you click **New Race,** you’ll see a “Connecting to simulator” screen. Then it’s time for you to go and start TORCS and get it to the “Initializing Driver scr_server1…” point. Once it says the UDP handshake has passed or goes through, then the dashboard will jump forward into the live view by itself, and you don’t need to press any other things just sit down and wait for it to load properly.
+
+*Now let's start with the Live dashboard order and listed*
+
+**Left column (timing)**
+
+From the top to the bottom:
+
+- **Race Position** - your current position/place, in color orange.
+- **Lap** - which lap you're on currently, it will resets to 1 every new race starts.
+- **Current Lap** - this is your live lap time, tickling while you drive. 
+  - Under that is your **lap distance in meters** and which **sector** you're in currently such as (sector 1, 2, or 3), as well as 3 split times for each sector, **S1 / S2 / S3**. After you finished each sector the time will locked automatically; but for whichever one you're driving in the time keepss counting up until you have cross that sector and pass to another sector.
+- **Previous Lap** and **Best Lap** - these lap time will filled in automatically the moment you cross the finish line.
+
+**Center (what the car's doing currently)**
+
+There will be a big speed number in km/h, as well as your current gear, which tells which gear you are currently using, and throttle/brake bars that fill up as you press the pedals, which also measure how hard you pressed it. Below that, there is a small dot which tracks your **track position** - green while you're safely on the track and red in the instant when you go off the track. As well as a fuel bar in percentage, which shows you how much fuel you have left.
+
+**Right column (car health)**
+
+- **Wheel Spin** - which tells you if the tires are losing grip or not. If the number gets higher and higher, it means that you’re spinning them.
+- **Car Damage** - which will show you how beat up or damaged the car has been taken in, both as a raw number, which will be out of 10,000, and as a percentage so that you know it instantly, as well as a bar that shifts green -> yellow -> red as it climbs. If the damage ever reaches 10,000, the session ends right there, and you’re sent to an error screen - it’s not a bug; this will cause TORCS itself to start glitching out past that point (when the car can literally fly off the track), so the dashboard will cut the run before that happens rather than showing you broken telemetry.
+- **Car angle** - which is quite relative to the track, and an ON TRACK / OFF TRACK status.
+- **Turn indicator** - it says “Turn 1” (For example) in orange when you’re literally in that corner, and it will say “Straight” in grey the rest of the time to let you know that you’re currently in the straight line. It also matches the same corners the AI coach is watching for late braking and bad exits, so if the coach tells you “brake earlier before T3”, this will let you know immediately when you’ve actually reached T3.
+
+**Bottom row**
+
+On the left, it will show you an RPM gauge that goes green -> yellow -> red as you near redline. To the right of it will shows you the **Race Engineer Console** - a running log of everything your AI coach says in real time. Yellow lines are urgent fast-layer alerts, for example: "Brake Now!" or "You are off track", which will pop up immediately without any delay. White lines are the slower, Granite-generated coaching feedback that shows up after each mistake is analyzed.
+
+**Ending a session**
+
+When TORCS ends the race - or whether your car has taken damage at the maximum you will see a Post-Race Summary page. Please wait a moment because the system is still waiting for the AI to finish putting together your lap review; then you’ll get a short debrief on the biggest thing to fix and improve for the next time. Then after that, hit the **MAIN MENU** to go back and start again. If you want to finish early, just press the **<BACK** button in the top-right corner of the live dashboard. It will stop everything cleanly and drop you back at the New Race screen - no need to close the whole app, and everything should still run properly once again.
 
 ## 5. Step-by-Step Execution Guide
 
@@ -608,7 +665,7 @@ Speaking audio: shift_down
 [Timeout Dropped] AI Coaching Speech is too old (2.84s old), skipping.
 ```
 
-The gear prompts are advisory: `shift_up` is triggered at `9000 RPM` or above, while `shift_down` is triggered at `6000 RPM` or below when the car is moving in a forward gear above first. A wrong-way prompt requires the vehicle to travel at least `10 km/h` in the opposite track direction for one continuous second, preventing momentary spins from producing false warnings.
+Gear conditions must remain stable for `0.6 s`. `shift_up` requires at least `8800 RPM`, `70%` throttle, and a settled on-track line. `shift_down` requires at most `4500 RPM`, at least `30%` brake, released throttle, a safe road speed, and a settled on-track line. Only one downshift is announced per continuous braking episode. A wrong-way prompt requires at least `10 m` of measured reverse track progress above `20 km/h` for `1.5 s`, preventing stationary turns and momentary spins from producing false warnings.
 
 <p align="center">
   <img src="./assets/images/Live_Telemetry_Dashboard_Coaching.png" alt="Live Telemetry Dashboard Coaching" width="400"/>
@@ -639,10 +696,6 @@ Data saved successfully and safely! Absolute file path: .../telemetry_20260729_2
 
 > **macOS Accessibility Notice:** Since the middleware uses global keyboard listeners (`pynput`) for input monitoring, macOS will prompt you for permission or display a warning: `This process is not trusted! Input event monitoring will not be possible...`
 **Fix:** Go to **System Settings** $\rightarrow$ **Privacy & Security** $\rightarrow$ **Accessibility** (and **Input Monitoring**), toggle **ON** the switch for your terminal app (e.g., Terminal, iTerm2, or VS Code), then restart the terminal and re-run `python main.py`.
-
-
-## 7. Troubleshooting & FAQs
-
 
 ## Appendix: Acquiring Expert Telemetry
 

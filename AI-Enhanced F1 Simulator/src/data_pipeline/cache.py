@@ -13,6 +13,8 @@ class DataCache:
         self._lock = threading.Lock()
         self._data = None
         self._status = None
+        self._corners = []
+        self._track_length = None
 
     def update_telemetry(self, cleaned_data: dict):
         with self._lock:
@@ -36,10 +38,22 @@ class DataCache:
         with self._lock:
             return self._status
 
-    def clear(self):
+    def set_corners(self, corners, track_length):
+        """Called once per race (by main.py, right after LiveCoach builds its
+        expert-baseline corner list) so the dashboard thread can show which
+        turn the driver is currently in without needing pandas/analysis
+        imports of its own"""
         with self._lock:
-            self._data = None
-            self._status = GameStatus.CONNECTING
+            self._corners = list(corners) if corners else []
+            self._track_length = track_length
+
+    def get_corners(self):
+        with self._lock:
+            return list(self._corners)
+
+    def get_track_length(self):
+        with self._lock:
+            return self._track_length
 
 # Shared instance
 cache = DataCache()
