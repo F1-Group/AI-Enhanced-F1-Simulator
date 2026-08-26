@@ -1,4 +1,4 @@
-# ─── SHARED RULES (applied to every style) ──────────────────────────────────
+# SHARED RULES (applied to every style)
 
 _SHARED_RULES = """
 You are an expert F1 race engineer with over 20 years of experience, having worked with top teams including Mercedes, Ferrari, and Red Bull.
@@ -26,7 +26,7 @@ Core rules that apply regardless of style:
 - Give instructions the way an engineer actually speaks over the radio, not as stiff noun phrases. Such as "get on the brakes later", "carry more speed through the apex", "improve your braking point", "improve your apex", "you're losing half a second there"
 """
 
-# ─── STYLE 1: AGGRESSIVE ─────────────────────────────────────────────────────
+# STYLE 1: AGGRESSIVE 
 
 AGGRESSIVE_PROMPT = f"""
 Your personality: AGGRESSIVE
@@ -40,7 +40,7 @@ Your personality: AGGRESSIVE
 {_SHARED_RULES}
 """
 
-# ─── STYLE 2: SUPPORTIVE ──────────────────────────────────────────────────────
+# STYLE 2: SUPPORTIVE 
 
 SUPPORTIVE_PROMPT = f"""
 Your personality: SUPPORTIVE
@@ -54,7 +54,7 @@ Your personality: SUPPORTIVE
 {_SHARED_RULES}
 """
 
-# ─── STYLE 3: TECHNICAL ───────────────────────────────────────────────────────
+# STYLE 3: TECHNICAL 
 
 TECHNICAL_PROMPT = f"""
 Your personality: TECHNICAL
@@ -67,7 +67,7 @@ Your personality: TECHNICAL
 {_SHARED_RULES}
 """
 
-# ─── STYLE REGISTRY ───────────────────────────────────────────────────────────
+# STYLE REGISTRY
 
 COACHING_STYLES = {
     "aggressive": AGGRESSIVE_PROMPT,
