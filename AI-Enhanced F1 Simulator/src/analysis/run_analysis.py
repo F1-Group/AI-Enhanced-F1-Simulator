@@ -13,12 +13,11 @@ import argparse
 import json
 from datetime import datetime
 from pathlib import Path
-import os
 import pandas as pd
 
 from .alignment import align_nearest, build_baseline, compute_deltas, distance_grid
 from .error_detection import detect_corners, detect_errors
-from .lap_utils import load_telemetry, split_laps
+from .lap_utils import MIN_LAP_FRACTION, load_telemetry, split_laps
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 DEFAULT_EXPERT = PROJECT_ROOT / "data" / "expert_data" / "expert_olethros_road_1_3laps.csv"
@@ -168,7 +167,7 @@ def main():
     track_length = max(lap["lap_distance"].max() for lap in expert_laps)
     complete_laps = []
     for lap in player_laps:
-        if lap["lap_distance"].max() >= 0.95 * track_length:
+        if lap["lap_distance"].max() >= MIN_LAP_FRACTION * track_length:
             complete_laps.append(lap)
         else:
             print(f"Skipping incomplete lap fragment "
