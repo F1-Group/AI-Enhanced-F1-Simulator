@@ -1,4 +1,3 @@
-import json
 import re
 
 # Input guardrail
@@ -178,14 +177,3 @@ def apply_guardrail(coaching_request: str, response: str, error: dict = None, st
         "corner": corner,
         "coaching_context": coaching_request
     }
-
-
-def apply_guardrail_json(coaching_request: str, response: str, error: dict = None, style: str = "technical") -> str:
-    """Same as apply_guardrail but returns a JSON string."""
-    return json.dumps(apply_guardrail(coaching_request, response, error, style=style), indent=2)
-
-
-def apply_guardrail_simple(question: str, response: str, style: str = "technical"):
-    """Returns (is_valid, text) tuple for granite_adapter.py compatibility."""
-    result = apply_guardrail(question, response, style=style)
-    return result["is_valid"], result["feedback"]

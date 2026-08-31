@@ -9,55 +9,55 @@
   "expert_lap_time_s": 175.49,
   "corners_detected": [
     {
-      "name": "T1",
+      "name": "Turn 1",
       "start_m": 535.0,
       "end_m": 620.0,
       "apex_m": 610.0
     },
     {
-      "name": "T2",
+      "name": "Turn 2",
       "start_m": 700.0,
       "end_m": 820.0,
       "apex_m": 795.0
     },
     {
-      "name": "T3",
+      "name": "Turn 3",
       "start_m": 2805.0,
       "end_m": 2870.0,
       "apex_m": 2815.0
     },
     {
-      "name": "T4",
+      "name": "Turn 4",
       "start_m": 3155.0,
       "end_m": 3185.0,
       "apex_m": 3185.0
     },
     {
-      "name": "T5",
+      "name": "Turn 5",
       "start_m": 3395.0,
       "end_m": 3435.0,
       "apex_m": 3435.0
     },
     {
-      "name": "T6",
+      "name": "Turn 6",
       "start_m": 3510.0,
       "end_m": 3565.0,
       "apex_m": 3550.0
     },
     {
-      "name": "T7",
+      "name": "Turn 7",
       "start_m": 3650.0,
       "end_m": 3700.0,
       "apex_m": 3660.0
     },
     {
-      "name": "T8",
+      "name": "Turn 8",
       "start_m": 4110.0,
       "end_m": 4165.0,
       "apex_m": 4165.0
     },
     {
-      "name": "T9",
+      "name": "Turn 9",
       "start_m": 4770.0,
       "end_m": 4975.0,
       "apex_m": 4965.0
@@ -65,11 +65,11 @@
   ],
   "errors": [
     {
-      "tag": "T1_poor_corner_exit",
+      "tag": "Turn 1_poor_corner_exit",
       "layer": "slow",
       "priority": "high",
       "interrupt": false,
-      "corner": "T1",
+      "corner": "Turn 1",
       "type": "poor_corner_exit",
       "severity": "high",
       "confidence": 0.95,
@@ -78,8 +78,8 @@
         "speed_kmh",
         "wheel_spin"
       ],
-      "message": "Poor corner exit detected at T1.",
-      "coaching_hint": "Get on the throttle earlier and more progressively out of T1; you are exiting about 58 km/h slower than the baseline.",
+      "message": "Poor corner exit detected at Turn 1.",
+      "coaching_hint": "Get on the throttle earlier and more progressively out of Turn 1; you are exiting about 58 km/h slower than the baseline.",
       "audio_key": "poor_corner_exit",
       "audio_file": "audio/poor_corner_exit.wav",
       "evidence": {
@@ -103,11 +103,11 @@
       }
     },
     {
-      "tag": "T2_poor_corner_exit",
+      "tag": "Turn 2_poor_corner_exit",
       "layer": "slow",
       "priority": "high",
       "interrupt": false,
-      "corner": "T2",
+      "corner": "Turn 2",
       "type": "poor_corner_exit",
       "severity": "high",
       "confidence": 0.95,
@@ -116,8 +116,8 @@
         "speed_kmh",
         "wheel_spin"
       ],
-      "message": "Poor corner exit detected at T2.",
-      "coaching_hint": "Get on the throttle earlier and more progressively out of T2; you are exiting about 156 km/h slower than the baseline.",
+      "message": "Poor corner exit detected at Turn 2.",
+      "coaching_hint": "Get on the throttle earlier and more progressively out of Turn 2; you are exiting about 156 km/h slower than the baseline.",
       "audio_key": "poor_corner_exit",
       "audio_file": "audio/poor_corner_exit.wav",
       "evidence": {
@@ -141,11 +141,11 @@
       }
     },
     {
-      "tag": "T3_poor_corner_exit",
+      "tag": "Turn 3_poor_corner_exit",
       "layer": "slow",
       "priority": "high",
       "interrupt": false,
-      "corner": "T3",
+      "corner": "Turn 3",
       "type": "poor_corner_exit",
       "severity": "high",
       "confidence": 0.95,
@@ -154,8 +154,8 @@
         "speed_kmh",
         "wheel_spin"
       ],
-      "message": "Poor corner exit detected at T3.",
-      "coaching_hint": "Get on the throttle earlier and more progressively out of T3; you are exiting about 352 km/h slower than the baseline.",
+      "message": "Poor corner exit detected at Turn 3.",
+      "coaching_hint": "Get on the throttle earlier and more progressively out of Turn 3; you are exiting about 352 km/h slower than the baseline.",
       "audio_key": "poor_corner_exit",
       "audio_file": "audio/poor_corner_exit.wav",
       "evidence": {
@@ -179,11 +179,11 @@
       }
     },
     {
-      "tag": "T3_poor_track_position",
+      "tag": "Turn 3_poor_track_position",
       "layer": "slow",
       "priority": "normal",
       "interrupt": false,
-      "corner": "T3",
+      "corner": "Turn 3",
       "type": "poor_track_position",
       "severity": "high",
       "confidence": 0.95,
@@ -192,8 +192,8 @@
         "angle",
         "steer"
       ],
-      "message": "The car is off the ideal racing line at T3.",
-      "coaching_hint": "Follow the baseline line through T3 more closely and avoid large steering corrections.",
+      "message": "The car is off the ideal racing line at Turn 3.",
+      "coaching_hint": "Follow the baseline line through Turn 3 more closely and avoid large steering corrections.",
       "audio_key": "poor_track_position",
       "audio_file": "audio/poor_track_position.wav",
       "evidence": {
@@ -216,11 +216,11 @@
       }
     },
     {
-      "tag": "T4_poor_corner_exit",
+      "tag": "Turn 4_poor_corner_exit",
       "layer": "slow",
       "priority": "high",
       "interrupt": false,
-      "corner": "T4",
+      "corner": "Turn 4",
       "type": "poor_corner_exit",
       "severity": "high",
       "confidence": 0.95,
@@ -229,8 +229,8 @@
         "speed_kmh",
         "wheel_spin"
       ],
-      "message": "Poor corner exit detected at T4.",
-      "coaching_hint": "Get on the throttle earlier and more progressively out of T4; you are exiting about 193 km/h slower than the baseline.",
+      "message": "Poor corner exit detected at Turn 4.",
+      "coaching_hint": "Get on the throttle earlier and more progressively out of Turn 4; you are exiting about 193 km/h slower than the baseline.",
       "audio_key": "poor_corner_exit",
       "audio_file": "audio/poor_corner_exit.wav",
       "evidence": {
@@ -254,11 +254,11 @@
       }
     },
     {
-      "tag": "T5_poor_corner_exit",
+      "tag": "Turn 5_poor_corner_exit",
       "layer": "slow",
       "priority": "high",
       "interrupt": false,
-      "corner": "T5",
+      "corner": "Turn 5",
       "type": "poor_corner_exit",
       "severity": "high",
       "confidence": 0.95,
@@ -267,8 +267,8 @@
         "speed_kmh",
         "wheel_spin"
       ],
-      "message": "Poor corner exit detected at T5.",
-      "coaching_hint": "Get on the throttle earlier and more progressively out of T5; you are exiting about 237 km/h slower than the baseline.",
+      "message": "Poor corner exit detected at Turn 5.",
+      "coaching_hint": "Get on the throttle earlier and more progressively out of Turn 5; you are exiting about 237 km/h slower than the baseline.",
       "audio_key": "poor_corner_exit",
       "audio_file": "audio/poor_corner_exit.wav",
       "evidence": {
@@ -292,11 +292,11 @@
       }
     },
     {
-      "tag": "T6_poor_corner_exit",
+      "tag": "Turn 6_poor_corner_exit",
       "layer": "slow",
       "priority": "high",
       "interrupt": false,
-      "corner": "T6",
+      "corner": "Turn 6",
       "type": "poor_corner_exit",
       "severity": "high",
       "confidence": 0.95,
@@ -305,8 +305,8 @@
         "speed_kmh",
         "wheel_spin"
       ],
-      "message": "Poor corner exit detected at T6.",
-      "coaching_hint": "Get on the throttle earlier and more progressively out of T6; you are exiting about 76 km/h slower than the baseline.",
+      "message": "Poor corner exit detected at Turn 6.",
+      "coaching_hint": "Get on the throttle earlier and more progressively out of Turn 6; you are exiting about 76 km/h slower than the baseline.",
       "audio_key": "poor_corner_exit",
       "audio_file": "audio/poor_corner_exit.wav",
       "evidence": {
@@ -330,11 +330,11 @@
       }
     },
     {
-      "tag": "T7_poor_corner_exit",
+      "tag": "Turn 7_poor_corner_exit",
       "layer": "slow",
       "priority": "high",
       "interrupt": false,
-      "corner": "T7",
+      "corner": "Turn 7",
       "type": "poor_corner_exit",
       "severity": "high",
       "confidence": 0.95,
@@ -343,8 +343,8 @@
         "speed_kmh",
         "wheel_spin"
       ],
-      "message": "Poor corner exit detected at T7.",
-      "coaching_hint": "Get on the throttle earlier and more progressively out of T7; you are exiting about 94 km/h slower than the baseline.",
+      "message": "Poor corner exit detected at Turn 7.",
+      "coaching_hint": "Get on the throttle earlier and more progressively out of Turn 7; you are exiting about 94 km/h slower than the baseline.",
       "audio_key": "poor_corner_exit",
       "audio_file": "audio/poor_corner_exit.wav",
       "evidence": {
@@ -368,11 +368,11 @@
       }
     },
     {
-      "tag": "T8_poor_corner_exit",
+      "tag": "Turn 8_poor_corner_exit",
       "layer": "slow",
       "priority": "high",
       "interrupt": false,
-      "corner": "T8",
+      "corner": "Turn 8",
       "type": "poor_corner_exit",
       "severity": "high",
       "confidence": 0.95,
@@ -381,8 +381,8 @@
         "speed_kmh",
         "wheel_spin"
       ],
-      "message": "Poor corner exit detected at T8.",
-      "coaching_hint": "Get on the throttle earlier and more progressively out of T8; you are exiting about 88 km/h slower than the baseline.",
+      "message": "Poor corner exit detected at Turn 8.",
+      "coaching_hint": "Get on the throttle earlier and more progressively out of Turn 8; you are exiting about 88 km/h slower than the baseline.",
       "audio_key": "poor_corner_exit",
       "audio_file": "audio/poor_corner_exit.wav",
       "evidence": {
@@ -406,11 +406,11 @@
       }
     },
     {
-      "tag": "T9_poor_corner_exit",
+      "tag": "Turn 9_poor_corner_exit",
       "layer": "slow",
       "priority": "high",
       "interrupt": false,
-      "corner": "T9",
+      "corner": "Turn 9",
       "type": "poor_corner_exit",
       "severity": "high",
       "confidence": 0.95,
@@ -419,8 +419,8 @@
         "speed_kmh",
         "wheel_spin"
       ],
-      "message": "Poor corner exit detected at T9.",
-      "coaching_hint": "Get on the throttle earlier and more progressively out of T9; you are exiting about 294 km/h slower than the baseline.",
+      "message": "Poor corner exit detected at Turn 9.",
+      "coaching_hint": "Get on the throttle earlier and more progressively out of Turn 9; you are exiting about 294 km/h slower than the baseline.",
       "audio_key": "poor_corner_exit",
       "audio_file": "audio/poor_corner_exit.wav",
       "evidence": {
@@ -522,11 +522,11 @@
       }
     },
     {
-      "tag": "T8_poor_track_position",
+      "tag": "Turn 8_poor_track_position",
       "layer": "slow",
       "priority": "normal",
       "interrupt": false,
-      "corner": "T8",
+      "corner": "Turn 8",
       "type": "poor_track_position",
       "severity": "high",
       "confidence": 0.94,
@@ -535,8 +535,8 @@
         "angle",
         "steer"
       ],
-      "message": "The car is off the ideal racing line at T8.",
-      "coaching_hint": "Follow the baseline line through T8 more closely and avoid large steering corrections.",
+      "message": "The car is off the ideal racing line at Turn 8.",
+      "coaching_hint": "Follow the baseline line through Turn 8 more closely and avoid large steering corrections.",
       "audio_key": "poor_track_position",
       "audio_file": "audio/poor_track_position.wav",
       "evidence": {
@@ -559,11 +559,11 @@
       }
     },
     {
-      "tag": "T9_poor_track_position",
+      "tag": "Turn 9_poor_track_position",
       "layer": "slow",
       "priority": "normal",
       "interrupt": false,
-      "corner": "T9",
+      "corner": "Turn 9",
       "type": "poor_track_position",
       "severity": "high",
       "confidence": 0.91,
@@ -572,8 +572,8 @@
         "angle",
         "steer"
       ],
-      "message": "The car is off the ideal racing line at T9.",
-      "coaching_hint": "Follow the baseline line through T9 more closely and avoid large steering corrections.",
+      "message": "The car is off the ideal racing line at Turn 9.",
+      "coaching_hint": "Follow the baseline line through Turn 9 more closely and avoid large steering corrections.",
       "audio_key": "poor_track_position",
       "audio_file": "audio/poor_track_position.wav",
       "evidence": {
@@ -596,11 +596,11 @@
       }
     },
     {
-      "tag": "T4_poor_track_position",
+      "tag": "Turn 4_poor_track_position",
       "layer": "slow",
       "priority": "normal",
       "interrupt": false,
-      "corner": "T4",
+      "corner": "Turn 4",
       "type": "poor_track_position",
       "severity": "medium",
       "confidence": 0.86,
@@ -609,8 +609,8 @@
         "angle",
         "steer"
       ],
-      "message": "The car is off the ideal racing line at T4.",
-      "coaching_hint": "Follow the baseline line through T4 more closely and avoid large steering corrections.",
+      "message": "The car is off the ideal racing line at Turn 4.",
+      "coaching_hint": "Follow the baseline line through Turn 4 more closely and avoid large steering corrections.",
       "audio_key": "poor_track_position",
       "audio_file": "audio/poor_track_position.wav",
       "evidence": {
@@ -633,11 +633,11 @@
       }
     },
     {
-      "tag": "T9_unstable_throttle",
+      "tag": "Turn 9_unstable_throttle",
       "layer": "slow",
       "priority": "normal",
       "interrupt": false,
-      "corner": "T9",
+      "corner": "Turn 9",
       "type": "unstable_throttle",
       "severity": "medium",
       "confidence": 0.85,
@@ -646,8 +646,8 @@
         "wheel_spin",
         "speed_kmh"
       ],
-      "message": "Unstable throttle control detected at T9.",
-      "coaching_hint": "Use one smooth throttle application through T9 instead of pumping the pedal.",
+      "message": "Unstable throttle control detected at Turn 9.",
+      "coaching_hint": "Use one smooth throttle application through Turn 9 instead of pumping the pedal.",
       "audio_key": "unstable_throttle",
       "audio_file": "audio/unstable_throttle.wav",
       "evidence": {
@@ -670,11 +670,11 @@
       }
     },
     {
-      "tag": "T7_poor_track_position",
+      "tag": "Turn 7_poor_track_position",
       "layer": "slow",
       "priority": "normal",
       "interrupt": false,
-      "corner": "T7",
+      "corner": "Turn 7",
       "type": "poor_track_position",
       "severity": "medium",
       "confidence": 0.84,
@@ -683,8 +683,8 @@
         "angle",
         "steer"
       ],
-      "message": "The car is off the ideal racing line at T7.",
-      "coaching_hint": "Follow the baseline line through T7 more closely and avoid large steering corrections.",
+      "message": "The car is off the ideal racing line at Turn 7.",
+      "coaching_hint": "Follow the baseline line through Turn 7 more closely and avoid large steering corrections.",
       "audio_key": "poor_track_position",
       "audio_file": "audio/poor_track_position.wav",
       "evidence": {
@@ -707,11 +707,11 @@
       }
     },
     {
-      "tag": "T2_poor_track_position",
+      "tag": "Turn 2_poor_track_position",
       "layer": "slow",
       "priority": "normal",
       "interrupt": false,
-      "corner": "T2",
+      "corner": "Turn 2",
       "type": "poor_track_position",
       "severity": "medium",
       "confidence": 0.77,
@@ -720,8 +720,8 @@
         "angle",
         "steer"
       ],
-      "message": "The car is off the ideal racing line at T2.",
-      "coaching_hint": "Follow the baseline line through T2 more closely and avoid large steering corrections.",
+      "message": "The car is off the ideal racing line at Turn 2.",
+      "coaching_hint": "Follow the baseline line through Turn 2 more closely and avoid large steering corrections.",
       "audio_key": "poor_track_position",
       "audio_file": "audio/poor_track_position.wav",
       "evidence": {
@@ -744,11 +744,11 @@
       }
     },
     {
-      "tag": "T3_unstable_throttle",
+      "tag": "Turn 3_unstable_throttle",
       "layer": "slow",
       "priority": "normal",
       "interrupt": false,
-      "corner": "T3",
+      "corner": "Turn 3",
       "type": "unstable_throttle",
       "severity": "low",
       "confidence": 0.71,
@@ -757,8 +757,8 @@
         "wheel_spin",
         "speed_kmh"
       ],
-      "message": "Unstable throttle control detected at T3.",
-      "coaching_hint": "Use one smooth throttle application through T3 instead of pumping the pedal.",
+      "message": "Unstable throttle control detected at Turn 3.",
+      "coaching_hint": "Use one smooth throttle application through Turn 3 instead of pumping the pedal.",
       "audio_key": "unstable_throttle",
       "audio_file": "audio/unstable_throttle.wav",
       "evidence": {
@@ -781,11 +781,11 @@
       }
     },
     {
-      "tag": "T1_poor_track_position",
+      "tag": "Turn 1_poor_track_position",
       "layer": "slow",
       "priority": "normal",
       "interrupt": false,
-      "corner": "T1",
+      "corner": "Turn 1",
       "type": "poor_track_position",
       "severity": "low",
       "confidence": 0.68,
@@ -794,8 +794,8 @@
         "angle",
         "steer"
       ],
-      "message": "The car is off the ideal racing line at T1.",
-      "coaching_hint": "Follow the baseline line through T1 more closely and avoid large steering corrections.",
+      "message": "The car is off the ideal racing line at Turn 1.",
+      "coaching_hint": "Follow the baseline line through Turn 1 more closely and avoid large steering corrections.",
       "audio_key": "poor_track_position",
       "audio_file": "audio/poor_track_position.wav",
       "evidence": {
@@ -818,11 +818,11 @@
       }
     },
     {
-      "tag": "T6_poor_track_position",
+      "tag": "Turn 6_poor_track_position",
       "layer": "slow",
       "priority": "normal",
       "interrupt": false,
-      "corner": "T6",
+      "corner": "Turn 6",
       "type": "poor_track_position",
       "severity": "low",
       "confidence": 0.65,
@@ -831,8 +831,8 @@
         "angle",
         "steer"
       ],
-      "message": "The car is off the ideal racing line at T6.",
-      "coaching_hint": "Follow the baseline line through T6 more closely and avoid large steering corrections.",
+      "message": "The car is off the ideal racing line at Turn 6.",
+      "coaching_hint": "Follow the baseline line through Turn 6 more closely and avoid large steering corrections.",
       "audio_key": "poor_track_position",
       "audio_file": "audio/poor_track_position.wav",
       "evidence": {
@@ -855,11 +855,11 @@
       }
     },
     {
-      "tag": "T8_unstable_throttle",
+      "tag": "Turn 8_unstable_throttle",
       "layer": "slow",
       "priority": "normal",
       "interrupt": false,
-      "corner": "T8",
+      "corner": "Turn 8",
       "type": "unstable_throttle",
       "severity": "low",
       "confidence": 0.61,
@@ -868,8 +868,8 @@
         "wheel_spin",
         "speed_kmh"
       ],
-      "message": "Unstable throttle control detected at T8.",
-      "coaching_hint": "Use one smooth throttle application through T8 instead of pumping the pedal.",
+      "message": "Unstable throttle control detected at Turn 8.",
+      "coaching_hint": "Use one smooth throttle application through Turn 8 instead of pumping the pedal.",
       "audio_key": "unstable_throttle",
       "audio_file": "audio/unstable_throttle.wav",
       "evidence": {

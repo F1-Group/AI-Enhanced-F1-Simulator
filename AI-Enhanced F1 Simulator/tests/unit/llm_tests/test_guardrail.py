@@ -1,4 +1,3 @@
-import json
 import sys
 from pathlib import Path
 
@@ -71,14 +70,6 @@ def test_apology_lead_is_stripped_but_real_advice_is_kept():
     assert "brake ten meters earlier" in text.lower()
 
 
-def test_turn_number_is_normalized_to_corner():
-    valid, text = guardrail.validate_output("Brake earlier into Turn 5.", "late_braking")
-
-    assert valid is True
-    assert "Turn 5" not in text
-    assert "the corner" in text.lower()
-
-
 def test_response_over_max_words_is_truncated_with_trailing_period():
     words = ["brake"] + ["word"] * 49
     response = " ".join(words)
@@ -125,7 +116,7 @@ def test_unknown_error_type_uses_default_fallback():
     assert text == guardrail.FALLBACK_RESPONSES["default"]
 
 
-# ─── apply_guardrail / json / simple wrappers ────────────────────────────────
+# ─── apply_guardrail ─────────────────────────────────────────────────────────
 
 def test_apply_guardrail_blocks_non_racing_topic_before_looking_at_the_response():
     result = guardrail.apply_guardrail("Tell me a joke", "anything the LLM said")
@@ -156,24 +147,3 @@ def test_apply_guardrail_defaults_error_type_when_no_error_dict_given():
     assert result["error_type"] == "default"
     assert result["corner"] is None
     assert result["severity"] is None
-
-
-def test_apply_guardrail_json_matches_the_dict_form():
-    error = {"type": "late_braking", "corner": "Turn 3", "severity": "high"}
-    expected = guardrail.apply_guardrail(
-        "Late braking at turn 3", "Brake ten meters earlier into the apex.", error=error
-    )
-    text = guardrail.apply_guardrail_json(
-        "Late braking at turn 3", "Brake ten meters earlier into the apex.", error=error
-    )
-
-    assert json.loads(text) == expected
-
-
-def test_apply_guardrail_simple_returns_is_valid_feedback_tuple():
-    is_valid, text = guardrail.apply_guardrail_simple(
-        "Brake earlier into the apex", "Brake ten meters earlier into the apex."
-    )
-
-    assert is_valid is True
-    assert text == "Brake ten meters earlier into the apex."

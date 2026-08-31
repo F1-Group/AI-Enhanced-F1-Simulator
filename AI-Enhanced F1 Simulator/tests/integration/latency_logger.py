@@ -56,6 +56,6 @@ def reset_log():
 
 if __name__ == "__main__":
     reset_log()
-    log_event("published", key="demo:T3_late_braking:1", detail="smoke test")
-    log_event("received", key="demo:T3_late_braking:1", detail="smoke test")
+    log_event("published", key="demo:Turn 3_late_braking:1", detail="smoke test")
+    log_event("received", key="demo:Turn 3_late_braking:1", detail="smoke test")
     print(f"Wrote a demo entry to {LOG_PATH}")

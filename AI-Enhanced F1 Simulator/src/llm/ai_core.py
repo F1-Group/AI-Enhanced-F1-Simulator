@@ -172,7 +172,6 @@ def ai_queue_consumer_loop(event_queue, audio_manager, stop_event, is_llm_availa
     while not stop_event.is_set():
         try:
             event = event_queue.get(block=True, timeout=1.0)
-            print(f">>> DEBUG got event: {event}")
             if event is not None:
                 log_event("received", key=f"{event.get('session_id')}:{event.get('tag')}:{event.get('lap_number')}", detail=event.get("type"))
         except queue.Empty:

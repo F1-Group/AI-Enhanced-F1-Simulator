@@ -3,7 +3,6 @@ import time
 import platform
 import shutil
 import subprocess
-from pathlib import Path
 import ollama
 
 MODEL_NAME = "granite3-dense:2b"
@@ -92,7 +91,6 @@ FALLBACK_SCRIPTS = {
 }
 
 FALLBACK_DEFAULT = "Focus on smooth inputs and following the racing line."
-AUDIO_DIR = Path(__file__).parent / "audio"
 
 
 def get_fallback_text(error_type: str) -> str:
