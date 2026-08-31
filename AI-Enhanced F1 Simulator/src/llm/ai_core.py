@@ -17,7 +17,7 @@ if str(_LATENCY_DIR) not in sys.path:
 from latency_logger import log_event
 from llm.prompts import build_user_prompt
 from llm.llm_client import ask_race_engineer
-from llm.guardrail import apply_guardrail, normalize_wording
+from llm.guardrail import apply_guardrail
 from llm.coaching_style import get_system_prompt
 from llm.rag import retrieve
 from llm.llm_client import get_fallback_text
@@ -145,7 +145,7 @@ def generate_summary(all_results, system_prompt, force_fallback=False):
     print("\n[AI] Compiling Macro Lap Summary Review")
 
     try:
-        summary_text = normalize_wording(ask_race_engineer(system_prompt, summary_prompt))
+        summary_text = ask_race_engineer(system_prompt, summary_prompt)
         _reset_llm_breaker()
         return summary_text, False
     except Exception as e:
@@ -172,7 +172,6 @@ def ai_queue_consumer_loop(event_queue, audio_manager, stop_event, is_llm_availa
     while not stop_event.is_set():
         try:
             event = event_queue.get(block=True, timeout=1.0)
-            print(f">>> DEBUG got event: {event}")
             if event is not None:
                 log_event("received", key=f"{event.get('session_id')}:{event.get('tag')}:{event.get('lap_number')}", detail=event.get("type"))
         except queue.Empty:

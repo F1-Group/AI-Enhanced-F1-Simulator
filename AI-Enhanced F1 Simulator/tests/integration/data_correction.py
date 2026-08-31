@@ -180,10 +180,10 @@ def test_lap_with_errors_writes_both_files_dashboard_can_read(ai_core):
     dashboard should read the headline back with no special-case code."""
     events = [
         {
-            "tag": "T1_late_braking", "type": "late_braking", "corner": "T1",
+            "tag": "Turn 1_late_braking", "type": "late_braking", "corner": "Turn 1",
             "severity": "high", "priority": "normal",
-            "message": "Late braking detected at T1.",
-            "coaching_hint": "Brake about 30 m earlier before T1.",
+            "message": "Late braking detected at Turn 1.",
+            "coaching_hint": "Brake about 30 m earlier before Turn 1.",
             "session_id": "s1", "lap_number": 1, "is_realtime": False,
             "telemetry": {
                 "lap_time": 14.0, "lap_distance": 600.0, "speed_kmh": 300.0,
@@ -217,7 +217,7 @@ def test_lap_with_errors_writes_both_files_dashboard_can_read(ai_core):
     assert lap_summary["type"] == "lap_summary"
     assert isinstance(lap_summary["feedback"], str) and lap_summary["feedback"]
     assert lap_summary["total_errors"] == 2
-    assert set(lap_summary["corners_affected"]) == {"T1", "Sector 2"}
+    assert set(lap_summary["corners_affected"]) == {"Turn 1", "Sector 2"}
 
     coaching_summary = json.loads(coaching_summary_path.read_text())
     assert coaching_summary["total_errors"] == 2

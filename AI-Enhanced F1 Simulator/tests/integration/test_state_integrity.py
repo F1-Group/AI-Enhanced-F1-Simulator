@@ -75,7 +75,7 @@ class TestStateAndDataIntegrity(unittest.TestCase):
             "tag": "exit_err",
             "session_id": "session_race_02",
             "lap_number": 1,
-            "corner": "T1",
+            "corner": "Turn 1",
             "message": "Low exit speed detected.",
             "coaching_hint": "Apply throttle earlier.",
             "telemetry": {

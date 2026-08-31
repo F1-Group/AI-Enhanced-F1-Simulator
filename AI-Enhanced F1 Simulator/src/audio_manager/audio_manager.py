@@ -399,7 +399,7 @@ class AudioManager:
     def _cooldown_key_for_error(self, error):
         """Cooldown key for a slow/fast-layer error dict.
 
-        Includes both the error type and the corner (e.g. "late_braking_T1")
+        Includes both the error type and the corner (e.g. "late_braking_Turn 1")
         so the same issue firing at different corners does not suppress each
         other under one shared per-type cooldown.
         """

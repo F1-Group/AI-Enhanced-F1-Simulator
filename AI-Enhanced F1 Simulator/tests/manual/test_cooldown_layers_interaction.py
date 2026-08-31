@@ -144,10 +144,10 @@ def test_layer1_fastlayer_own_cooldown():
         "lap_distance": [0.0, 50.0, 100.0, 150.0, 200.0, 500.0],
         "speed_kmh": [150.0, 150.0, 150.0, 150.0, 150.0, 150.0],
     })
-    corners = [{"name": "T1", "start_m": 100.0, "end_m": 150.0, "apex_m": 130.0}]
+    corners = [{"name": "Turn 1", "start_m": 100.0, "end_m": 150.0, "apex_m": 130.0}]
     fast_layer = FastLayer(baseline, corners, manager=None, event_queue=None)
 
-    # Inside T1's approach zone (start_m - 150 = -50, up to apex 130),
+    # Inside Turn 1's approach zone (start_m - 150 = -50, up to apex 130),
     # clearly overspeeding (>25km/h over the 150km/h baseline) and not
     # braking - satisfies fast_layer.py's brake_now condition.
     frame = {"lap_distance": 60.0, "speed_kmh": 200.0, "brake": 0.0, "track_pos": 0.0}
@@ -194,17 +194,17 @@ def test_layer2_livecoach_cooldown_is_per_location():
     per-location _corner_last_queued_time keying depend on."""
     coach = _bare_live_coach()
 
-    report_t1_first = {"errors": [_make_error("T1_late_braking", "T1", "late_braking")]}
-    report_t1_again = {"errors": [_make_error("T1_late_braking", "T1", "late_braking")]}
-    report_t2 = {"errors": [_make_error("T2_late_braking", "T2", "late_braking")]}
+    report_t1_first = {"errors": [_make_error("Turn 1_late_braking", "Turn 1", "late_braking")]}
+    report_t1_again = {"errors": [_make_error("Turn 1_late_braking", "Turn 1", "late_braking")]}
+    report_t2 = {"errors": [_make_error("Turn 2_late_braking", "Turn 2", "late_braking")]}
 
     first = coach._publish_new_errors(report_t1_first, lap_number=1, is_realtime=False)
     repeat = coach._publish_new_errors(report_t1_again, lap_number=1, is_realtime=False)
     other_corner = coach._publish_new_errors(report_t2, lap_number=1, is_realtime=False)
 
-    assert len(first) == 1, f"expected T1's first late_braking through, got {first}"
-    assert len(repeat) == 0, f"expected the immediate T1 repeat to be cooldown-suppressed, got {repeat}"
-    assert len(other_corner) == 1, f"expected T2's late_braking to be unaffected by T1's cooldown, got {other_corner}"
+    assert len(first) == 1, f"expected Turn 1's first late_braking through, got {first}"
+    assert len(repeat) == 0, f"expected the immediate Turn 1 repeat to be cooldown-suppressed, got {repeat}"
+    assert len(other_corner) == 1, f"expected Turn 2's late_braking to be unaffected by Turn 1's cooldown, got {other_corner}"
     print("\n[layer 2] LiveCoach.cooldown_config throttled a same-corner repeat "
           "without affecting a different corner")
 
@@ -218,17 +218,17 @@ def test_layer3_audiomanager_cooldown_is_per_type_and_corner():
     (short) queued lines don't need to fully play out."""
     manager = AudioManager()
     try:
-        err_t1 = _make_error("T1_late_braking", "T1", "late_braking")
-        err_t1_repeat = _make_error("T1_late_braking", "T1", "late_braking")
-        err_t2 = _make_error("T2_late_braking", "T2", "late_braking")
+        err_t1 = _make_error("Turn 1_late_braking", "Turn 1", "late_braking")
+        err_t1_repeat = _make_error("Turn 1_late_braking", "Turn 1", "late_braking")
+        err_t2 = _make_error("Turn 2_late_braking", "Turn 2", "late_braking")
 
         first = manager.play_error(err_t1)
         repeat = manager.play_error(err_t1_repeat)
         other_corner = manager.play_error(err_t2)
 
-        assert first is True, "expected T1's first late_braking to be accepted"
-        assert repeat is False, "expected the immediate T1 repeat to be cooldown-suppressed"
-        assert other_corner is True, "expected T2's late_braking to be unaffected by T1's cooldown"
+        assert first is True, "expected Turn 1's first late_braking to be accepted"
+        assert repeat is False, "expected the immediate Turn 1 repeat to be cooldown-suppressed"
+        assert other_corner is True, "expected Turn 2's late_braking to be unaffected by Turn 1's cooldown"
         print("\n[layer 3] AudioManager's cooldown throttled a same-(type,corner) repeat "
               "without affecting a different corner")
     finally:

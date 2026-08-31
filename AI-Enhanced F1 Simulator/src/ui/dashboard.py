@@ -988,7 +988,7 @@ class TelemetryDashboard:
                 current_turn_name = corner["name"]
                 break
         if current_turn_name:
-            self.lbl_turn.config(text=f"Turn {current_turn_name[1:]}" if current_turn_name.startswith("T") else current_turn_name, fg=ORANGE)
+            self.lbl_turn.config(text=current_turn_name, fg=ORANGE)
         else:
             self.lbl_turn.config(text="Straight", fg=GREY)
 
