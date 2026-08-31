@@ -41,7 +41,7 @@ def validate_input(coaching_request: str):
 
 # Output guardrail
 
-MAX_WORDS = 40 # To prevent system cut off the whole feedback
+MAX_WORDS = 30 # To prevent system generate feedback which is too long.
 
 INVALID_PHRASES = [
     "i don't know",
