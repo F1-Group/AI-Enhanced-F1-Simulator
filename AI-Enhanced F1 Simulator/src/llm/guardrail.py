@@ -70,14 +70,6 @@ def _strip_apology(text: str) -> str:
     return _APOLOGY_LEAD.sub("", text, count=1).strip().strip("\"'")
 
 
-# Use "corner" instead of specific turn numbers, since players may not know
-_TURN_NUMBER = re.compile(r"\b(the\s+)?turn\s+\d+\b|\bT\d+\b", re.IGNORECASE)
-
-
-def _replace_turn_with_corner(text: str) -> str:
-    return _TURN_NUMBER.sub("the corner", text)
-
-
 # Use simpler wording instead of "delta" or "time delta" so the feedback is easier for players to understand.
 _DELTA_WORDING = re.compile(r"\btime\s+delta\b|\bdelta\b", re.IGNORECASE)
 
@@ -85,13 +77,6 @@ _DELTA_WORDING = re.compile(r"\btime\s+delta\b|\bdelta\b", re.IGNORECASE)
 def _replace_delta_wording(text: str) -> str:
     return _DELTA_WORDING.sub("time loss", text)
 
-
-def normalize_wording(text: str) -> str:
-    """Strip invented turn numbers ("Turn 1", "T1", ...) down to "corner",
-    for text sent to the driver that doesn't go through the full
-    apply_guardrail pipeline (e.g. the lap-end summary).
-    """
-    return _replace_turn_with_corner(text)
 
 # Supportive and aggressive styles don't need specific numbers. Remove any numbers the model adds.
 _QUANTITY_UNIT_WORDS = {
@@ -122,7 +107,7 @@ FALLBACK_RESPONSES = {
 }
 
 def validate_output(response: str, error_type: str = "default", style: str = "technical"):
-    response = _replace_delta_wording(_replace_turn_with_corner(_strip_apology(response)))
+    response = _replace_delta_wording(_strip_apology(response))
     if style in ("aggressive", "supportive"):
         response = _replace_quantity_wording(response)
     words = response.split()
