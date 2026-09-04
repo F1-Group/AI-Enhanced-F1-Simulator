@@ -30,12 +30,12 @@ from latency_logger import log_event
 from .fast_layer import FastLayer
 from .alignment import build_baseline, distance_grid
 from .error_detection import detect_corners
-from .lap_utils import LAP_RESET_DROP_M, clean_telemetry, load_telemetry, split_laps
+from .lap_utils import (LAP_RESET_DROP_M, MIN_LAP_FRACTION, clean_telemetry,
+                        load_telemetry, split_laps)
 from .run_analysis import (DEFAULT_EXPERT, LATEST_POINTER,
                            analyse_lap, session_id_from)
 
 POLL_S = 0.05
-MIN_LAP_FRACTION = 0.95
 REALTIME_ANALYSIS_INTERVAL_S = 0.75
 MIN_REALTIME_ROWS = 50
 LAP_TIME_RESET_DROP_S = 2.0
@@ -159,7 +159,7 @@ class LiveCoach:
 
     def start_coaching_loop(self, wait_timeout=120.0, idle_timeout_s=10.0, max_seconds=None, stop_event=None):
         """Handle the wait for dynamic file generation and start the telemetry tracking loop."""
-        print(f"[Coach] Waiting for active recording CSV...")
+        print("[Coach] Waiting for active recording CSV...")
 
         if stop_event and stop_event.is_set():
             return

@@ -19,6 +19,11 @@ SPEED_MAX_VALID = 300.0
 # track length. Any backwards jump bigger than this is treated as a new lap.
 LAP_RESET_DROP_M = 500.0
 
+# A lap covering at least this fraction of the track length counts as
+# complete, rather than an aborted/trailing fragment. Shared by run_analysis.py
+# and live_coach.py so both "is this lap complete" checks stay in sync.
+MIN_LAP_FRACTION = 0.95
+
 
 def clean_telemetry(df):
     """Clean collision sensor spikes out of the speed column.
