@@ -314,7 +314,7 @@ The `analysis/` package converts raw TORCS telemetry into measurable, location-s
 #### Analysis Pipeline
 
 1. **Telemetry cleaning and lap segmentation (`lap_utils.py`)**
-   - Removes physically implausible collision-related speed spikes above `600 km/h` and interpolates across invalid samples.
+   - Treats speed readings outside the valid `0–300 km/h` range as collision-related sensor glitches and interpolates across invalid samples.
    - Detects a new lap when `lap_distance` drops by more than `500 m`.
    - Removes duplicate or backwards distance samples caused by stopping, spinning, or reversing.
 
@@ -346,7 +346,7 @@ The `analysis/` package converts raw TORCS telemetry into measurable, location-s
 | :--- | :--- | :--- |
 | `brake_now` | The player approaches a corner at least `25 km/h` faster than the expert while applying less than `0.30` brake. | Fast |
 | `off_track` | Absolute TORCS track position exceeds `1.0`. Detection and dashboard logging remain active, but audio is intentionally disabled. | Fast |
-| `wrong_way` | The vehicle travels at least `10 m` in the reverse track direction, above `20 km/h`, for at least `1.5 s`; announces “Wrong way. Turn around.” once per incident. | Fast |
+| `wrong_way` | The vehicle travels at least `10 m` in the reverse track direction at or above `10 km/h` for at least `1.5 s`; announces “Wrong way. Turn around.” once per incident. | Fast |
 | `shift_up` | On a stable, on-track line with at least `70%` throttle, engine speed remains at or above `8800 RPM` for `0.6 s`; announces “Shift up.” once for that gear. | Fast |
 | `shift_down` | On a stable, on-track line while braking at least `30%` with throttle released, engine speed remains at or below `4500 RPM` for `0.6 s` in a safe speed range; announces at most one “Shift down.” per braking episode. | Fast |
 | `late_braking` | The player's braking point is at least `25 m` later than the expert, or the player reaches the corner too fast without braking. | Slow |
@@ -396,15 +396,15 @@ The `audio_manager/` package provides a non-blocking output channel for urgent a
 | Priority | Typical Content | Behaviour |
 | :--- | :--- | :--- |
 | `urgent` | `brake_now` | Interrupts current speech, clears queued messages, and plays immediately. |
-| `high` | `wrong_way` and other safety-critical audio events | Interrupts lower-priority speech when configured and plays before normal coaching. |
-| `normal` | `shift_up`, `shift_down`, and Granite-generated coaching | Standard advisory priority without interrupting safety alerts. |
+| `high` | `wrong_way`, `shift_up`, and `shift_down` | Interrupts current lower-priority speech and plays before normal coaching. |
+| `normal` | Granite-generated coaching | Standard non-urgent coaching output. |
 | `low` / `slow` | Non-urgent sounds or long-form feedback | Played after more important messages. |
 
 The audio system includes the following safeguards:
 
 - **Cooldown control:** repeated messages with the same key are suppressed for `4 s` by default.
 - **Stale-message removal:** queued coaching older than `2.5 s` is discarded because outdated advice can distract the driver.
-- **True interruption:** urgent events stop both queued audio and speech already playing.
+- **True interruption:** alerts configured with `interrupt=True` stop both queued audio and speech already playing before the new alert is queued.
 - **Speech timeout:** a TTS message is terminated if it runs for more than `30 s`.
 - **Graceful fallback:** if a WAV file or `pygame` mixer is unavailable, the manager can speak the error's coaching hint instead.
 - **Safe shutdown:** active speech, queued jobs, and mixer resources are stopped when the race or application ends.
@@ -665,7 +665,7 @@ Speaking audio: shift_down
 [Timeout Dropped] AI Coaching Speech is too old (2.84s old), skipping.
 ```
 
-Gear conditions must remain stable for `0.6 s`. `shift_up` requires at least `8800 RPM`, `70%` throttle, and a settled on-track line. `shift_down` requires at most `4500 RPM`, at least `30%` brake, released throttle, a safe road speed, and a settled on-track line. Only one downshift is announced per continuous braking episode. A wrong-way prompt requires at least `10 m` of measured reverse track progress above `20 km/h` for `1.5 s`, preventing stationary turns and momentary spins from producing false warnings.
+Gear conditions must remain stable for `0.6 s`. `shift_up` requires at least `8800 RPM`, `70%` throttle, and a settled on-track line. `shift_down` requires at most `4500 RPM`, at least `30%` brake, released throttle, a safe road speed, and a settled on-track line. Only one downshift is announced per continuous braking episode. A wrong-way prompt requires at least `10 m` of measured reverse track progress at or above `10 km/h` for `1.5 s`, preventing stationary turns and momentary spins from producing false warnings.
 
 <p align="center">
   <img src="./assets/images/Live_Telemetry_Dashboard_Coaching.png" alt="Live Telemetry Dashboard Coaching" width="400"/>
